@@ -1,0 +1,13 @@
+{
+  "id": "P099",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already run most of my marketing and follow-up automations through Make and HubSpot, so I'd sign up for the free plan to poke at it, but I wouldn't pay 99 € a month in the first month for something that might just sit on top of what I already have.",
+  "objection": "'CRM, Google Workspace, Microsoft 365...' isn't an integration list. I need to see whether it actually reads and writes to HubSpot and plays with Make, and I have no idea what one 'credit' buys me or how fast 100 a month runs out.",
+  "would_change_my_mind": "A public integrations page showing a native two-way HubSpot connector plus a Make/Zapier app, and a plain explanation of what a credit equals, so the free trial can prove it saves me real hours.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}

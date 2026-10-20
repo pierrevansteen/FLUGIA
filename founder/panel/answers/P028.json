@@ -1,0 +1,13 @@
+{
+  "id": "P028",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already pay for ChatGPT and it does most of what I need when I copy-paste things around. On 32,000 a year I can't add another 59 to 99 euros a month for something I'm not sure does more than what I already have.",
+  "objection": "I don't have time to set it up and learn another tool, and I can't see what these 'AI co-workers' do that my ChatGPT subscription doesn't. And what is a 'credit' anyway? 100 a month could be nothing.",
+  "would_change_my_mind": "Seeing it take a real chore off my plate in the first week, like answering customer emails from my own Gmail, with the onboarding done for me and a clear idea of what 100 credits actually buys.",
+  "price_too_cheap": 5,
+  "price_cheap": 20,
+  "price_expensive": 40,
+  "price_too_expensive": 70
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P010",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I already pay for ChatGPT and it does most of what I need if I copy-paste. Before I connect my CRM and customer emails to some new platform I'd need to know exactly where that data goes, and one line saying 'GDPR-compliant' on a LinkedIn ad doesn't tell me that. I might try the free plan, but I wouldn't pay this month.",
+  "objection": "Who processes my customers' data, where is it hosted, which AI models it gets sent to, and will they sign a DPA with me? And what does a 'credit' actually buy me - is 100 a month enough or will I hit the wall in a week?",
+  "would_change_my_mind": "A clear data-processing page with EU hosting, a signed DPA, and a demo on my own CRM showing a co-worker doing something I can't do by copy-pasting into ChatGPT.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 149
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P070",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Losing that lead last month stung, so the AI Sales Manager following up for me is tempting, and I like that a human does the onboarding. But I would book the free demo first, not pay this month. I don't hand my customer list to a new AI tool on the strength of 'GDPR-compliant' written on a landing page.",
+  "objection": "Where does my customer data actually go? 'GDPR-compliant, data access controlled by you' is one line. I want to know where it is hosted, whether it's in the EU, whether the AI models train on my clients' data, and whether I get a proper DPA. On top of that, '100 credits a month' tells me nothing about how many follow-ups that really covers.",
+  "would_change_my_mind": "A demo where they set it up on my own CRM, show it following up a real lead, and hand me a signed DPA with EU hosting confirmed in writing.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 99,
+  "price_too_expensive": 180
+}

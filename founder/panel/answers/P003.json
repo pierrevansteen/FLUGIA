@@ -1,0 +1,13 @@
+{
+  "id": "P003",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I've never heard of FLUGIA, and I'm not wiring my CRM, my mailbox and my customers' data into a company that might not exist in two years. I might poke at the free plan on a quiet evening, but 99 € a month for something I haven't seen save me an hour is a no for now.",
+  "objection": "Who are these people and will they still be around? If I spend weeks setting up their 'AI co-workers' and they fold, I've lost the time and maybe my data. And 100 credits a month means nothing to me; I can't tell what that actually gets done.",
+  "would_change_my_mind": "A month-to-month trial where their onboarding team actually sets up one real thing, like answering my customer emails, and I can see the hours it saves, plus a couple of Belgian or Dutch small businesses like mine I can call who've used it for a year.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 129
+}

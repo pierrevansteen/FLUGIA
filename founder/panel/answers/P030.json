@@ -1,0 +1,13 @@
+{
+  "id": "P030",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "99 euros is nothing next to what I pay my freelancer, but I'm not swapping a person who knows my clients for 'AI co-workers' on the strength of a landing page. At most I'd open the free plan, and I wouldn't pay anything this month.",
+  "objection": "I don't believe an AI 'Marketing Manager' gets the work done the way my freelancer does without me checking everything, and I have no idea what 100 credits actually buys before I run out.",
+  "would_change_my_mind": "Seeing it handle one real job for my business, like a month of social posts or answering our support inbox, at a quality I'd sign off on without rewriting it, so I could cut the freelancer's hours.",
+  "price_too_cheap": 15,
+  "price_cheap": 49,
+  "price_expensive": 150,
+  "price_too_expensive": 300
+}

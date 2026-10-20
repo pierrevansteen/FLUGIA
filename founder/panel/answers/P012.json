@@ -1,0 +1,13 @@
+{
+  "id": "P012",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I've never heard of FLUGIA and I'm not letting an unknown AI talk to my customers or dig through my Google account on the strength of a 'GDPR-compliant' line. At most I'd poke at the free plan with nothing sensitive connected, but I wouldn't pay for it this month.",
+  "objection": "Who are these people, where is my data actually stored, and what happens when the AI says something wrong to a customer in my name? If they disappear in two years, I've built my processes on something that's gone.",
+  "would_change_my_mind": "A small business owner like me, in Belgium or France, telling me it's worked for them for a year, plus a setting where nothing goes out to a customer without me approving it first, the same way I sign off invoices on Fridays.",
+  "price_too_cheap": 15,
+  "price_cheap": 35,
+  "price_expensive": 79,
+  "price_too_expensive": 129
+}

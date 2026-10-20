@@ -1,0 +1,13 @@
+{
+  "id": "P008",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already pay for ChatGPT and it does most of this when I paste stuff in. I might poke at the free plan, but I'm not paying 99 euros a month for three 'managers' until I see them actually do something in my own tools.",
+  "objection": "'Connects to your CRM, Google Workspace, Microsoft 365...' is vague. If it doesn't plug into the exact tools we run, it's just another ChatGPT wrapper with a nicer name, and I still don't know what 100 credits buys me in real work.",
+  "would_change_my_mind": "Seeing it hooked into my actual CRM and inbox in a demo, doing a real week of follow-ups and posts without me copy-pasting, with a clear idea of how far 100 credits goes.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}

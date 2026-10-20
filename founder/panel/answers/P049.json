@@ -1,0 +1,13 @@
+{
+  "id": "P049",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'm not letting an AI answer my customers on its own when one wrong reply can cost me a client I spent years winning. 59 euros a month is cheap next to my freelancer, but my freelancer knows my clients and I can call them when something goes wrong.",
+  "objection": "AI talking to my customers 24/7 without me seeing it first could damage my reputation, and I have no idea what '100 credits' actually gets me in real replies or campaigns.",
+  "would_change_my_mind": "A free trial where every customer-facing message waits for my approval on my phone first, plus a few Belgian or Dutch businesses my size I can actually call who use it.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 99,
+  "price_too_expensive": 200
+}

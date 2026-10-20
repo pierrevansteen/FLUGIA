@@ -1,0 +1,13 @@
+{
+  "id": "P002",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "I lost a lead last month because nobody followed up, and I am answering emails at midnight. If an AI sales co-worker chases leads and handles the routine support mails, 99 euros a month is cheaper than one lost deal, so I would book the demo and take the monthly plan, not the yearly one yet.",
+  "objection": "Where does my customer data actually go? 'GDPR-compliant' is one line on a website; I want to know where it is hosted, who can see it and whether I can get it all back out if I leave.",
+  "would_change_my_mind": "If the demo cannot show me clearly where my data is stored in the EU and give me a data processing agreement, I walk away.",
+  "price_too_cheap": 15,
+  "price_cheap": 49,
+  "price_expensive": 149,
+  "price_too_expensive": 250
+}

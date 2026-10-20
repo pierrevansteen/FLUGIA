@@ -1,0 +1,13 @@
+{
+  "id": "P098",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already pay for ChatGPT and it covers most of what I need for emails and posts. I can't see what these 'co-workers' do that my copy-paste routine doesn't, and 99 euros a month on top is real money for us.",
+  "objection": "Will it actually send the replies and run the follow-ups, or is it just another set of drafts I still have to check and fix? And 100 credits a month means nothing to me, I have no idea how far that goes.",
+  "would_change_my_mind": "Seeing it work on my real inbox and CRM for two weeks on the free plan and actually saving me hours, without me having to fix every answer.",
+  "price_too_cheap": 15,
+  "price_cheap": 35,
+  "price_expensive": 60,
+  "price_too_expensive": 110
+}

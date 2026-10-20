@@ -1,0 +1,13 @@
+{
+  "id": "P083",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'd maybe poke at the free plan, but I'm not paying 99 € a month to let an unknown AI tool loose on my CRM and customer emails when Zapier and Make already run most of my automations. 'GDPR-compliant' in one line isn't enough, and I have no idea what 100 credits actually gets me.",
+  "objection": "Where is my customer data stored and processed, which AI models see it, is there a DPA I can sign, and is it EU-hosted? Plus the integration list is just 'CRM, Google Workspace, Microsoft 365...' - does it really plug into HubSpot and my Make scenarios, or is it another silo?",
+  "would_change_my_mind": "A published DPA with EU data hosting and a named sub-processor list, a real integration list including HubSpot and Make/Zapier, and a clear explanation of what a credit buys, so a free trial could prove it saves me hours in a week.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 129
+}

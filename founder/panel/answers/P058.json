@@ -1,0 +1,13 @@
+{
+  "id": "P058",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'm not letting an AI I've never seen talk to my customers or send sales emails in my name off the back of an ad. 'GDPR-compliant' is one line on a website; I'd need to see where my data goes and approve what it says before it goes out.",
+  "objection": "If the AI support or sales manager gives a customer a wrong answer or a pushy email, it's my reputation that pays, and I can't tell where my CRM and customer data end up or who can see it.",
+  "would_change_my_mind": "A demo on my own data where every customer-facing message needs my approval before sending, plus a signed DPA with data hosted in the EU and a reference from a similar Belgian or French business.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 99,
+  "price_too_expensive": 180
+}

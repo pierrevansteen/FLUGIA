@@ -1,0 +1,13 @@
+{
+  "id": "P046",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "The price is nothing next to the hours I lose answering emails at night, but I've never heard of FLUGIA and 'AI co-workers' is what every startup promises this year. I'd probably poke at the free plan, but I'm not paying or plugging my CRM and mailbox into it this month.",
+  "objection": "I've never heard of FLUGIA. Will the company still be around in two years, and what happens to my customer data and my automations if it isn't? I don't want to rebuild everything after it folds.",
+  "would_change_my_mind": "If the free co-worker actually cleared my support inbox for two weeks without me fixing its answers, and a Belgian or Dutch business my size told me they've been running it for a year, I'd pay monthly.",
+  "price_too_cheap": 15,
+  "price_cheap": 49,
+  "price_expensive": 149,
+  "price_too_expensive": 300
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P053",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already pay for ChatGPT and a freelancer handles our campaigns, so I don't see what three 'AI managers' add that I can't already do between appointments. I might poke at the free plan, but I wouldn't pay 99 a month on a pitch alone.",
+  "objection": "I already pay for ChatGPT, what does this add? And 100 credits a month means nothing to me until I know how much actual work that covers compared to what my freelancer delivers.",
+  "would_change_my_mind": "A demo showing it actually answering our customer emails and running a campaign from our own CRM well enough that I could cut back the freelancer's hours.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P066",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I saw one LinkedIn ad and I've never heard of FLUGIA. I might book the free demo to see it, but I'm not paying 99 euros a month to an unknown company until someone sets it up and shows me it brings in leads or saves me hours.",
+  "objection": "I don't know if FLUGIA will still exist in two years, and I don't want to hook my CRM and Google account into something that could vanish or that I'll end up babysitting myself.",
+  "would_change_my_mind": "A demo where they set it up on my own business and show real results in the first weeks, plus references from small businesses like mine in Belgium or France.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 149
+}

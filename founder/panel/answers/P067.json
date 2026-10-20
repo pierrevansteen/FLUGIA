@@ -1,0 +1,13 @@
+{
+  "id": "P067",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I already pay for ChatGPT and it does most of this when I copy-paste. Handing my CRM and Google Workspace to a company I've never heard of, for 99 a month, isn't something I'd do this week.",
+  "objection": "I've never heard of FLUGIA; is it going to be around in two years, and what does it really do beyond the ChatGPT I already pay for? 100 credits a month also tells me nothing about how much work I actually get.",
+  "would_change_my_mind": "A demo on my own data where the sales co-worker actually keeps my CRM updated and follows up leads without me, plus a reference from a Belgian or Dutch business my size.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 149
+}

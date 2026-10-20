@@ -1,0 +1,13 @@
+{
+  "id": "P044",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "One line saying 'GDPR-compliant' is not enough for me to plug my customer list and inbox into AI from a company I've never heard of. I might poke at the free plan, but I won't add another 99 € subscription to Friday's invoice pile until I know where my data sits and that it actually saves me hours.",
+  "objection": "Where is my customer data stored and processed, who can see it, and is it used to train AI models? If something leaks, my clients blame me, not the software.",
+  "would_change_my_mind": "A signed data processing agreement with EU-only hosting and no training on my data, plus a free month on the Standard plan with a cancel-anytime monthly option so I can see real time saved before paying.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 129
+}

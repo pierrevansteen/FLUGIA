@@ -1,0 +1,13 @@
+{
+  "id": "P048",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I already pay for ChatGPT and I'm not letting a new platform into my CRM and customer emails just because it says 'GDPR-compliant' in one line. The lost lead stings, but I might try the free plan and I won't pay 99 a month this week.",
+  "objection": "Where does my customer data actually go, which AI models see it, and is it hosted in the EU with a proper data processing agreement? Also, what does this do that my ChatGPT subscription and a CRM reminder don't?",
+  "would_change_my_mind": "A demo where it follows up a real lead from my own CRM automatically, plus a signed DPA showing EU hosting and no training on my data.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}

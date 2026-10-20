@@ -1,0 +1,13 @@
+{
+  "id": "P036",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I pay a freelancer a few hundred a month and I know who is touching my customer data; an AI co-worker connected to my CRM and inbox from one LinkedIn ad is a big leap. The price is cheap next to my freelancer, but I'd book the demo at most, not sign up this week.",
+  "objection": "'GDPR-compliant' is one line on a page. Where is my customer data hosted, is it used to train models, who at FLUGIA can see it, and can I get a DPA signed before I connect my CRM?",
+  "would_change_my_mind": "A signed DPA with EU-only hosting and no training on my data, plus a demo showing the AI Marketing Manager doing real work as well as my freelancer on my own accounts.",
+  "price_too_cheap": 15,
+  "price_cheap": 49,
+  "price_expensive": 150,
+  "price_too_expensive": 300
+}

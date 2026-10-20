@@ -1,0 +1,13 @@
+{
+  "id": "P100",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already run my follow-ups and lead routing through Zapier and HubSpot, and 'AI co-workers' sounds like another layer on top of what I've built. I might poke at the free plan, but I'm not paying 99 a month until I see it do something my current stack can't.",
+  "objection": "I don't have time to set up and learn another tool, and '100 credits' tells me nothing. I don't know what a credit buys or whether it really plugs into HubSpot and Zapier properly or just says '...'.",
+  "would_change_my_mind": "A published integration list with a native HubSpot and Zapier/Make connector, plus a clear 'one credit = X actions' table, so I can see in a 15-minute demo that it saves me hours a week.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}

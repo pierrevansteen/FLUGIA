@@ -1,0 +1,13 @@
+{
+  "id": "P005",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'd love to get my evenings back and stop losing leads, but 'CRM, Google, Microsoft...' doesn't tell me it works with the little tools I actually run on. I'd try the free plan or book the demo, but I'm not paying 99 € a month until I see it follow up a real lead without me babysitting it.",
+  "objection": "It probably won't plug into the specific tools I use, and then I'm the one doing the copy-pasting at midnight anyway, plus I don't know what 100 credits actually gets me.",
+  "would_change_my_mind": "Seeing it in the demo connected to my own inbox and tools, chasing up a real lead on its own, with a clear idea of how many tasks 100 credits covers.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 129
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P059",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already pay about 20 a month for ChatGPT and it covers most of my marketing and email drafting. On 35k a year I can't justify another 59 to 99 euros a month without proof it actually does the work instead of handing me more drafts to fix.",
+  "objection": "Will these 'AI co-workers' really run things on their own, or is it just ChatGPT with a nicer dashboard and a credit limit? And I have no idea how far 100 credits actually goes.",
+  "would_change_my_mind": "If the free plan showed me one co-worker actually handling my customer emails or follow-ups end to end for a couple of weeks, saving me real hours, I'd consider paying.",
+  "price_too_cheap": 5,
+  "price_cheap": 20,
+  "price_expensive": 45,
+  "price_too_expensive": 80
+}

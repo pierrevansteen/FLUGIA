@@ -1,0 +1,13 @@
+{
+  "id": "P038",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already pay for ChatGPT and use it every day; copy-pasting works well enough for me. I don't see what three 'AI managers' do that I can't already do myself for 20 euros, and I don't have the hours to connect it to everything and teach it my business.",
+  "objection": "I don't have time to set it up and learn another tool, and 100 credits a month sounds vague: I have no idea what that buys me or whether it runs out mid-month.",
+  "would_change_my_mind": "A colleague-owner my size showing me it actually handles our customer support or follow-ups end to end after a one-hour onboarding they do for me, with a free month to prove it.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}

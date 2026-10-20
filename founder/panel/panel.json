@@ -1,0 +1,95 @@
+{
+ "n": 100,
+ "seed": 947964,
+ "customer": {
+  "business": "FLUGIA, a platform of AI co-workers (AI Marketing Manager, AI Sales Manager, AI Customer Support Manager; HR, Admin/Finance and Assistant coming soon) that connect to a company's existing tools and automate tasks",
+  "target": "Owners and managers of small businesses (2 to 50 staff) in Belgium, France and the Netherlands who do marketing, sales and support themselves or with a stretched team",
+  "where": "Belgium, France and the Netherlands (French, Dutch and English speaking)",
+  "age": [
+   28,
+   58
+  ],
+  "segments": [
+   {
+    "name": "Solo founder or micro-business owner (1-5 staff)",
+    "share": 0.4,
+    "income": [
+     30000,
+     70000
+    ]
+   },
+   {
+    "name": "Small business owner or managing director (6-50 staff)",
+    "share": 0.4,
+    "income": [
+     60000,
+     140000
+    ]
+   },
+   {
+    "name": "Marketing, sales or operations manager at an SME",
+    "share": 0.2,
+    "income": [
+     45000,
+     90000
+    ]
+   }
+  ],
+  "behaviours": [
+   {
+    "name": "Already uses ChatGPT daily",
+    "share": 0.22,
+    "how": "Pays for ChatGPT or Claude and copy-pastes into other tools; wonders what an AI platform adds."
+   },
+   {
+    "name": "Overloaded doer",
+    "share": 0.2,
+    "how": "Answers customer emails and posts on social media at night; buys anything that clearly gives back hours."
+   },
+   {
+    "name": "Cautious about AI",
+    "share": 0.15,
+    "how": "Worried about data, GDPR and AI making mistakes in front of customers; needs proof and control."
+   },
+   {
+    "name": "Tool-stack tinkerer",
+    "share": 0.13,
+    "how": "Already uses Zapier/Make, HubSpot or a CRM and judges any new tool by its integrations."
+   },
+   {
+    "name": "Budget-first",
+    "share": 0.12,
+    "how": "Watches every monthly subscription; cancels anything not used in a month."
+   },
+   {
+    "name": "Agency or freelancer user",
+    "share": 0.1,
+    "how": "Pays a freelancer or agency for marketing and support and compares any tool against that cost."
+   },
+   {
+    "name": "Wants it done for them",
+    "share": 0.08,
+    "how": "Will only adopt if someone sets it up and shows results; books demos before buying."
+   }
+  ],
+  "objections": [
+   "I already pay for ChatGPT, what does this add?",
+   "I don't have time to set it up and learn another tool",
+   "Will it really do the work, or just give me drafts I still have to fix?",
+   "Is my customer data safe and GDPR compliant?",
+   "I've never heard of FLUGIA; is the company going to be around in two years?",
+   "It doesn't connect to the specific tools I use",
+   "The price isn't on the page, so it is probably expensive",
+   "AI talking to my customers could damage my reputation"
+  ],
+  "habits": [
+   "you answer customer emails on your phone between appointments",
+   "you post on Instagram and LinkedIn when you remember, about twice a month",
+   "your bookkeeper sends you invoices to approve every Friday",
+   "you run the business from Google Workspace and a CRM nobody updates",
+   "you lost a lead last month because nobody followed up",
+   "you saw a LinkedIn ad about AI agents this week"
+  ]
+ },
+ "pitch": "FLUGIA gives your business AI co-workers: an AI Marketing Manager, an AI Sales Manager and an AI Customer Support Manager (HR, finance and assistant co-workers coming soon).\nThey connect to the tools you already use (CRM, Google Workspace, Microsoft 365...), learn your business through a shared knowledge base, and run the automations you choose, 24/7. No technical skills needed; a human Customer Success team does your onboarding.\nStandard plan: all AI co-workers, 3 users, 100 FLUGIA credits a month, for 99 € a month, or 59 € a month if you pay yearly (-40%). Extra users 9,99 € a month.\nFree plan: one AI co-worker, 1 user, 50 credits in total. Enterprise: 199 € a month (99 € a month yearly), 5 users, 300 credits a month, custom modules.\nGDPR-compliant, with data access controlled by you. Create an account or book a free demo at flugia.com."
+}

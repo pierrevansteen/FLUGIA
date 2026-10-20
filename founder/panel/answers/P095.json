@@ -1,0 +1,13 @@
+{
+  "id": "P095",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "I already run HubSpot and Zapier, and the lead I lost was a follow-up problem I can fix with one zap and a reminder sequence I already pay for. Paying 99 euros a month for a vague 'AI Sales Manager' on top of my stack is hard to justify, so at most I'd poke at the free plan and probably forget about it.",
+  "objection": "'Connects to your CRM' tells me nothing. I want to see the actual list of integrations and exactly what it does inside HubSpot, and I don't have time to set it up, feed it a knowledge base and learn yet another dashboard with a credit system I can't predict.",
+  "would_change_my_mind": "A native HubSpot and Zapier integration that I can see working in a 15-minute demo, auto-following up every new lead from day one, with clear numbers on what 100 credits actually covers.",
+  "price_too_cheap": 9,
+  "price_cheap": 25,
+  "price_expensive": 59,
+  "price_too_expensive": 120
+}

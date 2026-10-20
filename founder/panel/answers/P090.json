@@ -1,0 +1,13 @@
+{
+  "id": "P090",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'd poke at the free plan, but I won't pay 99 a month for 'AI co-workers' when the page just says 'CRM, Google Workspace, Microsoft 365...' and never tells me whether it plugs into my HubSpot and Zapier setup or what a credit actually buys. I already patch my follow-up gap with Make for a lot less.",
+  "objection": "100 credits a month means nothing to me. If one follow-up email burns a credit I'm out by week two, and I don't see a real integrations list, so I can't tell if this replaces my stack or just adds another tool next to it.",
+  "would_change_my_mind": "A public integrations list with native HubSpot and Zapier/Make support, plus a plain example of how many lead follow-ups 100 credits covers, proven by the free plan catching a lead I would have lost.",
+  "price_too_cheap": 10,
+  "price_cheap": 29,
+  "price_expensive": 79,
+  "price_too_expensive": 149
+}

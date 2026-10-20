@@ -1,0 +1,268 @@
+{
+ "business": "FLUGIA, a platform of AI co-workers (AI Marketing Manager, AI Sales Manager, AI Customer Support Manager; HR, Admin/Finance and Assistant coming soon) that connect to a company's existing tools and automate tasks",
+ "seed": 947964,
+ "dealt": 100,
+ "answered": 100,
+ "skipped": [],
+ "buys": 1,
+ "passes": 99,
+ "buy_rate": 0.01,
+ "by_segment": [
+  [
+   "Small business owner or managing director (6-50 staff)",
+   40,
+   0.025
+  ],
+  [
+   "Solo founder or micro-business owner (1-5 staff)",
+   40,
+   0.0
+  ],
+  [
+   "Marketing, sales or operations manager at an SME",
+   20,
+   0.0
+  ]
+ ],
+ "by_behaviour": [
+  [
+   "Overloaded doer",
+   20,
+   0.05
+  ],
+  [
+   "Budget-first",
+   12,
+   0.0
+  ],
+  [
+   "Wants it done for them",
+   8,
+   0.0
+  ],
+  [
+   "Already uses ChatGPT daily",
+   22,
+   0.0
+  ],
+  [
+   "Cautious about AI",
+   15,
+   0.0
+  ],
+  [
+   "Tool-stack tinkerer",
+   13,
+   0.0
+  ],
+  [
+   "Agency or freelancer user",
+   10,
+   0.0
+  ]
+ ],
+ "by_income": [
+  [
+   "$86,000 and up",
+   34,
+   0.029411764705882353
+  ],
+  [
+   "$57,000 to $86,000",
+   35,
+   0.0
+  ],
+  [
+   "under $57,000",
+   31,
+   0.0
+  ]
+ ],
+ "why_not": [
+  [
+   "trust",
+   65,
+   [
+    "I've never heard of FLUGIA and I'm not handing my CRM, my emails and my customers to an unknown company for 99 € a month, and 59 € only if I lock in a full year. I might poke at the free plan, but 50 credits total tells me nothing about whether it actually saves me time.",
+    "I've never heard of FLUGIA, and I'm not wiring my CRM, my mailbox and my customers' data into a company that might not exist in two years. I might poke at the free plan on a quiet evening, but 99 € a month for something I haven't seen save me an hour is a no for now."
+   ],
+   [
+    "P001",
+    "P003"
+   ]
+  ],
+  [
+   "need",
+   25,
+   [
+    "I already pay for ChatGPT and I can't see what three 'AI managers' do for me that it doesn't, beyond a nice name. I might book the free demo, but I wouldn't pay anything this month until someone shows me actual results on my own business.",
+    "I already pay for ChatGPT and get most of this by copy-pasting into my tools. A LinkedIn ad saying 'AI co-workers' doesn't show me what it does on a Tuesday that my current subscription doesn't, so I'm not adding another 99 a month and another tool to learn."
+   ],
+   [
+    "P004",
+    "P006"
+   ]
+  ],
+  [
+   "quality",
+   3,
+   [
+    "99 euros a month is a real line on my Friday invoice pile, and I have no proof these 'co-workers' do the work rather than hand me drafts I still have to fix. At most I'd poke at the free plan, but I wouldn't pay this month.",
+    "I already pay for ChatGPT and use it every day. Nothing here shows me these co-workers actually finish the work in my CRM and inbox instead of handing me more drafts to fix, so I'm not adding another subscription on a promise."
+   ],
+   [
+    "P011",
+    "P092"
+   ]
+  ],
+  [
+   "convenience",
+   3,
+   [
+    "Missing that lead hurt, but I don't have the hours to connect my CRM, build a knowledge base and pick automations. A 99 euro subscription I don't use properly would be gone by month two. At most I'd poke at the free plan and leave it there.",
+    "If it really gave me my evenings back I'd pay 99 € without blinking, but a LinkedIn ad saying 'AI co-workers' doesn't show me that. At most I'd poke at the free plan one night, and I'd probably never get around to setting it up properly."
+   ],
+   [
+    "P042",
+    "P080"
+   ]
+  ],
+  [
+   "price",
+   2,
+   [
+    "99 euros a month is a real line on my budget for something I'd use when I remember, like my twice-a-month posts. I might poke at the free plan, but 50 credits in total and one co-worker won't prove it's worth paying for every month.",
+    "99 euros a month is more than I'll put on a tool I haven't proven I need, and I'm not locking in a year to get 59. I might poke at the free plan, but I wouldn't pay this month."
+   ],
+   [
+    "P077",
+    "P078"
+   ]
+  ],
+  [
+   "habit",
+   1,
+   [
+    "I already run HubSpot and Zapier, and the lead I lost was a follow-up problem I can fix with one zap and a reminder sequence I already pay for. Paying 99 euros a month for a vague 'AI Sales Manager' on top of my stack is hard to justify, so at most I'd poke at the free plan and probably forget about it."
+   ],
+   [
+    "P095"
+   ]
+  ]
+ ],
+ "why_yes": [
+  [
+   "need",
+   1,
+   [
+    "I lost a lead last month because nobody followed up, and I am answering emails at midnight. If an AI sales co-worker chases leads and handles the routine support mails, 99 euros a month is cheaper than one lost deal, so I would book the demo and take the monthly plan, not the yearly one yet."
+   ],
+   [
+    "P002"
+   ]
+  ]
+ ],
+ "flip": [
+  "A monthly plan I can cancel anytime at around 39-49 €, with a clear explanation of what a credit buys, plus a reference from a small business near me showing hours actually saved.",
+  "A month-to-month trial where their onboarding team actually sets up one real thing, like answering my customer emails, and I can see the hours it saves, plus a couple of Belgian or Dutch small businesses like mine I can call who've used it for a year.",
+  "If the onboarding team set it up on my own CRM and inbox during a trial and showed me real leads answered or hours saved within two weeks, before I pay.",
+  "Seeing it in the demo connected to my own inbox and tools, chasing up a real lead on its own, with a clear idea of how many tasks 100 credits covers.",
+  "Seeing it actually running in my own CRM and inbox within an hour, with the onboarding team doing the setup, and a concrete example of hours saved per week compared with just using ChatGPT.",
+  "Seeing it working on my own setup in the free demo, answering my real customer emails and posting for me, with a clear idea of how many replies and posts 100 credits covers.",
+  "Seeing it hooked into my actual CRM and inbox in a demo, doing a real week of follow-ups and posts without me copy-pasting, with a clear idea of how far 100 credits goes.",
+  "Trying the free plan on my real support inbox and seeing it save me a few hours a week, with data hosted in the EU and a clear data processing agreement.",
+  "A clear data-processing page with EU hosting, a signed DPA, and a demo on my own CRM showing a co-worker doing something I can't do by copy-pasting into ChatGPT.",
+  "Seeing it handle my own customer support inbox for a couple of weeks on the free plan with almost no fixing from me, plus a clear explanation of what 100 credits actually covers.",
+  "A small business owner like me, in Belgium or France, telling me it's worked for them for a year, plus a setting where nothing goes out to a customer without me approving it first, the same way I sign off invoices on Fridays.",
+  "A demo on my own inbox where every reply waits for my approval before it goes out, plus a signed data processing agreement with EU hosting and a Belgian or Dutch client of my size I can call.",
+  "Seeing it handle a week of my real customer emails and social posts in the free trial or demo, with a clear number of hours saved and what 100 credits actually covers.",
+  "A public integrations list with native HubSpot and Make/Zapier support, plus a clear explanation of what a credit buys, and a few named Benelux/French SMB customers I could check, so I'd be willing to go from the free plan to monthly.",
+  "A public integration list showing native HubSpot and Zapier/Make connections, plus a clear credits-to-tasks breakdown, and the onboarding team setting up one real workflow, like lead follow-up from my CRM, in under an hour during the free trial.",
+  "A peer business owner in Belgium or France telling me it actually saved them hours each week, plus month-to-month billing I can cancel without a fight.",
+  "A concrete example from a business my size showing it reliably handled a specific job I currently pay my freelancer for, with a clear idea of how far 100 credits goes.",
+  "A month-long trial on our own CRM, plus references from a couple of Belgian or Dutch SMEs my size, showing it actually runs follow-ups and posts on its own and saves me real hours compared with ChatGPT.",
+  "A demo on my own tools, where it takes a real job off my plate end to end (like chasing unpaid invoices or answering support emails in our CRM) without me copy-pasting anything, with a clear idea of how many credits that uses.",
+  "Seeing it run one real job for my business end to end on the free plan, like answering my customer emails correctly without me fixing them, and knowing what 100 credits actually buys.",
+  "Seeing it handle a week of my real customer emails and social posts on the free plan, with the time it saved shown to me, plus a plain answer on what one credit buys.",
+  "A demo where I see every message waits for my approval before it goes out, plus a signed DPA with EU hosting and a couple of Belgian or French small businesses I can actually call as references.",
+  "Seeing it run on my own business in the demo: it answers real customer emails in my tone and schedules a month of Instagram and LinkedIn posts that I'd publish without editing.",
+  "A demo where their Customer Success person sets it up on my own business and shows real results in the first weeks, plus references from small businesses like mine in Belgium or France that have used it for a while.",
+  "A public list of native integrations (HubSpot, Zapier/Make, my email) plus a clear credits-per-task table, and a free trial long enough to show it replaces at least one paid tool I already have.",
+  "A demo where I see exactly what data it touches and every message it sends needs my approval first, plus references from two or three similar SMEs in Belgium or the Netherlands who've used it for six months or more, and an EU-hosted data processing agreement I can show my accountant.",
+  "Seeing it take a real chore off my plate in the first week, like answering customer emails from my own Gmail, with the onboarding done for me and a clear idea of what 100 credits actually buys.",
+  "A demo showing that nothing goes out to a customer without my approval, plus a proper DPA with EU data hosting and a reference from a similar Belgian or French SME using it for a few months.",
+  "Seeing it handle one real job for my business, like a month of social posts or answering our support inbox, at a quality I'd sign off on without rewriting it, so I could cut the freelancer's hours.",
+  "A demo on our own data with EU hosting and a signed DPA in writing, every customer-facing message needing my approval before it goes out, and a peer business in Belgium or France showing real results.",
+  "A signed DPA with EU-only hosting and no training on my data, plus a mode where nothing goes to a customer without my approval, shown to me in a demo. Then I'd try the free plan with one co-worker.",
+  "Seeing it connected to my own tools during the free demo and following up a real lead for me on its own within the first week.",
+  "A public integrations list showing native HubSpot and Zapier/Make support, plus a plain table of what one credit does (one email, one lead qualified, one ticket answered).",
+  "The Customer Success person setting it up on my real inbox and CRM during the demo, and showing me a week of real results before I pay.",
+  "A signed DPA with EU-only hosting and no training on my data, plus a demo showing the AI Marketing Manager doing real work as well as my freelancer on my own accounts.",
+  "A demo on my own Google Workspace and CRM showing it finishes real tasks with approve-before-send on anything customer-facing, plus EU hosting and a signed DPA, and a reference from a Belgian or Dutch business my size.",
+  "A colleague-owner my size showing me it actually handles our customer support or follow-ups end to end after a one-hour onboarding they do for me, with a free month to prove it.",
+  "A demo on my own data where I approve everything before it goes out, plus a reference from a Belgian or French business my size that's been using it for months without incidents and a clear DPA saying where the data is stored.",
+  "Seeing in a demo that it connects to my own inbox and CRM and sends a real follow-up to a lead without me touching it, plus a clear idea of how many tasks 100 credits covers.",
+  "A free trial on my real inbox where I approve every reply before it goes out, plus a written DPA saying the data stays in the EU.",
+  "If they set up automatic lead follow-up on my own CRM for me in under an hour, and I could see it working on real leads before paying anything.",
+  "Seeing it handle my own real customer emails for a couple of weeks on the free plan, set up by their team, with me approving every reply from my phone, and clearly fewer hours than my freelancer bills.",
+  "A signed data processing agreement with EU-only hosting and no training on my data, plus a free month on the Standard plan with a cancel-anytime monthly option so I can see real time saved before paying.",
+  "A public integrations list with real HubSpot/Make depth plus a clear credits-per-action table, and a free trial of the Standard plan long enough to see it actually run one workflow end to end better than my Make scenario does.",
+  "If the free co-worker actually cleared my support inbox for two weeks without me fixing its answers, and a Belgian or Dutch business my size told me they've been running it for a year, I'd pay monthly.",
+  "A real reference from a small business like mine in Belgium or France that has used it for months, plus a monthly plan I can cancel any time and a clear way to export my data. Then I'd try it alongside my freelancer for a month.",
+  "A demo where it follows up a real lead from my own CRM automatically, plus a signed DPA showing EU hosting and no training on my data.",
+  "A free trial where every customer-facing message waits for my approval on my phone first, plus a few Belgian or Dutch businesses my size I can actually call who use it.",
+  "A demo on my own data showing every outgoing message waits for my approval, plus a signed DPA with EU hosting and a reference from a similar Belgian or French SME.",
+  "A demo on my own Google Workspace and CRM where the AI sales co-worker updates the CRM and follows up leads on its own, with a clear idea of how far 100 credits go.",
+  "A demo where the onboarding team sets it up on my own tools for free and shows me a month of concrete results before I pay anything.",
+  "A demo showing it actually answering our customer emails and running a campaign from our own CRM well enough that I could cut back the freelancer's hours.",
+  "A list or demo showing it connected to my exact CRM and inbox, then actually sending a follow-up to a real lead without me touching it.",
+  "Seeing it run in a business like mine with every customer-facing message held for my approval first, plus a clear explanation of what a credit covers, during a free month I can cancel without hassle.",
+  "A free plan or trial where I watch it follow up a real lead from my CRM within a week, plus a plain explanation of where my data is stored (EU servers) and what one credit buys.",
+  "Seeing it actually answer my real customer emails from my phone for two weeks on the free plan, with data hosted in the EU and a clear explanation of what a credit buys.",
+  "A demo on my own data where every customer-facing message needs my approval before sending, plus a signed DPA with data hosted in the EU and a reference from a similar Belgian or French business.",
+  "If the free plan showed me one co-worker actually handling my customer emails or follow-ups end to end for a couple of weeks, saving me real hours, I'd consider paying.",
+  "Seeing it run on a business like mine for a month on the free plan or a pilot, with real output I could put next to my freelancer's invoice.",
+  "Seeing it handle a week of my real support emails and a couple of LinkedIn posts in the free trial without me rewriting them, plus a clear answer on what 100 credits actually covers.",
+  "A clear list showing my exact tools are supported, plus a plain explanation of what 100 credits actually gets me, then a free month on my own data where it saves me real hours.",
+  "The free co-worker handling a week of my real customer emails and social posts well enough that I only have to approve them, like my Friday invoices.",
+  "A demo where their Customer Success person sets it up on my own CRM and mailbox and shows me real results within a month, ideally with a reference from a similar small business in Belgium or France.",
+  "A demo with my own inbox and social accounts where it handles a week of customer emails and posts by itself and clearly saves me several hours, with the onboarding team doing the setup.",
+  "A demo where they set it up on my own business and show real results in the first weeks, plus references from small businesses like mine in Belgium or France.",
+  "A demo on my own data where the sales co-worker actually keeps my CRM updated and follows up leads without me, plus a reference from a Belgian or Dutch business my size.",
+  "Being able to approve every message before it goes out to a customer, plus seeing real Belgian or French small businesses like mine using it without problems. I might try the free plan in draft-only mode.",
+  "The Customer Success team sets it up on my real tools during the demo and shows me a month of posts and lead follow-ups it ran with no help from me, ideally with a money-back first month.",
+  "A demo where they set it up on my own CRM, show it following up a real lead, and hand me a signed DPA with EU hosting confirmed in writing.",
+  "Being able to approve every customer-facing message before it goes out, plus a real example from a small business like mine showing hours saved, with a free trial long enough to test it on my own customers.",
+  "A free trial of the full Standard plan for 14 days with enough credits to run my real support inbox, plus a clear explanation of what one credit buys.",
+  "Seeing the free co-worker actually handle a week of my support emails or social posts without me fixing them, plus a couple of Belgian or Dutch businesses my size I can call who've used it for a year.",
+  "A free trial where every customer-facing message waits for my approval before sending, plus a clear HubSpot and Zapier integration and an honest example of what 100 credits gets me in a month.",
+  "Seeing it run one real job end to end on my own CRM and inbox during the free trial, like following up my leads for a week without me fixing the output, with a clear idea of what 100 credits actually buys.",
+  "A reference from a similar Belgian or French SME using it for sales follow-up, plus a setup where the AI drafts and a human approves before anything goes to a customer.",
+  "A monthly price around 30-40 euros with no annual lock-in, plus a clear example of what 100 credits does (how many posts, emails or support replies).",
+  "A monthly price closer to 30 euros with a clear list showing it plugs into the exact tools I use, and a plain answer on what a credit buys.",
+  "Seeing it run on the free plan in draft-only mode, where nothing goes to a customer until I approve it, and it actually saving me hours in the first month.",
+  "If their onboarding team set it up for me in one call and I saw it answering my real customer emails and drafting my posts in my voice within the first week.",
+  "A free trial on my real tools that visibly saves me a few hours in the first week, plus a clear DPA with EU hosting and a reference from a Belgian or Dutch SME like mine.",
+  "A demo on my own CRM where the AI follows up a real lead, with an approval step before anything goes to a customer, plus a written answer on where the data is hosted (EU) and a plain explanation of what a credit covers.",
+  "A published DPA with EU data hosting and a named sub-processor list, a real integration list including HubSpot and Make/Zapier, and a clear explanation of what a credit buys, so a free trial could prove it saves me hours in a week.",
+  "A demo on my own tools showing every AI reply goes to me for approval first, plus a clear statement of where my data is stored in the EU and a list of the exact integrations.",
+  "Seeing it actually keep my CRM updated and follow up with leads by itself for a couple of weeks on the free plan, with a clear idea of what 100 credits gets me.",
+  "A public integrations list with native HubSpot and Make support, plus a clear breakdown of what one credit does, showing it saves me hours my current stack doesn't.",
+  "A demo on my own data showing it actually doing a job end to end, like answering our support emails or chasing leads, with the setup done for me in an afternoon.",
+  "A demo on my own Google Workspace and CRM where it does a real job end to end, like following up stale leads and drafting the replies, and saves me hours in the first week without me babysitting it.",
+  "Seeing it actually update our CRM and follow up leads from Gmail on its own during a demo with our data, so it saves me hours ChatGPT can't, with a clear idea of how far the credits go.",
+  "A public integrations list with native HubSpot and Zapier/Make support, plus a plain example of how many lead follow-ups 100 credits covers, proven by the free plan catching a lead I would have lost.",
+  "A free trial where every customer-facing message needs my approval before it goes out, plus a published list of native integrations (HubSpot, Zapier/Make) and what a credit actually buys.",
+  "A demo on my own CRM and mailbox where the Sales or Support co-worker clears a real backlog without me editing everything, plus a clear answer on what one credit buys.",
+  "A small business like mine, ideally Belgian or French, showing real work the AI did for a month, plus a plain explanation of what a credit buys, so I could compare it euro for euro with my freelancer's invoice.",
+  "Seeing it actually run a sales follow-up or support inbox in my own CRM on the free plan for a month, saving me real hours each week, with a clear explanation of what 100 credits gets me.",
+  "A native HubSpot and Zapier integration that I can see working in a 15-minute demo, auto-following up every new lead from day one, with clear numbers on what 100 credits actually covers.",
+  "A month-long trial where it runs one real campaign and handles our support inbox side by side with my agency, with results I can compare directly.",
+  "Their onboarding team setting it up for me in under an hour and showing it answering my real customer emails in my own tone during the demo.",
+  "Seeing it work on my real inbox and CRM for two weeks on the free plan and actually saving me hours, without me having to fix every answer.",
+  "A public integrations page showing a native two-way HubSpot connector plus a Make/Zapier app, and a plain explanation of what a credit equals, so the free trial can prove it saves me real hours.",
+  "A published integration list with a native HubSpot and Zapier/Make connector, plus a clear 'one credit = X actions' table, so I can see in a 15-minute demo that it saves me hours a week."
+ ],
+ "purchases_first_month_per_buyer": 1.0,
+ "price_answers": 100
+}

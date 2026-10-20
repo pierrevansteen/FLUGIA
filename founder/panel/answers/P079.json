@@ -1,0 +1,13 @@
+{
+  "id": "P079",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'm not letting an AI answer my customers or send sales emails in my name when one wrong reply could cost me a client I spent years earning. And 99 euros a month for something I'd have to babysit is exactly the kind of subscription I end up cancelling.",
+  "objection": "AI talking to my customers could damage my reputation, and I don't know what it will say when I'm not watching.",
+  "would_change_my_mind": "Seeing it run on the free plan in draft-only mode, where nothing goes to a customer until I approve it, and it actually saving me hours in the first month.",
+  "price_too_cheap": 10,
+  "price_cheap": 25,
+  "price_expensive": 59,
+  "price_too_expensive": 99
+}

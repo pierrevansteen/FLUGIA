@@ -1,0 +1,13 @@
+{
+  "id": "P020",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already pay for ChatGPT and use it every day; copy-pasting is a bit clunky but it works. 'AI co-workers' sounds like a rebrand of what I have, and I don't see what I'd get for another 59 to 99 euros a month beyond a nicer wrapper. I might poke at the free plan, but I wouldn't pay this month.",
+  "objection": "'CRM, Google Workspace, Microsoft 365...' is vague. Does it actually plug into my accounting and invoicing tools and the CRM we really use, or just the big names? And what does a 'credit' get me? 100 a month could be gone in a week.",
+  "would_change_my_mind": "A demo on my own tools, where it takes a real job off my plate end to end (like chasing unpaid invoices or answering support emails in our CRM) without me copy-pasting anything, with a clear idea of how many credits that uses.",
+  "price_too_cheap": 10,
+  "price_cheap": 30,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}

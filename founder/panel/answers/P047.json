@@ -1,0 +1,13 @@
+{
+  "id": "P047",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Next to what I pay my freelancer, 59 to 99 euros a month is cheap. But I saw one LinkedIn ad, I've never heard of FLUGIA, and I'm not handing my CRM, my inbox and my customers to an unknown startup on the strength of that. At most I'd poke at the free plan, and I wouldn't pay this month.",
+  "objection": "Will FLUGIA still exist in two years, and if it disappears what happens to my data and the automations I built on it? My freelancer is a real person I can call. 'AI co-workers' running 24/7 on my customers with nobody watching worries me.",
+  "would_change_my_mind": "A real reference from a small business like mine in Belgium or France that has used it for months, plus a monthly plan I can cancel any time and a clear way to export my data. Then I'd try it alongside my freelancer for a month.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 99,
+  "price_too_expensive": 200
+}

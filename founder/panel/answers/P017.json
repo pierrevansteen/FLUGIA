@@ -1,0 +1,13 @@
+{
+  "id": "P017",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I've never heard of FLUGIA and I'm not handing my CRM and customer data to a company that might not exist in two years, off the back of one LinkedIn ad. I might poke at the free plan, but I wouldn't pay this month.",
+  "objection": "Who is FLUGIA, will they still be around in two years, and what is a 'credit' actually worth? 100 credits a month means nothing to me until I know how far it goes before I'm paying for more.",
+  "would_change_my_mind": "A peer business owner in Belgium or France telling me it actually saved them hours each week, plus month-to-month billing I can cancel without a fight.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 129
+}

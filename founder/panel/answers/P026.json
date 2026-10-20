@@ -1,0 +1,13 @@
+{
+  "id": "P026",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already pay for ChatGPT and have Zapier and my CRM wired together, so I'd poke at the free plan out of curiosity, but I don't see what paying 59-99 € a month adds over what I've already built. At my income that's real money for something I can't yet compare with my current stack.",
+  "objection": "I don't know what a 'FLUGIA credit' actually buys or which integrations really exist beyond 'CRM, Google Workspace, Microsoft 365...'. If 100 credits runs out in a week, it's just another subscription sitting on top of ChatGPT and Zapier.",
+  "would_change_my_mind": "A public list of native integrations (HubSpot, Zapier/Make, my email) plus a clear credits-per-task table, and a free trial long enough to show it replaces at least one paid tool I already have.",
+  "price_too_cheap": 10,
+  "price_cheap": 25,
+  "price_expensive": 59,
+  "price_too_expensive": 99
+}

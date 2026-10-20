@@ -1,0 +1,13 @@
+{
+  "id": "P092",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "quality",
+  "reason": "I already pay for ChatGPT and use it every day. Nothing here shows me these co-workers actually finish the work in my CRM and inbox instead of handing me more drafts to fix, so I'm not adding another subscription on a promise.",
+  "objection": "Will it really do the work, or just give me drafts I still have to fix? And what does 100 credits a month actually get me? I can't tell if that's a week of use or a day.",
+  "would_change_my_mind": "A demo on my own CRM and mailbox where the Sales or Support co-worker clears a real backlog without me editing everything, plus a clear answer on what one credit buys.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 99,
+  "price_too_expensive": 180
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P035",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "The price is actually on the page and 59 € a month isn't crazy, but I'd book the free demo, maybe try the free plan, and not pay until I see it answering my own customer emails properly. 'AI co-workers' sounds great until one sends a wrong reply to a client.",
+  "objection": "I don't believe it will learn my business well enough to act without me checking everything, and if I have to check everything it saves me nothing. Also I don't know what 100 credits actually gets me.",
+  "would_change_my_mind": "The Customer Success person setting it up on my real inbox and CRM during the demo, and showing me a week of real results before I pay.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 129
+}

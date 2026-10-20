@@ -1,0 +1,13 @@
+{
+  "id": "P082",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "The lost lead hurts, and an AI Sales Manager that follows up sounds like what I need. But I won't pay for something that writes to my customers until I've seen it actually do the follow-up properly and not just hand me drafts. At most I'd try the free plan or book the demo first.",
+  "objection": "An AI sending the wrong thing to a customer in my name, and not knowing exactly where my customer data goes. 'GDPR-compliant' on a landing page is not proof, and I have no idea what 100 credits actually buys me.",
+  "would_change_my_mind": "A demo on my own CRM where the AI follows up a real lead, with an approval step before anything goes to a customer, plus a written answer on where the data is hosted (EU) and a plain explanation of what a credit covers.",
+  "price_too_cheap": 15,
+  "price_cheap": 49,
+  "price_expensive": 99,
+  "price_too_expensive": 180
+}

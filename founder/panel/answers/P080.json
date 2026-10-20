@@ -1,0 +1,13 @@
+{
+  "id": "P080",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "convenience",
+  "reason": "If it really gave me my evenings back I'd pay 99 € without blinking, but a LinkedIn ad saying 'AI co-workers' doesn't show me that. At most I'd poke at the free plan one night, and I'd probably never get around to setting it up properly.",
+  "objection": "I don't have time to set it up and learn another tool, and I'm not sure 'connect your tools and build a knowledge base' is something I can do myself at 11pm after answering customer emails.",
+  "would_change_my_mind": "If their onboarding team set it up for me in one call and I saw it answering my real customer emails and drafting my posts in my voice within the first week.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 99,
+  "price_too_expensive": 150
+}

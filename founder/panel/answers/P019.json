@@ -1,0 +1,13 @@
+{
+  "id": "P019",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I already pay for ChatGPT and get most of this done by copy-pasting into LinkedIn and our CRM. I've never heard of FLUGIA and I'm not wiring our CRM and Google Workspace into a company that might not exist in two years, so maybe I'd poke at the free plan but I'm not paying.",
+  "objection": "Who is FLUGIA and will they still be around in two years? If I spend weeks feeding them our knowledge base and connecting our tools and they fold, I've wasted the time and our data sits somewhere I can't control. And I still don't see what it does that my ChatGPT subscription doesn't.",
+  "would_change_my_mind": "A month-long trial on our own CRM, plus references from a couple of Belgian or Dutch SMEs my size, showing it actually runs follow-ups and posts on its own and saves me real hours compared with ChatGPT.",
+  "price_too_cheap": 15,
+  "price_cheap": 35,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}

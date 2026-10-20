@@ -1,0 +1,13 @@
+{
+  "id": "P014",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "99 euros a month is nothing if it really takes the night-time emails and posts off my plate, but 'AI co-workers' is a big promise and I've paid for tools that just gave me one more thing to set up. This month I'd try the free plan or book the demo, I wouldn't pay yet.",
+  "objection": "Will it actually answer my customers and post in my voice without me checking everything at 11pm, or will I end up babysitting it and fixing its mistakes? And what does a 'credit' get me, will 100 run out in a week?",
+  "would_change_my_mind": "Seeing it handle a week of my real customer emails and social posts in the free trial or demo, with a clear number of hours saved and what 100 credits actually covers.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 149,
+  "price_too_expensive": 299
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P068",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'm not letting an AI answer my customers or post for me when I can't see what it will say first. And on 32k a year, 59 to 99 euros a month is real money for something I'm not sure I'd trust.",
+  "objection": "AI talking to my customers could damage my reputation. One wrong answer or a made-up promise and I lose a client, and 'GDPR-compliant' on a website isn't proof of anything.",
+  "would_change_my_mind": "Being able to approve every message before it goes out to a customer, plus seeing real Belgian or French small businesses like mine using it without problems. I might try the free plan in draft-only mode.",
+  "price_too_cheap": 10,
+  "price_cheap": 25,
+  "price_expensive": 49,
+  "price_too_expensive": 79
+}

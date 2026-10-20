@@ -1,0 +1,13 @@
+{
+  "id": "P091",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I might poke at the free plan to see which integrations it really has, but I'm not paying 99 a month to let an AI answer my customers when one wrong reply can cost me a client I spent years winning. 'Connects to your CRM' with a '...' tells me nothing about whether it plays nicely with my HubSpot and Zapier setup.",
+  "objection": "An AI talking to my customers unsupervised could make promises or say something off-brand and damage my reputation, and I can't see how much control I keep over what it sends.",
+  "would_change_my_mind": "A free trial where every customer-facing message needs my approval before it goes out, plus a published list of native integrations (HubSpot, Zapier/Make) and what a credit actually buys.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 149
+}

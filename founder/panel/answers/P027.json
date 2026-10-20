@@ -1,0 +1,13 @@
+{
+  "id": "P027",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I've never heard of FLUGIA, and I'm not letting an unknown company's AI talk to my customers or dig through my CRM and mailbox on the strength of a 'GDPR-compliant' line. I might poke at the free plan on a quiet Friday, but I'm not paying for this right now.",
+  "objection": "Who are these people, will they still exist in two years, and where does my customer data actually go? If the AI support manager tells a customer something wrong, that's my reputation, not theirs.",
+  "would_change_my_mind": "A demo where I see exactly what data it touches and every message it sends needs my approval first, plus references from two or three similar SMEs in Belgium or the Netherlands who've used it for six months or more, and an EU-hosted data processing agreement I can show my accountant.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 99,
+  "price_too_expensive": 180
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P073",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'd love to stop answering emails at midnight, and 59 euros is nothing if it really gives me hours back, but I'm not putting my customer emails and CRM in the hands of a company I've never heard of. At most I'd poke at the free plan, and I wouldn't pay for it this month.",
+  "objection": "I've never heard of FLUGIA. If they're gone in two years, I've wired my business into their tool for nothing, and an AI answering my customers badly costs me more than the hours it saves.",
+  "would_change_my_mind": "Seeing the free co-worker actually handle a week of my support emails or social posts without me fixing them, plus a couple of Belgian or Dutch businesses my size I can call who've used it for a year.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 149,
+  "price_too_expensive": 300
+}

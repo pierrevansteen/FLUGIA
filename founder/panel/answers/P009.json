@@ -1,0 +1,13 @@
+{
+  "id": "P009",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already pay for ChatGPT and it handles my emails and posts when I paste things in. I don't see what 99 euros a month of 'AI co-workers' adds for a business my size, and 100 credits sounds like it could run out fast.",
+  "objection": "Letting a platform plug into my mailbox and customer files: 'GDPR-compliant' is one line on a website. Where is the data stored, who sees it, and what does a credit actually buy me?",
+  "would_change_my_mind": "Trying the free plan on my real support inbox and seeing it save me a few hours a week, with data hosted in the EU and a clear data processing agreement.",
+  "price_too_cheap": 9,
+  "price_cheap": 25,
+  "price_expensive": 49,
+  "price_too_expensive": 79
+}

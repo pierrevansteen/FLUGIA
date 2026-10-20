@@ -1,0 +1,13 @@
+{
+  "id": "P045",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I'd poke at the free plan out of curiosity, but I already glue my CRM together with Make and draft posts in ChatGPT. Nothing here tells me what it does that my current stack doesn't, so I'm not adding another 59-99 € a month.",
+  "objection": "It's vague on integrations and on what a 'credit' actually buys. 100 credits a month could be gone in a week, and 'connects to your CRM' means nothing until I see the exact HubSpot triggers and actions. Right now it looks like a ChatGPT wrapper with a nice org chart.",
+  "would_change_my_mind": "A public integrations list with real HubSpot/Make depth plus a clear credits-per-action table, and a free trial of the Standard plan long enough to see it actually run one workflow end to end better than my Make scenario does.",
+  "price_too_cheap": 10,
+  "price_cheap": 25,
+  "price_expensive": 59,
+  "price_too_expensive": 99
+}

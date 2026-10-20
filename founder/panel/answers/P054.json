@@ -1,0 +1,13 @@
+{
+  "id": "P054",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Losing that lead last month hurt, and 59 to 99 euros is nothing if it really follows up for me. But 'CRM, Google Workspace, Microsoft 365...' with three dots doesn't tell me it works with what I actually use, so this month I'd poke at the free plan at most, not pay.",
+  "objection": "It probably doesn't plug into my specific tools, and then I spend my evenings setting it up and copy-pasting instead of getting hours back. And I have no idea what 100 'credits' actually gets me.",
+  "would_change_my_mind": "A list or demo showing it connected to my exact CRM and inbox, then actually sending a follow-up to a real lead without me touching it.",
+  "price_too_cheap": 15,
+  "price_cheap": 40,
+  "price_expensive": 150,
+  "price_too_expensive": 300
+}

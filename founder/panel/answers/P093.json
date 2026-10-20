@@ -1,0 +1,13 @@
+{
+  "id": "P093",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "The 59 euros is cheaper than what I pay my freelancer, but my freelancer actually knows my customers and I can call her when something goes wrong. One LinkedIn ad isn't enough for me to let an AI talk to my clients, so at most I'd poke at the free plan and keep paying her.",
+  "objection": "I don't know what 100 credits actually gets me or what the AI does when I'm not watching, and if it sends a bad email or gives a customer a wrong answer, I'm the one cleaning up the mess.",
+  "would_change_my_mind": "A small business like mine, ideally Belgian or French, showing real work the AI did for a month, plus a plain explanation of what a credit buys, so I could compare it euro for euro with my freelancer's invoice.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 99,
+  "price_too_expensive": 200
+}

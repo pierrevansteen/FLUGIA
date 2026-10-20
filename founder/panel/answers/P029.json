@@ -1,0 +1,13 @@
+{
+  "id": "P029",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "The price is actually reasonable, which surprised me, but I'm not letting an AI answer my customers or touch our CRM on the strength of a landing page that says 'GDPR-compliant' in one line. At most I'd book the demo or poke at the free plan, not pay this month.",
+  "objection": "What happens when it gets something wrong in front of a customer, and where exactly does our customer data go: which servers, which AI model, who can see it? 'Data access controlled by you' doesn't tell me if I can approve every message before it's sent.",
+  "would_change_my_mind": "A demo showing that nothing goes out to a customer without my approval, plus a proper DPA with EU data hosting and a reference from a similar Belgian or French SME using it for a few months.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 99,
+  "price_too_expensive": 180
+}

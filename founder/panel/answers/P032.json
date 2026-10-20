@@ -1,0 +1,13 @@
+{
+  "id": "P032",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "An AI talking to my customers and touching my CRM and inbox, 24/7, is exactly what I'm nervous about. One line saying 'GDPR-compliant' isn't proof, and I wouldn't hand over customer data to a company I've never heard of on that basis.",
+  "objection": "Where is my customer data stored, who can see it, is it used to train models, and what happens when the AI says something wrong to a client in my name? I need to approve what it sends, not find out afterwards.",
+  "would_change_my_mind": "A signed DPA with EU-only hosting and no training on my data, plus a mode where nothing goes to a customer without my approval, shown to me in a demo. Then I'd try the free plan with one co-worker.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 129
+}

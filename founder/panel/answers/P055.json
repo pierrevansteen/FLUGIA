@@ -1,0 +1,13 @@
+{
+  "id": "P055",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'm not letting an AI answer my customers on its own when I've spent twenty years building those relationships. And 99 euros a month for something I'd have to babysit, on top of a CRM nobody even updates, isn't going to survive my monthly subscription review.",
+  "objection": "One wrong or tone-deaf reply from the AI to a good client and I lose more than a year of subscription fees. I don't know what 100 credits actually buys me either, so I can't tell what the real monthly cost will be.",
+  "would_change_my_mind": "Seeing it run in a business like mine with every customer-facing message held for my approval first, plus a clear explanation of what a credit covers, during a free month I can cancel without hassle.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 129
+}

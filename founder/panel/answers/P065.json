@@ -1,0 +1,13 @@
+{
+  "id": "P065",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'd probably poke at the free plan some evening, but I won't pay 99 euros a month until I see it actually answer my customer emails and post for me without me redoing everything. I already pay for ChatGPT and our CRM is a mess, so I doubt it would learn our business any better than what I have.",
+  "objection": "I already pay for ChatGPT. What does this do that it doesn't, and will it really work off a CRM nobody updates, or will it just make me another tool to babysit at night?",
+  "would_change_my_mind": "A demo with my own inbox and social accounts where it handles a week of customer emails and posts by itself and clearly saves me several hours, with the onboarding team doing the setup.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P096",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "quality",
+  "reason": "59 € a month is nothing next to what I pay my agency, which is exactly why I doubt it does the same job. I might poke at the free plan, but I won't pay for it or drop my freelancer until I see the output is as good as theirs.",
+  "objection": "My agency knows my market and produces work I can approve on a Friday without rewriting it. I don't believe an AI co-worker fed a knowledge base gets that right, and I don't want to end up babysitting it myself.",
+  "would_change_my_mind": "A month-long trial where it runs one real campaign and handles our support inbox side by side with my agency, with results I can compare directly.",
+  "price_too_cheap": 15,
+  "price_cheap": 49,
+  "price_expensive": 199,
+  "price_too_expensive": 500
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P013",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I already pay for ChatGPT and I'm not letting an AI answer my customers or touch my CRM on its own because a website says 'GDPR-compliant'. At most I'd poke at the free plan, but I wouldn't pay this month.",
+  "objection": "If the AI support manager tells a customer something wrong, it's my name on it, and I don't know where my customer data goes, who processes it or what servers it sits on. 'Credits' also tells me nothing about what a month will really cost.",
+  "would_change_my_mind": "A demo on my own inbox where every reply waits for my approval before it goes out, plus a signed data processing agreement with EU hosting and a Belgian or Dutch client of my size I can call.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}

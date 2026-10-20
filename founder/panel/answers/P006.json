@@ -1,0 +1,13 @@
+{
+  "id": "P006",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already pay for ChatGPT and get most of this by copy-pasting into my tools. A LinkedIn ad saying 'AI co-workers' doesn't show me what it does on a Tuesday that my current subscription doesn't, so I'm not adding another 99 a month and another tool to learn.",
+  "objection": "I don't have time to set up and learn another platform, and 100 credits a month sounds like it could run out fast without me knowing what a credit actually buys.",
+  "would_change_my_mind": "Seeing it actually running in my own CRM and inbox within an hour, with the onboarding team doing the setup, and a concrete example of hours saved per week compared with just using ChatGPT.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}

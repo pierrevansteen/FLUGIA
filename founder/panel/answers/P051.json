@@ -1,0 +1,13 @@
+{
+  "id": "P051",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already pay for ChatGPT and get most of this by copy-pasting, so I don't see what three 'co-workers' add until I see one actually working inside my Google Workspace and that CRM nobody updates. I might open the free plan out of curiosity, but I'm not paying 99 € a month on a landing page promise.",
+  "objection": "'Connects to the tools you already use' is what everyone says, and then it doesn't connect to the specific ones I use, or only half-works. I also have no idea what 100 credits actually buys me in a month.",
+  "would_change_my_mind": "A demo on my own Google Workspace and CRM where the AI sales co-worker updates the CRM and follows up leads on its own, with a clear idea of how far 100 credits go.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}

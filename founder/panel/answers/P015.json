@@ -1,0 +1,13 @@
+{
+  "id": "P015",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'd maybe poke at the free plan to see what it actually connects to, but I'm not paying for a company I'd never heard of until a LinkedIn ad this week. I've already got Zapier and HubSpot doing a lot of this, and 'CRM, Google Workspace, Microsoft 365...' doesn't tell me which integrations are real or how deep they go.",
+  "objection": "Who is FLUGIA, and will they still be around in two years? I'd be wiring my CRM and customer data into it, and if they fold or the 'AI co-workers' turn out to be thin wrappers I've wasted the setup time. On top of that, 100 credits a month means nothing to me until I know what one credit actually buys.",
+  "would_change_my_mind": "A public integrations list with native HubSpot and Make/Zapier support, plus a clear explanation of what a credit buys, and a few named Benelux/French SMB customers I could check, so I'd be willing to go from the free plan to monthly.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 99,
+  "price_too_expensive": 180
+}

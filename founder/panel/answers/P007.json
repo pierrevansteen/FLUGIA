@@ -1,0 +1,13 @@
+{
+  "id": "P007",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'd love to get my evenings back, but 'connects to the tools you already use' with a CRM and Google example doesn't tell me it works with what I actually run, and at 59 to 99 euros a month on my income I can't pay to find out. At most I'd poke at the free plan one night and probably never come back to it.",
+  "objection": "It won't plug into my specific tools, and I'll end up spending more nights setting it up and checking its work than it saves me. Plus 'credits' means I have no idea what 100 a month actually gets me.",
+  "would_change_my_mind": "Seeing it working on my own setup in the free demo, answering my real customer emails and posting for me, with a clear idea of how many replies and posts 100 credits covers.",
+  "price_too_cheap": 9,
+  "price_cheap": 25,
+  "price_expensive": 49,
+  "price_too_expensive": 89
+}

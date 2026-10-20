@@ -1,0 +1,13 @@
+{
+  "id": "P001",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I've never heard of FLUGIA and I'm not handing my CRM, my emails and my customers to an unknown company for 99 € a month, and 59 € only if I lock in a full year. I might poke at the free plan, but 50 credits total tells me nothing about whether it actually saves me time.",
+  "objection": "Will this company still exist in two years, and if it disappears what happens to my customer data and all the setup I did? Also, I have no idea what a 'credit' is or how fast 100 of them run out.",
+  "would_change_my_mind": "A monthly plan I can cancel anytime at around 39-49 €, with a clear explanation of what a credit buys, plus a reference from a small business near me showing hours actually saved.",
+  "price_too_cheap": 10,
+  "price_cheap": 29,
+  "price_expensive": 59,
+  "price_too_expensive": 99
+}

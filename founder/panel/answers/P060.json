@@ -1,0 +1,13 @@
+{
+  "id": "P060",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "99 euros is cheap next to what I pay my freelancer, but I'm paying her for results I can see, not for 'AI co-workers' I'd have to set up and babysit. At most I'd poke at the free plan, I wouldn't pay this month.",
+  "objection": "I don't believe an AI 'Marketing Manager' produces work as good as my freelancer's without me spending my evenings checking and fixing it, and I have no idea what 100 credits actually gets me.",
+  "would_change_my_mind": "Seeing it run on a business like mine for a month on the free plan or a pilot, with real output I could put next to my freelancer's invoice.",
+  "price_too_cheap": 15,
+  "price_cheap": 49,
+  "price_expensive": 150,
+  "price_too_expensive": 300
+}

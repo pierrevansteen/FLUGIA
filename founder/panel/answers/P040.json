@@ -1,0 +1,13 @@
+{
+  "id": "P040",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'd love something that follows up leads while I sleep, but 'connects to your CRM, Google, Microsoft...' doesn't tell me it works with the exact tools I run. I'd sign up for the free plan and poke at it, but I'm not paying 99 a month until I see it actually doing my follow-ups.",
+  "objection": "It probably doesn't plug into the specific tools I use, and then I'm the one spending nights wiring it up instead of getting hours back. 'Credits' also worries me: I don't know how far 100 a month goes.",
+  "would_change_my_mind": "Seeing in a demo that it connects to my own inbox and CRM and sends a real follow-up to a lead without me touching it, plus a clear idea of how many tasks 100 credits covers.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 130
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P039",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "I'm not letting an AI talk to my customers or send sales emails on my behalf because a landing page says 'GDPR-compliant'. Maybe I'd poke at the free plan, but I wouldn't pay 99 a month on a first look.",
+  "objection": "Will it really do the work, or will it make mistakes in front of my customers and leave me with drafts I still have to check and fix? And where does my customer data go once it's connected to my CRM and mailbox?",
+  "would_change_my_mind": "A demo on my own data where I approve everything before it goes out, plus a reference from a Belgian or French business my size that's been using it for months without incidents and a clear DPA saying where the data is stored.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}

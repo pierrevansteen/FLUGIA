@@ -1,0 +1,13 @@
+{
+  "id": "P018",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "I already pay for ChatGPT and a freelancer handles my marketing; an ad full of 'AI co-workers' doesn't show me what this does that those two don't. I might try the free plan out of curiosity, but I wouldn't pay 99 € a month on the strength of a LinkedIn ad.",
+  "objection": "What does this actually do that ChatGPT plus my freelancer don't, and what is a 'credit'? 100 credits a month means nothing to me, so I can't tell if it would replace any of my freelancer's hours or just be one more subscription.",
+  "would_change_my_mind": "A concrete example from a business my size showing it reliably handled a specific job I currently pay my freelancer for, with a clear idea of how far 100 credits goes.",
+  "price_too_cheap": 15,
+  "price_cheap": 39,
+  "price_expensive": 79,
+  "price_too_expensive": 150
+}
