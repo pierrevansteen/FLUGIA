@@ -3,3 +3,5 @@ snapshots/
 renders/
 .hyperframes/
 .thumbnails/
+__pycache__/
+*.pyc
