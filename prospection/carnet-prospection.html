@@ -1,0 +1,707 @@
+<title>Carnet de prospection</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout : bandeau de quotas en tête, puis liste de travail à gauche et panneau d'outils à droite (empilés sur mobile). */
+:root {
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --sunk: #eaeef5;
+  --line: #d9dfea;
+  --fg: #172033;
+  --muted: #5d6780;
+  --accent: #2f55d4;
+  --accent-soft: #e3e9fb;
+  --on-accent: #ffffff;
+  --ok: #1f8a5b;
+  --ok-soft: #dff3e9;
+  --warn: #b86a00;
+  --warn-soft: #fbeed9;
+  --bad: #c2373a;
+  --bad-soft: #f9e1e1;
+  --f-display: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1420; --surface: #171e2d; --sunk: #1f2738; --line: #2b3549;
+    --fg: #e6eaf3; --muted: #97a1b8; --accent: #7d9bff; --accent-soft: #233056; --on-accent: #0f1420;
+    --ok: #4fc58f; --ok-soft: #173326; --warn: #f0a640; --warn-soft: #3a2c15; --bad: #ff7b7e; --bad-soft: #3d1c1e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1420; --surface: #171e2d; --sunk: #1f2738; --line: #2b3549;
+  --fg: #e6eaf3; --muted: #97a1b8; --accent: #7d9bff; --accent-soft: #233056; --on-accent: #0f1420;
+  --ok: #4fc58f; --ok-soft: #173326; --warn: #f0a640; --warn-soft: #3a2c15; --bad: #ff7b7e; --bad-soft: #3d1c1e;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h1 { font-size: 1.6rem; font-weight: 800; }
+h2 { font-size: 1.02rem; font-weight: 700; }
+.sub { color: var(--muted); margin: 4px 0 0; max-width: 65ch; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+header.top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px; }
+.banner { padding: 10px 14px; border-radius: var(--r); background: var(--warn-soft); color: var(--fg); border: 1px solid var(--line); }
+
+/* Quotas */
+.quota { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.q { background: var(--surface); padding: 14px 16px; display: grid; gap: 6px; min-width: 0; }
+.q .val { font-family: var(--f-mono); font-size: 1.35rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.q .val small { font-size: 0.85rem; color: var(--muted); }
+.meter { height: 6px; border-radius: 3px; background: var(--sunk); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+.meter i.warn { background: var(--warn); }
+.meter i.full { background: var(--bad); }
+.q .hint { font-size: 0.78rem; color: var(--muted); }
+.q.next .val.ready { color: var(--ok); }
+.q.next .val.wait { color: var(--warn); }
+
+/* Main grid */
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+.tabs { display: flex; gap: 4px; padding: 6px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tab { border: 0; background: transparent; color: var(--muted); font: 600 0.88rem var(--f-body); padding: 8px 12px; border-radius: 7px; cursor: pointer; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+.tab:hover { background: var(--sunk); color: var(--fg); }
+.tab[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
+.tab .n { font-family: var(--f-mono); font-size: 0.75rem; background: var(--sunk); color: var(--muted); padding: 1px 7px; border-radius: 99px; }
+.tab[aria-selected="true"] .n { background: var(--accent); color: var(--on-accent); }
+.tab .n.alert { background: var(--warn); color: var(--on-accent); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.filters > * { flex: 1 1 160px; min-width: 0; }
+.tabnote { padding: 10px 14px; color: var(--muted); font-size: 0.85rem; border-bottom: 1px solid var(--line); }
+
+input[type=text], input[type=number], select, textarea {
+  font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%;
+}
+textarea { font-family: var(--f-mono); font-size: 0.85rem; resize: vertical; min-height: 96px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+label { display: grid; gap: 4px; font-size: 0.82rem; color: var(--muted); font-weight: 500; }
+
+.btn { font: 600 0.84rem var(--f-body); border-radius: 8px; padding: 7px 12px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.btn:hover:not(:disabled) { background: var(--sunk); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.08); background: var(--accent); }
+.btn.good { border-color: var(--ok); color: var(--ok); }
+.btn.danger { border-color: var(--bad); color: var(--bad); }
+.btn.ghost { border-color: transparent; color: var(--muted); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Rows */
+.list { display: grid; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.who { min-width: 0; display: grid; gap: 2px; }
+.handle { font-family: var(--f-mono); font-weight: 500; font-size: 0.95rem; overflow-wrap: anywhere; }
+.handle a { color: var(--fg); text-decoration: none; }
+.handle a:hover { color: var(--accent); text-decoration: underline; }
+.meta { font-size: 0.8rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.chip { font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--sunk); color: var(--muted); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.bad { background: var(--bad-soft); color: var(--bad); }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.empty { padding: 36px 20px; text-align: center; color: var(--muted); display: grid; gap: 8px; justify-items: center; }
+.empty strong { color: var(--fg); font-family: var(--f-display); font-size: 1.05rem; }
+.empty ol { text-align: left; margin: 6px 0 0; padding-left: 20px; display: grid; gap: 4px; max-width: 46ch; }
+.more { padding: 12px; text-align: center; }
+
+/* Side */
+.side { display: grid; gap: 16px; }
+.card { padding: 16px; display: grid; gap: 12px; }
+.card p { margin: 0; color: var(--muted); font-size: 0.85rem; }
+.inline { display: flex; gap: 8px; }
+.inline > input { flex: 1; min-width: 0; }
+.srclist { display: grid; gap: 0; }
+.src { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.src:first-child { border-top: 0; }
+.src .rate { font-family: var(--f-mono); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+.src .stats { grid-column: 1 / -1; font-size: 0.76rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.settings { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.msg { font-size: 0.82rem; min-height: 1.2em; color: var(--muted); }
+.msg.ok { color: var(--ok); }
+.msg.bad { color: var(--bad); }
+details.rules summary { cursor: pointer; font-weight: 600; font-family: var(--f-display); }
+details.rules ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 0.84rem; display: grid; gap: 4px; }
+
+@media (max-width: 900px) {
+  .main { grid-template-columns: minmax(0, 1fr); }
+  .quota { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .row { grid-template-columns: minmax(0, 1fr); }
+  .actions { justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) { .meter i { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Instagram · prospection manuelle</div>
+      <h1>Carnet de prospection</h1>
+      <p class="sub">Prépare ta liste, ouvre chaque profil et clique toi-même sur « S'abonner » dans Instagram, puis note-le ici. Le carnet compte tes actions, impose un rythme prudent et te rappelle qui ne t'a pas suivi en retour.</p>
+    </div>
+    <button class="btn" id="exportBtn" type="button">Exporter en CSV</button>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <section class="quota" aria-label="Quotas du jour">
+    <div class="q">
+      <span class="eyebrow">Abonnements aujourd'hui</span>
+      <span class="val" id="qDay">0 <small>/ 20</small></span>
+      <div class="meter"><i id="mDay"></i></div>
+    </div>
+    <div class="q">
+      <span class="eyebrow">Sur la dernière heure</span>
+      <span class="val" id="qHour">0 <small>/ 8</small></span>
+      <div class="meter"><i id="mHour"></i></div>
+    </div>
+    <div class="q">
+      <span class="eyebrow">Désabonnements aujourd'hui</span>
+      <span class="val" id="qUnf">0 <small>/ 20</small></span>
+      <div class="meter"><i id="mUnf"></i></div>
+    </div>
+    <div class="q next">
+      <span class="eyebrow">Prochaine action</span>
+      <span class="val ready" id="qNext">Maintenant</span>
+      <span class="hint" id="qNextHint">Délai minimum entre deux actions : 90 s</span>
+    </div>
+  </section>
+
+  <div class="main">
+    <section class="panel" aria-label="Liste de travail">
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div class="tabnote" id="tabnote"></div>
+      <div class="filters">
+        <input type="text" id="search" placeholder="Rechercher un pseudo" aria-label="Rechercher un pseudo">
+        <select id="srcFilter" aria-label="Filtrer par compte source"><option value="">Tous les comptes sources</option></select>
+      </div>
+      <div class="list" id="list"></div>
+    </section>
+
+    <aside class="side">
+      <section class="panel card">
+        <h2>Ajouter des profils</h2>
+        <p>Colle des pseudos repérés dans les abonnés d'un compte de ta niche : un par ligne, avec ou sans @, ou des liens instagram.com. Les doublons sont ignorés.</p>
+        <label>Compte source
+          <select id="addSource"><option value="">(aucun)</option></select>
+        </label>
+        <textarea id="addText" placeholder="@exemple_un&#10;exemple.deux&#10;https://www.instagram.com/exemple_trois/"></textarea>
+        <button class="btn primary" id="addBtn" type="button">Ajouter à la liste</button>
+        <div class="msg" id="addMsg" role="status"></div>
+      </section>
+
+      <section class="panel card">
+        <h2>Ils m'ont suivi</h2>
+        <p>Ouvre la liste de tes nouveaux abonnés dans Instagram et colle leurs pseudos ici : ceux que tu suivais passent en « suivi en retour ».</p>
+        <textarea id="backText" placeholder="un pseudo par ligne"></textarea>
+        <button class="btn" id="backBtn" type="button">Mettre à jour</button>
+        <div class="msg" id="backMsg" role="status"></div>
+      </section>
+
+      <section class="panel card">
+        <h2>Comptes sources</h2>
+        <p>Les comptes de ta niche dont tu explores les abonnés. Le taux de retour t'indique lesquels valent le coup.</p>
+        <div class="inline">
+          <input type="text" id="srcInput" placeholder="@compte_de_ta_niche" aria-label="Pseudo du compte source">
+          <button class="btn" id="srcBtn" type="button">Ajouter</button>
+        </div>
+        <div class="srclist" id="srcList"></div>
+      </section>
+
+      <section class="panel card">
+        <h2>Rythme et limites</h2>
+        <div class="settings">
+          <label>Abonnements / jour <input type="number" id="sDay" min="1" max="60"></label>
+          <label>Abonnements / heure <input type="number" id="sHour" min="1" max="15"></label>
+          <label>Désabonnements / jour <input type="number" id="sUnf" min="1" max="60"></label>
+          <label>Délai entre actions (s) <input type="number" id="sGap" min="30" max="900"></label>
+          <label>Rappel « pas de retour » (jours) <input type="number" id="sDelay" min="2" max="30"></label>
+        </div>
+        <button class="btn" id="saveSettings" type="button">Enregistrer</button>
+        <div class="msg" id="setMsg" role="status"></div>
+        <details class="rules">
+          <summary>Règles de prudence</summary>
+          <ul>
+            <li>Compte récent (moins de 3 mois) : reste sous 10 abonnements par jour la première semaine, puis augmente de 5 par semaine.</li>
+            <li>Au-delà de 50 abonnements par jour, même à la main, Instagram peut bloquer temporairement l'action.</li>
+            <li>N'utilise aucune autre appli d'automatisation en parallèle et ne partage pas ton mot de passe.</li>
+            <li>Varie tes journées : quelques pauses, des likes ou commentaires sincères comptent plus qu'un abonnement de plus.</li>
+            <li>Si Instagram affiche « Action bloquée », arrête 24 à 48 h puis reprends à la moitié de ton rythme.</li>
+          </ul>
+        </details>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script>
+(() => {
+  const DEFAULTS = { dailyFollow: 20, hourlyFollow: 8, dailyUnfollow: 20, minGapSec: 90, delayDays: 7 };
+  const CAPS = { dailyFollow: [1, 60], hourlyFollow: [1, 15], dailyUnfollow: [1, 60], minGapSec: [30, 900], delayDays: [2, 30] };
+  const DAY = 86400000;
+  const PAGE = 60;
+
+  const state = {
+    prospects: new Map(), sources: new Map(), settings: { ...DEFAULTS },
+    tab: "todo", search: "", srcFilter: "", shown: PAGE, loaded: false
+  };
+  let db = null;
+  let canWrite = true;
+  let busy = false;
+
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, props = {}, ...kids) => {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else if (v === true) n.setAttribute(k, "");
+      else if (v !== false && v != null) n.setAttribute(k, v);
+    }
+    for (const c of kids) if (c != null) n.append(c);
+    return n;
+  };
+
+  // ---------- Pseudos ----------
+  const RESERVED = new Set(["p", "reel", "reels", "explore", "stories", "accounts", "direct", "tv"]);
+  function parseHandles(text) {
+    const out = [];
+    const seen = new Set();
+    for (let tok of String(text).split(/[\s,;]+/)) {
+      if (!tok) continue;
+      const m = tok.match(/instagram\.com\/([A-Za-z0-9._]+)/i);
+      if (m) tok = m[1];
+      tok = tok.replace(/^@+/, "").replace(/[\/?#].*$/, "").toLowerCase();
+      if (!/^[a-z0-9._]{1,30}$/.test(tok) || /^\.+$/.test(tok) || RESERVED.has(tok)) continue;
+      if (!seen.has(tok)) { seen.add(tok); out.push(tok); }
+    }
+    return out;
+  }
+  const profileUrl = (h) => "https://www.instagram.com/" + encodeURIComponent(h) + "/";
+
+  // ---------- Temps ----------
+  const now = () => Date.now();
+  const startOfDay = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); };
+  function ago(ts) {
+    const s = Math.max(0, Math.round((now() - ts) / 1000));
+    if (s < 60) return "à l'instant";
+    if (s < 3600) return "il y a " + Math.round(s / 60) + " min";
+    if (s < DAY / 1000) return "il y a " + Math.round(s / 3600) + " h";
+    const d = Math.floor(s / 86400);
+    return "il y a " + d + " j";
+  }
+  const fmtDate = (ts) => ts ? new Date(ts).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "";
+  function fmtWait(ms) {
+    const s = Math.ceil(ms / 1000);
+    if (s < 60) return s + " s";
+    const m = Math.floor(s / 60), r = s % 60;
+    if (m < 60) return m + " min " + String(r).padStart(2, "0");
+    return Math.floor(m / 60) + " h " + String(m % 60).padStart(2, "0");
+  }
+
+  // ---------- Quotas ----------
+  function counts() {
+    const sod = startOfDay(), hourAgo = now() - 3600000;
+    let day = 0, hour = 0, unf = 0, last = 0;
+    for (const p of state.prospects.values()) {
+      if (p.followedAt) {
+        if (p.followedAt >= sod) day++;
+        if (p.followedAt >= hourAgo) hour++;
+        last = Math.max(last, p.followedAt);
+      }
+      if (p.unfollowedAt) {
+        if (p.unfollowedAt >= sod) unf++;
+        last = Math.max(last, p.unfollowedAt);
+      }
+    }
+    return { day, hour, unf, last };
+  }
+  function gate(kind) {
+    const s = state.settings, c = counts();
+    const gapLeft = c.last ? c.last + s.minGapSec * 1000 - now() : 0;
+    if (kind === "follow") {
+      if (c.day >= s.dailyFollow) return { ok: false, why: "Limite du jour atteinte (" + s.dailyFollow + "). Reprends demain." };
+      if (c.hour >= s.hourlyFollow) return { ok: false, why: "Limite horaire atteinte (" + s.hourlyFollow + "). Fais une pause." };
+    } else {
+      if (c.unf >= s.dailyUnfollow) return { ok: false, why: "Limite de désabonnements du jour atteinte (" + s.dailyUnfollow + ")." };
+    }
+    if (gapLeft > 0) return { ok: false, why: "Attends encore " + fmtWait(gapLeft) + " avant la prochaine action.", wait: gapLeft };
+    return { ok: true };
+  }
+  function meter(elm, v, max) {
+    const pct = Math.min(100, (v / max) * 100);
+    elm.style.width = pct + "%";
+    elm.className = v >= max ? "full" : pct >= 75 ? "warn" : "";
+  }
+  function renderQuota() {
+    const s = state.settings, c = counts();
+    setVal($("qDay"), c.day, s.dailyFollow); meter($("mDay"), c.day, s.dailyFollow);
+    setVal($("qHour"), c.hour, s.hourlyFollow); meter($("mHour"), c.hour, s.hourlyFollow);
+    setVal($("qUnf"), c.unf, s.dailyUnfollow); meter($("mUnf"), c.unf, s.dailyUnfollow);
+    const g = gate("follow");
+    const next = $("qNext");
+    const gapLeft = c.last ? c.last + s.minGapSec * 1000 - now() : 0;
+    if (gapLeft > 0) { next.textContent = "dans " + fmtWait(gapLeft); next.className = "val wait"; }
+    else if (!g.ok) { next.textContent = "En pause"; next.className = "val wait"; }
+    else { next.textContent = "Maintenant"; next.className = "val ready"; }
+    $("qNextHint").textContent = (!g.ok && !g.wait) ? g.why : "Délai minimum entre deux actions : " + s.minGapSec + " s";
+  }
+  function setVal(node, v, max) {
+    node.textContent = v + " ";
+    node.append(el("small", { text: "/ " + max }));
+  }
+
+  // ---------- Tabs ----------
+  const TABS = [
+    { id: "todo", label: "À suivre", note: "Ouvre le profil, abonne-toi dans Instagram, puis clique « Je l'ai suivi ». Le bouton se bloque quand ton quota ou le délai entre actions l'impose." },
+    { id: "waiting", label: "En attente", note: "Tu les suis depuis moins de " + "{d}" + " jours. Colle tes nouveaux abonnés dans « Ils m'ont suivi » pour les faire passer en retour." },
+    { id: "unfollow", label: "À désabonner", note: "Suivis depuis {d} jours ou plus sans retour. Ouvre le profil, désabonne-toi dans Instagram, puis note-le ici." },
+    { id: "back", label: "Suivis en retour", note: "Ils t'ont suivi en retour. Garde-les : ce sont tes nouveaux abonnés, engage-toi avec leur contenu." },
+    { id: "archive", label: "Archives", note: "Profils désabonnés ou écartés. Tu peux les remettre dans la file ou les supprimer." }
+  ];
+  function bucket(p) {
+    if (p.status === "todo") return "todo";
+    if (p.status === "followed") return (now() - p.followedAt >= state.settings.delayDays * DAY) ? "unfollow" : "waiting";
+    if (p.status === "followback") return "back";
+    return "archive";
+  }
+  function renderTabs(groups) {
+    const box = $("tabs");
+    box.replaceChildren();
+    for (const t of TABS) {
+      const n = groups[t.id].length;
+      const badge = el("span", { class: "n" + (t.id === "unfollow" && n > 0 ? " alert" : ""), text: String(n) });
+      box.append(el("button", {
+        class: "tab", role: "tab", type: "button", id: "tab-" + t.id,
+        "aria-selected": state.tab === t.id ? "true" : "false",
+        onclick: () => { state.tab = t.id; state.shown = PAGE; render(); }
+      }, t.label, badge));
+    }
+    const t = TABS.find((x) => x.id === state.tab);
+    $("tabnote").textContent = t.note.replace("{d}", state.settings.delayDays);
+  }
+
+  // ---------- List ----------
+  function sortFor(tab, arr) {
+    const k = { todo: (p) => p.addedAt, waiting: (p) => p.followedAt, unfollow: (p) => p.followedAt, back: (p) => -(p.followbackAt || 0), archive: (p) => -(p.unfollowedAt || p.skippedAt || 0) }[tab];
+    return arr.sort((a, b) => (k(a) || 0) - (k(b) || 0));
+  }
+  function renderList(groups) {
+    const box = $("list");
+    box.replaceChildren();
+    if (!state.loaded) { box.append(el("div", { class: "empty" }, el("span", { text: "Chargement du carnet…" }))); return; }
+    let arr = groups[state.tab].slice();
+    const q = state.search.trim().toLowerCase().replace(/^@/, "");
+    if (q) arr = arr.filter((p) => p.handle.includes(q));
+    if (state.srcFilter) arr = arr.filter((p) => (p.source || "") === state.srcFilter);
+    sortFor(state.tab, arr);
+
+    if (!arr.length) { box.append(emptyState()); return; }
+    const fGate = gate("follow"), uGate = gate("unfollow");
+    for (const p of arr.slice(0, state.shown)) box.append(row(p, fGate, uGate));
+    if (arr.length > state.shown) {
+      box.append(el("div", { class: "more" }, el("button", { class: "btn", type: "button", text: "Afficher " + Math.min(PAGE, arr.length - state.shown) + " de plus (" + (arr.length - state.shown) + " restants)", onclick: () => { state.shown += PAGE; render(); } })));
+    }
+  }
+  function emptyState() {
+    const total = state.prospects.size;
+    if (!total && state.tab === "todo") {
+      return el("div", { class: "empty" },
+        el("strong", { text: "Ton carnet est vide" }),
+        el("ol", {},
+          el("li", { text: "Ajoute un compte de ta niche dans « Comptes sources »." }),
+          el("li", { text: "Dans Instagram, ouvre la liste de ses abonnés et repère des profils actifs et pertinents." }),
+          el("li", { text: "Colle leurs pseudos dans « Ajouter des profils » : ils apparaîtront ici." })
+        ));
+    }
+    const msgs = { todo: "Plus personne à suivre. Ajoute de nouveaux profils.", waiting: "Personne en attente de retour.", unfollow: "Rien à faire ici : aucun profil n'a dépassé le délai sans retour.", back: "Pas encore de retour enregistré.", archive: "Aucun profil archivé." };
+    return el("div", { class: "empty" }, el("span", { text: (state.search || state.srcFilter) ? "Aucun profil ne correspond à ce filtre." : msgs[state.tab] }));
+  }
+  function row(p, fGate, uGate) {
+    const meta = el("div", { class: "meta" });
+    if (p.source) meta.append(el("span", { text: "via @" + p.source }));
+    const b = bucket(p);
+    const chips = [];
+    if (b === "todo") meta.append(el("span", { text: "ajouté " + ago(p.addedAt) }));
+    if (b === "waiting") {
+      const left = Math.ceil((p.followedAt + state.settings.delayDays * DAY - now()) / DAY);
+      meta.append(el("span", { text: "suivi " + ago(p.followedAt) }));
+      chips.push(el("span", { class: "chip", text: "rappel dans " + left + " j" }));
+    }
+    if (b === "unfollow") {
+      meta.append(el("span", { text: "suivi le " + fmtDate(p.followedAt) }));
+      chips.push(el("span", { class: "chip warn", text: "pas de retour · " + Math.floor((now() - p.followedAt) / DAY) + " j" }));
+    }
+    if (b === "back") {
+      meta.append(el("span", { text: "suivi le " + fmtDate(p.followedAt) }));
+      chips.push(el("span", { class: "chip ok", text: "retour le " + fmtDate(p.followbackAt) }));
+    }
+    if (b === "archive") {
+      chips.push(p.status === "unfollowed"
+        ? el("span", { class: "chip bad", text: "désabonné le " + fmtDate(p.unfollowedAt) })
+        : el("span", { class: "chip", text: "écarté" }));
+    }
+    if (p.note) meta.append(el("span", { text: "· " + p.note }));
+    chips.forEach((c) => meta.append(c));
+
+    const link = el("a", { href: profileUrl(p.handle), target: "_blank", rel: "noopener noreferrer", text: "@" + p.handle });
+    const who = el("div", { class: "who" }, el("div", { class: "handle" }, link), meta);
+    const acts = el("div", { class: "actions" });
+    const open = () => el("a", { class: "btn", href: profileUrl(p.handle), target: "_blank", rel: "noopener noreferrer", text: "Ouvrir le profil ↗" });
+    const btn = (label, cls, fn, g) => el("button", {
+      class: "btn " + cls, type: "button", text: label,
+      disabled: !canWrite || (g && !g.ok), title: g && !g.ok ? g.why : false,
+      onclick: fn
+    });
+
+    if (b === "todo") {
+      acts.append(open(),
+        btn("Je l'ai suivi", "primary", () => markFollowed(p), fGate),
+        btn("Écarter", "ghost", () => patch(p.handle, { status: "skipped", skippedAt: now() })));
+    } else if (b === "waiting") {
+      acts.append(open(),
+        btn("M'a suivi en retour", "good", () => patch(p.handle, { status: "followback", followbackAt: now() })),
+        btn("Annuler l'abonnement noté", "ghost", () => patch(p.handle, { status: "todo", followedAt: null })));
+    } else if (b === "unfollow") {
+      acts.append(open(),
+        btn("Je me suis désabonné", "danger", () => markUnfollowed(p), uGate),
+        btn("M'a suivi en retour", "good", () => patch(p.handle, { status: "followback", followbackAt: now() })));
+    } else if (b === "back") {
+      acts.append(open(), btn("Annuler le retour", "ghost", () => patch(p.handle, { status: "followed", followbackAt: null })));
+    } else {
+      acts.append(
+        btn("Remettre à suivre", "", () => patch(p.handle, { status: "todo", followedAt: null, unfollowedAt: null, skippedAt: null, followbackAt: null, addedAt: now() })),
+        btn("Supprimer", "ghost", () => removeProspect(p.handle)));
+    }
+    return el("div", { class: "row" }, who, acts);
+  }
+
+  // ---------- Sources ----------
+  function renderSources() {
+    const list = $("srcList");
+    list.replaceChildren();
+    const stats = new Map();
+    for (const p of state.prospects.values()) {
+      const k = p.source || "";
+      const s = stats.get(k) || { total: 0, followed: 0, back: 0 };
+      s.total++;
+      if (p.followedAt) s.followed++;
+      if (p.status === "followback") s.back++;
+      stats.set(k, s);
+    }
+    const srcs = [...state.sources.values()].sort((a, b) => a.handle.localeCompare(b.handle));
+    if (!srcs.length) list.append(el("p", { text: "Aucun compte source pour l'instant." }));
+    for (const src of srcs) {
+      const s = stats.get(src.handle) || { total: 0, followed: 0, back: 0 };
+      const rate = s.followed ? Math.round((s.back / s.followed) * 100) + " %" : "—";
+      list.append(el("div", { class: "src" },
+        el("div", { class: "handle" }, el("a", { href: profileUrl(src.handle), target: "_blank", rel: "noopener noreferrer", text: "@" + src.handle })),
+        el("div", { class: "inline" },
+          el("span", { class: "rate", title: "Taux de retour", text: rate }),
+          el("button", { class: "btn ghost", type: "button", text: "Retirer", disabled: !canWrite, "aria-label": "Retirer @" + src.handle, onclick: () => removeSource(src.handle) })),
+        el("div", { class: "stats", text: s.total + " profils · " + s.followed + " suivis · " + s.back + " retours" })
+      ));
+    }
+    for (const id of ["addSource", "srcFilter"]) {
+      const sel = $(id), cur = id === "srcFilter" ? state.srcFilter : sel.value;
+      const first = sel.options[0].cloneNode(true);
+      sel.replaceChildren(first);
+      for (const src of srcs) sel.append(el("option", { value: src.handle, text: "@" + src.handle }));
+      sel.value = srcs.some((x) => x.handle === cur) ? cur : "";
+    }
+  }
+
+  function renderSettings() {
+    const s = state.settings;
+    $("sDay").value = s.dailyFollow; $("sHour").value = s.hourlyFollow; $("sUnf").value = s.dailyUnfollow;
+    $("sGap").value = s.minGapSec; $("sDelay").value = s.delayDays;
+  }
+
+  function render() {
+    const groups = { todo: [], waiting: [], unfollow: [], back: [], archive: [] };
+    for (const p of state.prospects.values()) groups[bucket(p)].push(p);
+    renderTabs(groups);
+    renderList(groups);
+    renderQuota();
+  }
+
+  // ---------- Écritures ----------
+  function setMsg(id, text, kind) { const m = $(id); m.textContent = text; m.className = "msg" + (kind ? " " + kind : ""); }
+  function dbErr(e) {
+    if (e && e.code === "quota_exceeded") return "Le carnet est plein. Supprime des profils archivés pour faire de la place.";
+    if (e && e.code === "invalid_argument") { canWrite = false; render(); renderSources(); return "Tu n'as pas le droit de modifier ce carnet."; }
+    return "L'enregistrement a échoué. Réessaie dans un instant.";
+  }
+  async function patch(handle, fields) {
+    if (!db || busy) return;
+    busy = true;
+    try { await db.collection("prospects").doc(handle).update(fields); }
+    catch (e) { showBanner(dbErr(e)); }
+    finally { busy = false; }
+  }
+  async function markFollowed(p) {
+    const g = gate("follow");
+    if (!g.ok) { showBanner(g.why); return; }
+    await patch(p.handle, { status: "followed", followedAt: now() });
+  }
+  async function markUnfollowed(p) {
+    const g = gate("unfollow");
+    if (!g.ok) { showBanner(g.why); return; }
+    await patch(p.handle, { status: "unfollowed", unfollowedAt: now() });
+  }
+  const pendingDelete = new Set();
+  async function removeProspect(handle) {
+    if (!pendingDelete.has(handle)) {
+      pendingDelete.add(handle);
+      showBanner("Clique encore sur « Supprimer » pour effacer @" + handle + " définitivement.");
+      setTimeout(() => pendingDelete.delete(handle), 5000);
+      return;
+    }
+    pendingDelete.delete(handle);
+    try { await db.collection("prospects").doc(handle).delete(); hideBanner(); }
+    catch (e) { showBanner(dbErr(e)); }
+  }
+  async function removeSource(handle) {
+    try { await db.collection("sources").doc(handle).delete(); }
+    catch (e) { showBanner(dbErr(e)); }
+  }
+
+  $("addBtn").addEventListener("click", async () => {
+    if (!db) return;
+    const all = parseHandles($("addText").value);
+    if (!all.length) { setMsg("addMsg", "Aucun pseudo valide trouvé.", "bad"); return; }
+    const fresh = all.filter((h) => !state.prospects.has(h) && !state.sources.has(h)).slice(0, 300);
+    const skipped = all.length - fresh.length;
+    if (!fresh.length) { setMsg("addMsg", "Tous ces profils sont déjà dans ton carnet.", ""); return; }
+    const source = $("addSource").value;
+    $("addBtn").disabled = true;
+    let done = 0;
+    try {
+      const base = now();
+      for (const h of fresh) {
+        await db.collection("prospects").doc(h).set({ handle: h, source, status: "todo", addedAt: base + done, followedAt: null, followbackAt: null, unfollowedAt: null, skippedAt: null, note: "" });
+        done++;
+        if (done % 10 === 0) setMsg("addMsg", "Ajout… " + done + " / " + fresh.length);
+      }
+      $("addText").value = "";
+      setMsg("addMsg", done + " profil(s) ajouté(s)" + (skipped ? ", " + skipped + " ignoré(s) (doublons ou limite de 300 par ajout)." : "."), "ok");
+    } catch (e) {
+      setMsg("addMsg", done + " ajouté(s) avant l'erreur. " + dbErr(e), "bad");
+    } finally { $("addBtn").disabled = !canWrite; }
+  });
+
+  $("backBtn").addEventListener("click", async () => {
+    if (!db) return;
+    const hs = parseHandles($("backText").value);
+    if (!hs.length) { setMsg("backMsg", "Aucun pseudo valide trouvé.", "bad"); return; }
+    const targets = hs.filter((h) => state.prospects.get(h)?.status === "followed");
+    $("backBtn").disabled = true;
+    let done = 0;
+    try {
+      for (const h of targets) { await db.collection("prospects").doc(h).update({ status: "followback", followbackAt: now() }); done++; }
+      $("backText").value = "";
+      setMsg("backMsg", done + " retour(s) enregistré(s) sur " + hs.length + " pseudo(s) collé(s).", "ok");
+    } catch (e) { setMsg("backMsg", dbErr(e), "bad"); }
+    finally { $("backBtn").disabled = !canWrite; }
+  });
+
+  $("srcBtn").addEventListener("click", async () => {
+    if (!db) return;
+    const [h] = parseHandles($("srcInput").value);
+    if (!h) return;
+    try { await db.collection("sources").doc(h).set({ handle: h, addedAt: now() }); $("srcInput").value = ""; $("addSource").value = h; }
+    catch (e) { showBanner(dbErr(e)); }
+  });
+  $("srcInput").addEventListener("keydown", (e) => { if (e.key === "Enter") $("srcBtn").click(); });
+
+  $("saveSettings").addEventListener("click", async () => {
+    if (!db) return;
+    const read = (id, key) => { const [lo, hi] = CAPS[key]; const v = Math.round(Number($(id).value)); return Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : DEFAULTS[key]; };
+    const s = { dailyFollow: read("sDay", "dailyFollow"), hourlyFollow: read("sHour", "hourlyFollow"), dailyUnfollow: read("sUnf", "dailyUnfollow"), minGapSec: read("sGap", "minGapSec"), delayDays: read("sDelay", "delayDays") };
+    try {
+      await db.doc("settings/main").set(s);
+      setMsg("setMsg", s.dailyFollow > 40 ? "Enregistré. Attention : plus de 40 abonnements par jour augmente nettement le risque de blocage." : "Enregistré.", s.dailyFollow > 40 ? "bad" : "ok");
+    } catch (e) { setMsg("setMsg", dbErr(e), "bad"); }
+  });
+
+  $("search").addEventListener("input", (e) => { state.search = e.target.value; state.shown = PAGE; render(); });
+  $("srcFilter").addEventListener("change", (e) => { state.srcFilter = e.target.value; state.shown = PAGE; render(); });
+
+  // ---------- Export ----------
+  $("exportBtn").addEventListener("click", async () => {
+    const dl = await window.claude?.use?.("downloads");
+    const esc = (v) => { const s = v == null ? "" : String(v); return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const iso = (t) => t ? new Date(t).toISOString() : "";
+    const lines = [["pseudo", "source", "statut", "ajoute", "suivi", "retour", "desabonne", "note"].join(",")];
+    for (const p of state.prospects.values()) lines.push([p.handle, p.source, p.status, iso(p.addedAt), iso(p.followedAt), iso(p.followbackAt), iso(p.unfollowedAt), p.note].map(esc).join(","));
+    if (!dl) { showBanner("L'export n'est pas disponible dans cette vue."); return; }
+    try { await dl.save({ filename: "prospection-" + new Date().toISOString().slice(0, 10) + ".csv", data: "﻿" + lines.join("\n") }); }
+    catch (e) { if (e?.code !== "declined") showBanner("L'export a échoué."); }
+  });
+
+  // ---------- Bannière ----------
+  let bannerTimer = null;
+  function showBanner(text, sticky) {
+    const b = $("banner"); b.textContent = text; b.hidden = false;
+    clearTimeout(bannerTimer);
+    if (!sticky) bannerTimer = setTimeout(hideBanner, 6000);
+  }
+  function hideBanner() { $("banner").hidden = true; }
+
+  function setWritable(v) {
+    canWrite = v;
+    for (const id of ["addBtn", "backBtn", "srcBtn", "saveSettings"]) $(id).disabled = !v;
+  }
+
+  // ---------- Démarrage ----------
+  render(); renderSources(); renderSettings();
+  setInterval(() => { if (state.loaded) renderQuota(); }, 1000);
+  let lastBucketTick = 0;
+  setInterval(() => { if (state.loaded && now() - lastBucketTick > 60000) { lastBucketTick = now(); render(); } }, 15000);
+
+  (async () => {
+    db = await window.claude?.use?.("db") ?? null;
+    if (!db) {
+      state.loaded = true; setWritable(false); render();
+      showBanner("Le carnet n'est pas accessible dans cette vue. Ouvre-le connecté à ton compte Claude.", true);
+      return;
+    }
+    const user = await window.claude?.use?.("user");
+    const w = user ? await user.can("data.write") : null;
+    if (w === false) { setWritable(false); showBanner("Lecture seule : tu peux consulter ce carnet mais pas le modifier.", true); }
+
+    const slow = setTimeout(() => showBanner("Le carnet met du temps à se charger. Vérifie ta connexion.", true), 10000);
+    db.collection("prospects").onSnapshot((snap) => {
+      const m = new Map();
+      for (const d of snap.docs) { const v = d.data(); if (v && v.handle) m.set(d.id, { ...v, handle: d.id }); }
+      state.prospects = m;
+      if (!snap.metadata.fromCache) { clearTimeout(slow); if (!state.loaded) hideBanner(); state.loaded = true; }
+      else if (m.size) state.loaded = true;
+      render(); renderSources();
+    }, (e) => { clearTimeout(slow); state.loaded = true; render(); showBanner(e.code === "revoked" ? "Accès au carnet retiré." : "Impossible de charger le carnet.", true); });
+
+    db.collection("sources").onSnapshot((snap) => {
+      const m = new Map();
+      for (const d of snap.docs) { const v = d.data(); if (v) m.set(d.id, { ...v, handle: d.id }); }
+      state.sources = m;
+      renderSources();
+    }, () => {});
+
+    db.doc("settings/main").onSnapshot((snap) => {
+      state.settings = { ...DEFAULTS, ...(snap.exists ? snap.data() : {}) };
+      renderSettings(); render();
+    }, () => {});
+  })();
+})();
+</script>
