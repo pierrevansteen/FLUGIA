@@ -1,0 +1,106 @@
+name: Tracking marketing & commercial
+
+on:
+  schedule:
+    - cron: "23 5 * * *"   # chaque nuit vers 6h20 (heure de Bruxelles)
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Nombre de jours à (re)collecter (90 pour un historique)"
+        default: "7"
+      weekly:
+        description: "Forcer la synthèse hebdomadaire"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tracking
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: tracking
+    env:
+      # Base : Postgres (ex. Supabase gratuit). Sans DATABASE_URL, une base SQLite est conservée dans le cache GitHub.
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Google (GA4, Search Console, Agenda)
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+      GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID }}
+      SEARCH_CONSOLE_SITE: ${{ vars.SEARCH_CONSOLE_SITE }}
+      GOOGLE_CALENDAR_ID: ${{ vars.GOOGLE_CALENDAR_ID }}
+      DEMO_KEYWORDS: ${{ vars.DEMO_KEYWORDS }}
+      BRAND_TERMS: ${{ vars.BRAND_TERMS }}
+      # Google Ads
+      GOOGLE_ADS_DEVELOPER_TOKEN: ${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}
+      GOOGLE_ADS_CLIENT_ID: ${{ secrets.GOOGLE_ADS_CLIENT_ID }}
+      GOOGLE_ADS_CLIENT_SECRET: ${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}
+      GOOGLE_ADS_REFRESH_TOKEN: ${{ secrets.GOOGLE_ADS_REFRESH_TOKEN }}
+      GOOGLE_ADS_CUSTOMER_ID: ${{ vars.GOOGLE_ADS_CUSTOMER_ID }}
+      GOOGLE_ADS_LOGIN_CUSTOMER_ID: ${{ vars.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}
+      # Meta
+      META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+      META_AD_ACCOUNT_ID: ${{ vars.META_AD_ACCOUNT_ID }}
+      META_IG_USER_ID: ${{ vars.META_IG_USER_ID }}
+      # LinkedIn
+      LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+      LINKEDIN_AD_ACCOUNT_ID: ${{ vars.LINKEDIN_AD_ACCOUNT_ID }}
+      LINKEDIN_ORGANIZATION_ID: ${{ vars.LINKEDIN_ORGANIZATION_ID }}
+      # IA : mesure GEO + synthèse hebdomadaire
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # Plus tard : base de l'app et facturation
+      APP_DATABASE_URL: ${{ secrets.APP_DATABASE_URL }}
+      STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
+      # Notifications
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      SMTP_FROM: ${{ secrets.SMTP_FROM }}
+      ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+      DASHBOARD_URL: ${{ vars.DASHBOARD_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tracking/requirements.txt
+
+      - run: pip install -r requirements.txt
+
+      - name: Restaurer la base SQLite (si pas de DATABASE_URL)
+        if: env.DATABASE_URL == ''
+        uses: actions/cache/restore@v4
+        with:
+          path: tracking/data/tracking.db
+          key: tracking-db-${{ github.run_id }}
+          restore-keys: tracking-db-
+
+      - name: Collecte, alertes, tableau de bord
+        run: |
+          ARGS="--days ${{ github.event.inputs.days || '7' }}"
+          if [ "${{ github.event.inputs.weekly }}" = "true" ]; then ARGS="$ARGS --weekly"; fi
+          python -m flugia_tracking run $ARGS
+
+      - name: Sauvegarder la base SQLite
+        if: always() && env.DATABASE_URL == ''
+        uses: actions/cache/save@v4
+        with:
+          path: tracking/data/tracking.db
+          key: tracking-db-${{ github.run_id }}
+
+      - name: Publier le tableau de bord (artefact téléchargeable)
+        uses: actions/upload-artifact@v4
+        with:
+          name: tableau-de-bord
+          path: tracking/site/
+          retention-days: 30

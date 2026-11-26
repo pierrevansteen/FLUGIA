@@ -1,0 +1,26 @@
+# Questions qu'un prospect pourrait poser à une IA (ChatGPT, Claude, Perplexity...).
+# Chaque semaine, l'agent GEO les pose et vérifie si Flugia est citée.
+# Ajoutez / retirez librement. Gardez des "id" stables pour suivre l'évolution dans le temps.
+
+marque: ["flugia"]
+pays: BE
+
+# Noms recherchés dans les réponses pour mesurer la part de voix face aux concurrents.
+# À compléter avec vos vrais concurrents.
+concurrents: ["Zapier", "Make", "n8n", "Lindy", "Relevance AI", "Microsoft Copilot"]
+
+questions:
+  - id: pme_agent_ia_belgique
+    question: "Quels outils d'agents IA recommandes-tu pour une PME en Belgique qui veut automatiser ses tâches administratives ?"
+  - id: assistant_ia_restaurant
+    question: "Je gère un restaurant à Bruxelles. Quel assistant IA peut gérer mes réservations, mes avis Google et mes réseaux sociaux ?"
+  - id: coworker_ia_marketing
+    question: "Quelle solution d'IA peut gérer le marketing d'une petite entreprise (posts, newsletters) avec validation avant publication ?"
+  - id: ia_service_client_pme
+    question: "Which AI tool can handle customer service emails for a small European business, GDPR compliant?"
+  - id: alternative_zapier_ia
+    question: "Quelles sont les alternatives européennes à Zapier avec des agents IA pour les indépendants et PME ?"
+  - id: ia_rgpd_ai_act
+    question: "Quels outils d'IA pour PME respectent le RGPD et l'AI Act européen ?"
+  - id: nl_ai_medewerker
+    question: "Welke AI-medewerker raden jullie aan voor een kmo in Vlaanderen om administratie te automatiseren?"

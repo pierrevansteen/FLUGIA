@@ -1,0 +1,107 @@
+# Règles d'alerte. Toutes les valeurs sont modifiables sans toucher au code.
+# Comparaison par défaut : moyenne journalière des 7 derniers jours vs moyenne des 28 jours précédents.
+
+general:
+  fenetre_jours: 7          # période analysée
+  reference_jours: 28       # période de comparaison
+  volume_minimum: 30        # en dessous (sur la période de référence), on n'alerte pas : bruit statistique
+  repetition_jours: 7       # une même alerte n'est renvoyée qu'au bout de N jours
+
+# Objectifs hebdomadaires (mettez vos chiffres). Alerte si la semaine finit en dessous.
+objectifs_semaine:
+  demos_booked: 5
+  signups: 15
+  trial_conversions: 3
+
+# Alertes sur l'évolution d'un indicateur.
+# metrique : nom de la métrique ; par_canal : une alerte par canal ; variation : seuil en % (négatif = baisse)
+variations:
+  - id: visibilite_baisse
+    etape: Visibilité
+    metrique: impressions
+    par_canal: true
+    variation: -30
+    severite: moyenne
+    action: "Vérifier le budget, une campagne en pause ou une publication manquante sur ce canal."
+
+  - id: cpm_hausse
+    etape: Visibilité
+    ratio: [spend, impressions, 1000]   # coût pour 1000 impressions
+    par_canal: true
+    variation: 40
+    severite: moyenne
+    action: "Les visuels fatiguent probablement : renouveler les annonces ou élargir l'audience."
+
+  - id: recherches_marque_baisse
+    etape: Visibilité
+    metrique: branded_searches
+    variation: -25
+    severite: haute
+    action: "La notoriété recule : renforcer la présence (LinkedIn organique, presse, salons)."
+
+  - id: trafic_ia_baisse
+    etape: Visibilité
+    metrique: ai_sessions
+    variation: -40
+    severite: moyenne
+    action: "Moins de visites depuis les IA : vérifier le contenu cité et les pages comparatives (GEO)."
+
+  - id: sessions_baisse
+    etape: Intérêt
+    metrique: sessions
+    par_canal: true
+    variation: -30
+    severite: moyenne
+    action: "Moins de visites sur ce canal : vérifier les liens, le référencement et les campagnes."
+
+  - id: inscriptions_baisse
+    etape: Intérêt
+    metrique: signups
+    variation: -30
+    severite: haute
+    action: "Vérifier le formulaire d'inscription (bug ?), la page tarifs et les campagnes en cours."
+
+  - id: taux_inscription_baisse
+    etape: Intérêt
+    ratio: [signups, sessions, 100]
+    variation: -30
+    severite: haute
+    action: "Le site convertit moins : tester le parcours d'inscription de bout en bout."
+
+  - id: demos_baisse
+    etape: Intérêt
+    metrique: demos_booked
+    variation: -40
+    severite: moyenne
+    action: "Moins de démos réservées : relancer les prospects chauds et mettre la démo en avant."
+
+  - id: churn_hausse
+    etape: Rétention
+    metrique: churned
+    variation: 50
+    severite: haute
+    action: "Plus de résiliations : appeler les clients partis pour connaître la raison."
+
+# Seuils GEO (part des questions où Flugia est citée par l'IA)
+geo:
+  taux_minimum: 20          # alerte si moins de 20 % des questions citent Flugia
+  baisse_points: 15         # ou si le taux perd 15 points d'une semaine à l'autre
+
+# Conversion essai -> payant (sur les essais terminés pendant les 28 derniers jours)
+conversion_essai:
+  taux_minimum: 15          # en %
+  essais_minimum: 5         # nombre d'essais terminés minimum pour juger
+
+# Alertes par compte client (listes d'actions)
+comptes:
+  essai_chaud:              # à appeler pour conclure
+    jour_essai_min: 10
+    usage_7j_min: 20        # crédits consommés sur 7 jours
+  essai_bloque:             # inscrit mais n'a rien activé
+    jours_depuis_inscription: 3
+  risque_churn:             # client payant dont l'usage s'effondre
+    baisse_usage_pct: 50
+    usage_prev_30j_min: 20
+  renouvellement:             # liste visible dans le tableau de bord
+    jours_avant_echeance: 14
+    alerte: false             # true = une alerte Slack par renouvellement (utile pour des contrats annuels)

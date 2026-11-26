@@ -1,0 +1,47 @@
+# Requête lue par le collecteur "app_db" (actif quand APP_DATABASE_URL est défini).
+# À adapter au schéma réel de la base Flugia : seuls les NOMS DE COLONNES renvoyés comptent.
+#
+# Colonnes attendues (les absentes restent vides) :
+#   account_id          identifiant unique du compte (obligatoire)
+#   name, email         pour les listes d'actions commerciales
+#   created_at          date de création du compte (= inscription / début d'essai)
+#   first_touch_source  utm_source enregistré à l'inscription (google, linkedin, chatgpt.com, ...)
+#   first_touch_medium  utm_medium (cpc, social, referral, organic...)
+#   first_touch_campaign utm_campaign
+#   plan                standard / business / enterprise
+#   status              trial | active | past_due | cancelled | expired
+#   trial_ends_at       fin de l'essai de 15 jours
+#   activated_at        1re action de valeur (outil connecté / 1er Co-Worker lancé)
+#   converted_at        1er paiement après l'essai
+#   churned_at          date de résiliation / fin
+#   contract_end_at     prochaine échéance de renouvellement
+#   mrr                 revenu mensuel récurrent du compte (EUR)
+#   usage_7d            crédits consommés sur les 7 derniers jours
+#   usage_30d           crédits consommés sur les 30 derniers jours
+#   usage_prev_30d      crédits consommés sur les 30 jours précédents
+
+accounts: |
+  -- EXEMPLE (Postgres) : remplacez les noms de tables/colonnes par les vôtres.
+  -- SELECT
+  --   o.id                         AS account_id,
+  --   o.name                       AS name,
+  --   u.email                      AS email,
+  --   o.created_at                 AS created_at,
+  --   o.utm_source                 AS first_touch_source,
+  --   o.utm_medium                 AS first_touch_medium,
+  --   o.utm_campaign               AS first_touch_campaign,
+  --   s.plan                       AS plan,
+  --   s.status                     AS status,
+  --   s.trial_ends_at              AS trial_ends_at,
+  --   (SELECT MIN(created_at) FROM coworker_runs r WHERE r.org_id = o.id) AS activated_at,
+  --   s.first_paid_at              AS converted_at,
+  --   s.cancelled_at               AS churned_at,
+  --   s.current_period_end         AS contract_end_at,
+  --   s.mrr                        AS mrr,
+  --   (SELECT COALESCE(SUM(credits),0) FROM credit_usage c WHERE c.org_id = o.id AND c.created_at >= now() - interval '7 days')  AS usage_7d,
+  --   (SELECT COALESCE(SUM(credits),0) FROM credit_usage c WHERE c.org_id = o.id AND c.created_at >= now() - interval '30 days') AS usage_30d,
+  --   (SELECT COALESCE(SUM(credits),0) FROM credit_usage c WHERE c.org_id = o.id AND c.created_at >= now() - interval '60 days'
+  --                                                       AND c.created_at <  now() - interval '30 days') AS usage_prev_30d
+  -- FROM organizations o
+  -- JOIN users u ON u.id = o.owner_id
+  -- LEFT JOIN subscriptions s ON s.org_id = o.id
