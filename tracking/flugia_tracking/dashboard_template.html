@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pilotage Flugia</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f6f4; --surface: #ffffff; --border: #e4e4e0;
+  --text: #191919; --text-2: #666666; --grid: #ececec;
+  --s1: #257de0; --s2: #f47230; --s3: #00b894; --s4: #f2a600; --s5: #ee7fac;
+  --good: #0a7d1e; --bad: #c62f30; --warn-bg: #fff4e5; --crit-bg: #fdecec; --info-bg: #eaf2fd;
+  --accent: #257de0;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111111; --surface: #191919; --border: #2c2c2c;
+    --text: #efefef; --text-2: #9c9c9c; --grid: #2a2a2a;
+    --s1: #338ced; --s2: #e76624; --s3: #00a888; --s4: #d28e05; --s5: #e24d8b;
+    --good: #3ccf55; --bad: #f07070; --warn-bg: #33270f; --crit-bg: #3a1a1a; --info-bg: #14243a;
+    --accent: #338ced;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111111; --surface: #191919; --border: #2c2c2c;
+  --text: #efefef; --text-2: #9c9c9c; --grid: #2a2a2a;
+  --s1: #338ced; --s2: #e76624; --s3: #00a888; --s4: #d28e05; --s5: #e24d8b;
+  --good: #3ccf55; --bad: #f07070; --warn-bg: #33270f; --crit-bg: #3a1a1a; --info-bg: #14243a;
+  --accent: #338ced;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+header { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; justify-content: space-between; margin-bottom: 20px; }
+h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-2); margin: 28px 0 10px; font-weight: 600; }
+h3 { font-size: 14px; margin: 0 0 10px; font-weight: 600; }
+.muted { color: var(--text-2); }
+.small { font-size: 12px; }
+.grid { display: grid; gap: 12px; }
+.stages { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1000px) { .stages { grid-template-columns: repeat(2, minmax(0, 1fr)); } .three { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) { .stages, .two, .three { grid-template-columns: 1fr; } }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; min-width: 0; }
+.stage-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.stage-title span { font-weight: 600; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: var(--bg); color: var(--text-2); border: 1px solid var(--border); }
+.kpi { padding: 8px 0; border-top: 1px solid var(--border); }
+.kpi:first-of-type { border-top: 0; }
+.kpi .lbl { color: var(--text-2); font-size: 12px; }
+.kpi .val { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.kpi.hero .val { font-size: 30px; }
+.delta { font-size: 12px; font-weight: 600; margin-left: 6px; font-variant-numeric: tabular-nums; }
+.delta.up { color: var(--good); } .delta.down { color: var(--bad); } .delta.flat { color: var(--text-2); }
+.chart-box { position: relative; height: 240px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--border); font-size: 13px; }
+th { color: var(--text-2); font-weight: 600; font-size: 12px; }
+td.num, th.num { text-align: right; }
+.table-scroll { overflow-x: auto; }
+.alert { border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--border); }
+.alert.haute { background: var(--crit-bg); } .alert.moyenne { background: var(--warn-bg); } .alert.info { background: var(--info-bg); }
+.alert .t { font-weight: 600; }
+.alert .a { margin-top: 4px; }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; border: 1px solid currentColor; margin-right: 6px; }
+.empty { color: var(--text-2); font-style: italic; padding: 8px 0; }
+.ok { color: var(--good); font-weight: 600; } .ko { color: var(--bad); font-weight: 600; }
+.theme-btn { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 12px; }
+.demo-banner { background: var(--warn-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 16px; }
+.summary { white-space: pre-wrap; }
+.scroll-panel { max-height: 560px; overflow-y: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Pilotage commercial Flugia</h1>
+      <div class="muted" id="period"></div>
+    </div>
+    <div class="muted small"><span id="generated"></span> &nbsp; <button class="theme-btn" id="themeBtn" type="button">Thème</button></div>
+  </header>
+  <div id="demoBanner"></div>
+
+  <div class="grid stages" id="stages"></div>
+
+  <h2>Alertes et actions</h2>
+  <div class="grid two">
+    <div class="card"><h3>Alertes actives</h3><div id="alerts" class="scroll-panel"></div></div>
+    <div class="card"><h3>Synthèse IA de la semaine</h3><div id="summary" class="summary muted"></div></div>
+  </div>
+
+  <h2>Visibilité</h2>
+  <div class="grid two">
+    <div class="card"><h3>Vues par canal, par semaine</h3><div class="chart-box"><canvas id="cVis"></canvas></div></div>
+    <div class="card"><h3>Vues par canal — 7 derniers jours</h3><div class="table-scroll"><table id="tVis"></table></div></div>
+  </div>
+  <div class="grid two" style="margin-top:12px">
+    <div class="card"><h3>GEO — part des questions où une IA cite Flugia</h3><div class="chart-box"><canvas id="cGeo"></canvas></div></div>
+    <div class="card"><h3>GEO — dernière mesure par question</h3><div class="table-scroll"><table id="tGeo"></table></div></div>
+  </div>
+
+  <h2>Intérêt</h2>
+  <div class="grid three">
+    <div class="card"><h3>Visites du site par semaine</h3><div class="chart-box"><canvas id="cVisits"></canvas></div></div>
+    <div class="card"><h3>Inscriptions (essais) par semaine</h3><div class="chart-box"><canvas id="cSignups"></canvas></div></div>
+    <div class="card"><h3>Démos réservées par semaine</h3><div class="chart-box"><canvas id="cDemos"></canvas></div></div>
+  </div>
+
+  <h2>Acquisition — d'où viennent les clients (90 jours)</h2>
+  <div class="card"><div class="table-scroll"><table id="tAttr"></table></div><p class="muted small" id="attrNote"></p></div>
+
+  <h2>Acquisition et rétention</h2>
+  <div class="grid two">
+    <div class="card"><h3>Nouveaux clients et résiliations par semaine</h3><div class="chart-box"><canvas id="cConv"></canvas></div></div>
+    <div class="card"><h3>Revenu mensuel récurrent (MRR)</h3><div class="chart-box"><canvas id="cMrr"></canvas></div></div>
+  </div>
+
+  <h2>Listes d'actions commerciales</h2>
+  <div class="grid two" id="lists"></div>
+
+  <h2>État des sources</h2>
+  <div class="card"><div class="table-scroll"><table id="tSources"></table></div></div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+// ---------- thème ----------
+(function () {
+  const root = document.documentElement;
+  try { const t = localStorage.getItem("flugia-theme"); if (t) root.dataset.theme = t; } catch (e) {}
+  document.getElementById("themeBtn").addEventListener("click", () => {
+    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem("flugia-theme", root.dataset.theme); } catch (e) {}
+    drawCharts();
+  });
+})();
+
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const nf = new Intl.NumberFormat("fr-BE", { maximumFractionDigits: 1 });
+const money = new Intl.NumberFormat("fr-BE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const fmt = (v, kind) => v === null || v === undefined ? "—" : kind === "eur" ? money.format(v) : kind === "pct" ? nf.format(v) + " %" : nf.format(v);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const short = (iso) => new Date(iso + "T00:00:00").toLocaleDateString("fr-BE", { day: "numeric", month: "short" });
+
+function delta(cur, prev, goodWhenUp = true, isPoints = false) {
+  if (cur === null || cur === undefined || prev === null || prev === undefined) return "";
+  if (isPoints) {
+    const d = cur - prev; if (Math.abs(d) < 0.05) return `<span class="delta flat">=</span>`;
+    const good = (d > 0) === goodWhenUp;
+    return `<span class="delta ${good ? "up" : "down"}">${d > 0 ? "▲" : "▼"} ${nf.format(Math.abs(d))} pt</span>`;
+  }
+  if (!prev) return cur ? `<span class="delta flat">nouveau</span>` : "";
+  const p = 100 * (cur - prev) / prev;
+  if (Math.abs(p) < 0.5) return `<span class="delta flat">=</span>`;
+  const good = (p > 0) === goodWhenUp;
+  return `<span class="delta ${good ? "up" : "down"}">${p > 0 ? "▲" : "▼"} ${nf.format(Math.abs(p))} %</span>`;
+}
+
+function kpi(label, cur, prev, kind, opts = {}) {
+  return `<div class="kpi ${opts.hero ? "hero" : ""}"><div class="lbl">${label}</div>
+    <div><span class="val">${fmt(cur, kind)}</span>${prev !== undefined ? delta(cur, prev, opts.goodUp !== false, opts.points) : ""}</div>
+    ${opts.note ? `<div class="muted small">${opts.note}</div>` : ""}</div>`;
+}
+
+function render() {
+  const d = DATA;
+  document.getElementById("period").textContent =
+    `Semaine du ${short(d.periode.debut)} au ${short(d.periode.fin)} · comparée à la semaine précédente`;
+  document.getElementById("generated").textContent = "Mis à jour le " + new Date(d.genere_le).toLocaleString("fr-BE");
+  if (d.demo) document.getElementById("demoBanner").innerHTML =
+    `<div class="demo-banner"><b>Données de démonstration.</b> Ces chiffres sont fictifs : ils montrent le rendu en attendant le branchement des vraies sources.</div>`;
+
+  const v = d.visibilite, i = d.interet, a = d.acquisition, r = d.retention;
+  const notConnected = `<div class="empty">Base de l'app / facturation pas encore branchée.</div>`;
+  document.getElementById("stages").innerHTML = `
+    <div class="card"><div class="stage-title"><span>1 · Visibilité</span><span class="badge">7 jours</span></div>
+      ${kpi("Vues totales (tous canaux)", v.total.cur, v.total.prev, "n", { hero: true })}
+      ${kpi("Recherches « flugia » sur Google", v.recherches_marque.cur, v.recherches_marque.prev, "n")}
+      ${kpi("Citée par les IA (GEO)", v.geo_taux_citation.cur, v.geo_taux_citation.prev, "pct", { points: true })}
+      ${kpi("Dépenses publicitaires", v.depenses.cur, v.depenses.prev, "eur", { goodUp: false })}
+    </div>
+    <div class="card"><div class="stage-title"><span>2 · Intérêt</span><span class="badge">7 jours</span></div>
+      ${kpi("Inscriptions (essais créés)", i.inscriptions.cur, i.inscriptions.prev, "n", { hero: true, note: i.source_inscriptions === "ga4" ? "Source : événement GA4 (app pas encore branchée)" : "" })}
+      ${kpi("Démos réservées", i.demos_reservees.cur, i.demos_reservees.prev, "n")}
+      ${kpi("Visites du site", i.visites.cur, i.visites.prev, "n")}
+      ${kpi("Taux visite → inscription", i.taux_inscription.cur, i.taux_inscription.prev, "pct", { points: true })}
+    </div>
+    <div class="card"><div class="stage-title"><span>3 · Acquisition</span><span class="badge">essai → payant</span></div>
+      ${a.branche ? `
+      ${kpi("Conversion après l'essai (28 j)", a.taux_conversion.cur, a.taux_conversion.prev, "pct", { hero: true, points: true, note: `${a.convertis_28j} clients sur ${a.essais_termines_28j} essais terminés` })}
+      ${kpi("Nouveaux clients (7 j)", a.nouveaux_clients.cur, a.nouveaux_clients.prev, "n")}
+      ${kpi("Essais activés (outil connecté)", a.taux_activation, undefined, "pct")}` : notConnected}
+    </div>
+    <div class="card"><div class="stage-title"><span>4 · Rétention</span><span class="badge">30 jours</span></div>
+      ${r.branche ? `
+      ${kpi("Clients payants", r.clients_payants, undefined, "n", { hero: true })}
+      ${kpi("MRR", r.mrr, undefined, "eur")}
+      ${kpi("Churn (30 j)", r.taux_churn_30j, undefined, "pct", { note: `${r.resiliations_30j.cur} résiliation(s), ${r.resiliations_30j.prev} le mois précédent` })}
+      <div class="kpi"><div class="lbl">Clients qui prolongent après 1 mois / 3 mois</div>
+        <div><span class="val">${fmt(r.prolongation_1_mois.taux, "pct")} / ${fmt(r.prolongation_3_mois.taux, "pct")}</span></div></div>` :(r.mrr != null ? kpi("MRR", r.mrr, undefined, "eur") : notConnected)}
+    </div>`;
+
+  // alertes
+  const perAccount = /^(essai_chaud|essai_bloque|risque|renouvellement):/;
+  const al = (d.alertes || []).filter((x) => !perAccount.test(x.key));
+  const L0 = d.listes || {};
+  const accountNote = d.acquisition.branche ? `<div class="alert info small"><b>Comptes à traiter :</b> ${(L0.essais_chauds || []).length} essai(s) chaud(s), ${(L0.essais_bloques || []).length} essai(s) bloqué(s), ${(L0.clients_a_risque || []).length} client(s) à risque → voir les listes plus bas.</div>` : "";
+  document.getElementById("alerts").innerHTML = accountNote + (al.length ? al.slice(0, 30).map((x) => `
+    <div class="alert ${x.severite}"><div class="t"><span class="tag">${x.severite === "haute" ? "▲ Urgent" : x.severite === "moyenne" ? "● À surveiller" : "ℹ Info"}</span>[${esc(x.etape)}] ${esc(x.titre)}</div>
+    <div class="small muted">${esc(x.detail)}</div><div class="a small">→ ${esc(x.action)}</div></div>`).join("")
+    + (al.length > 30 ? `<div class="muted small">… et ${al.length - 30} autres.</div>` : "")
+    : `<div class="empty">Aucune alerte sur les indicateurs : tout est dans les clous.</div>`);
+  document.getElementById("summary").textContent = d.synthese || "La synthèse IA est générée chaque lundi (et avec --weekly).";
+
+  // tables
+  document.getElementById("tVis").innerHTML = `<tr><th>Canal</th><th class="num">7 derniers jours</th><th class="num">Semaine précédente</th><th class="num">Évolution</th></tr>` +
+    (v.par_canal.length ? v.par_canal.map((c) => `<tr><td>${esc(c.canal)}</td><td class="num">${fmt(c.cur)}</td><td class="num">${fmt(c.prev)}</td><td class="num">${delta(c.cur, c.prev)}</td></tr>`).join("")
+      + `<tr><td><b>Total</b></td><td class="num"><b>${fmt(v.total.cur)}</b></td><td class="num">${fmt(v.total.prev)}</td><td class="num">${delta(v.total.cur, v.total.prev)}</td></tr>`
+      : `<tr><td colspan="4" class="empty">Aucune source de visibilité branchée.</td></tr>`);
+
+  const geoQ = (v.geo_par_question || []).filter((q) => q.question);
+  const geoC = (v.geo_par_question || []).find((q) => q.concurrents_cites);
+  document.getElementById("tGeo").innerHTML = `<tr><th>Question posée à l'IA</th><th>Flugia citée ?</th></tr>` +
+    (geoQ.length ? geoQ.map((q) => `<tr><td>${esc(q.question.replace(/_/g, " "))}</td><td>${q.citee ? '<span class="ok">✓ Oui</span>' : '<span class="ko">✗ Non</span>'}</td></tr>`).join("")
+      : `<tr><td colspan="2" class="empty">Pas encore de mesure GEO.</td></tr>`) +
+    (geoC ? `<tr><td colspan="2" class="small muted">Concurrents cités : ${Object.entries(geoC.concurrents_cites).map(([k, n]) => `${esc(k)} (${n})`).join(", ")}</td></tr>` : "");
+
+  const attr = a.attribution_90j || [];
+  document.getElementById("tAttr").innerHTML = `<tr><th>Canal</th><th class="num">Inscriptions</th><th class="num">Clients payants</th><th class="num">Taux</th><th class="num">Dépenses</th><th class="num">Coût / inscription</th><th class="num">Coût / client</th></tr>` +
+    (attr.length ? attr.map((x) => `<tr><td>${esc(x.canal)}</td><td class="num">${fmt(x.inscriptions)}</td><td class="num">${a.branche ? fmt(x.clients) : "—"}</td>
+      <td class="num">${a.branche && x.inscriptions ? fmt(100 * x.clients / x.inscriptions, "pct") : "—"}</td><td class="num">${x.depenses ? fmt(x.depenses, "eur") : "—"}</td>
+      <td class="num">${fmt(x.cout_par_inscription, "eur")}</td><td class="num">${fmt(x.cout_par_client, "eur")}</td></tr>`).join("")
+      : `<tr><td colspan="7" class="empty">Pas encore de données d'inscription.</td></tr>`);
+  document.getElementById("attrNote").textContent = a.branche
+    ? "Canal = source enregistrée à l'inscription (UTM). Les clients payants sont ceux inscrits sur la période et convertis depuis."
+    : "Inscriptions issues de GA4 en attendant la base de l'app : les clients payants et le coût par client apparaîtront une fois l'app branchée.";
+
+  // listes
+  const L = d.listes || {};
+  const listDefs = [
+    ["essais_chauds", "🔥 Essais chauds à appeler", ["compte", "jour_essai", "usage_7j", "canal"], ["Compte", "Jour", "Crédits 7 j", "Canal"]],
+    ["essais_bloques", "⏸ Essais bloqués (rien activé)", ["compte", "jour_essai", "canal"], ["Compte", "Jour", "Canal"]],
+    ["clients_a_risque", "⚠ Clients à risque de churn", ["compte", "baisse_pct", "mrr"], ["Compte", "Baisse d'usage %", "MRR €"]],
+    ["renouvellements", "📅 Renouvellements à venir", ["compte", "echeance", "mrr"], ["Compte", "Échéance", "MRR €"]],
+  ];
+  document.getElementById("lists").innerHTML = listDefs.map(([k, t, cols, heads]) => {
+    const rows = L[k] || [];
+    return `<div class="card"><h3>${t} <span class="badge">${rows.length}</span></h3><div class="table-scroll"><table>
+      <tr>${heads.map((h, j) => `<th class="${j ? "num" : ""}">${h}</th>`).join("")}</tr>
+      ${rows.length ? rows.slice(0, 15).map((row) => `<tr>${cols.map((c, j) => `<td class="${j ? "num" : ""}">${esc(typeof row[c] === "number" ? fmt(row[c]) : row[c] ?? "—")}</td>`).join("")}</tr>`).join("")
+        : `<tr><td colspan="${cols.length}" class="empty">${d.acquisition.branche ? "Personne pour l'instant." : "Disponible une fois la base de l'app branchée."}</td></tr>`}
+    </table></div></div>`;
+  }).join("");
+
+  document.getElementById("tSources").innerHTML = `<tr><th>Source</th><th>Configurée</th><th>Dernière collecte</th><th>Statut</th><th>Message</th></tr>` +
+    d.sources.map((s) => `<tr><td>${esc(s.nom)}</td><td>${s.configuree ? '<span class="ok">Oui</span>' : '<span class="muted">Non</span>'}</td>
+      <td>${s.derniere_collecte ? new Date(s.derniere_collecte).toLocaleString("fr-BE") : "—"}</td>
+      <td>${s.dernier_statut === "ok" ? '<span class="ok">✓ OK</span>' : s.dernier_statut === "erreur" ? '<span class="ko">✗ Erreur</span>' : s.dernier_statut ? esc(s.dernier_statut) : "—"}</td>
+      <td class="small muted">${esc(s.message || "")}</td></tr>`).join("");
+}
+
+// ---------- graphiques ----------
+const charts = {};
+function base(opts = {}) {
+  const grid = css("--grid"), text = css("--text-2");
+  return {
+    responsive: true, maintainAspectRatio: false, animation: false,
+    interaction: { mode: "index", intersect: false },
+    plugins: {
+      legend: { display: !!opts.legend, position: "top", align: "start", labels: { color: css("--text"), boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: "rectRounded" } },
+      tooltip: { callbacks: { title: (it) => "Semaine au " + short(DATA.hebdo.semaines[it[0].dataIndex]),
+        label: (c) => ` ${c.dataset.label} : ${opts.kind === "eur" ? money.format(c.parsed.y) : nf.format(c.parsed.y)}${opts.kind === "pct" ? " %" : ""}` } },
+    },
+    scales: {
+      x: { stacked: !!opts.stacked, grid: { display: false }, ticks: { color: text, maxRotation: 0, autoSkip: true, maxTicksLimit: 7 }, border: { color: grid } },
+      y: { stacked: !!opts.stacked, beginAtZero: true, max: opts.max, grid: { color: grid }, border: { display: false },
+           ticks: { color: text, maxTicksLimit: 5, callback: (v) => opts.kind === "eur" ? money.format(v) : nf.format(v) + (opts.kind === "pct" ? " %" : "") } },
+    },
+  };
+}
+function draw(id, type, datasets, opts) {
+  if (charts[id]) charts[id].destroy();
+  const el = document.getElementById(id);
+  const has = datasets.some((ds) => (ds.data || []).some((x) => x !== null && x !== 0));
+  if (!has) { el.parentElement.innerHTML = `<div class="empty">Pas encore de données.</div>`; return; }
+  charts[id] = new Chart(el, { type, data: { labels: DATA.hebdo.semaines.map(short), datasets }, options: base(opts) });
+}
+function bar(label, data, color) {
+  return { label, data, backgroundColor: color, borderColor: css("--surface"), borderWidth: { top: 0, left: 1, right: 1, bottom: 2 }, borderRadius: 4, borderSkipped: "start", maxBarThickness: 28 };
+}
+function line(label, data, color) {
+  return { label, data, borderColor: color, backgroundColor: color, borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, spanGaps: true, tension: 0.25 };
+}
+function drawCharts() {
+  if (!DATA) return;
+  const h = DATA.hebdo, pal = ["--s1", "--s2", "--s3", "--s4", "--s5"].map(css);
+  const fams = Object.keys(h.visibilite);
+  draw("cVis", "bar", fams.map((f, k) => bar(f, h.visibilite[f], pal[k % pal.length])), { stacked: true, legend: true });
+  draw("cGeo", "line", [line("Taux de citation", h.geo_taux, pal[0])], { kind: "pct", max: 100 });
+  draw("cVisits", "bar", [bar("Visites", h.visites, pal[0])], {});
+  draw("cSignups", "bar", [bar("Inscriptions", h.inscriptions, pal[0])], {});
+  draw("cDemos", "bar", [bar("Démos réservées", h.demos, pal[0])], {});
+  if (h.conversions) draw("cConv", "bar", [bar("Nouveaux clients", h.conversions, pal[0]), bar("Résiliations", h.resiliations, pal[1])], { legend: true });
+  else document.getElementById("cConv").parentElement.innerHTML = `<div class="empty">Disponible une fois la base de l'app / facturation branchée.</div>`;
+  draw("cMrr", "line", [line("MRR", h.mrr, pal[0])], { kind: "eur" });
+}
+render();
+drawCharts();
+</script>
+</body>
+</html>

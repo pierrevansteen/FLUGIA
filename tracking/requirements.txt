@@ -1,0 +1,11 @@
+# Socle
+requests>=2.31
+PyYAML>=6.0
+# Base Postgres (Supabase) en production ; SQLite est utilisé en local sans dépendance
+psycopg[binary]>=3.1
+# Comptes de service Google (GA4, Search Console)
+google-auth>=2.29
+# Synthèse IA
+anthropic>=2.14
+# Optionnel : base de l'app en MySQL
+# pymysql>=1.1
