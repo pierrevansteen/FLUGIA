@@ -7,6 +7,19 @@ from datetime import date, datetime, timedelta, timezone
 
 from .db import DB
 
+DEMO_SUMMARY = """**En une phrase** : la visibilité se maintient, mais les inscriptions reculent nettement cette semaine.
+
+**Les 4 étapes**
+- **Visibilité** : vues en léger recul, pénalisées par Meta Ads.
+- **Intérêt** : inscriptions et démos réservées en baisse.
+- **Acquisition** : conversion après l'essai proche de 20 %.
+- **Rétention** : base de clients payants stable, churn à surveiller.
+
+**3 priorités de la semaine**
+1. Appeler les essais à conclure avant la fin de leur période d'essai.
+2. Tester le parcours d'inscription : le taux de conversion du site a été divisé par deux.
+3. Contacter les clients dont l'usage chute de plus de 50 %."""
+
 FAMILY_UTM = [  # (utm_source, utm_medium, poids)
     ("google", "cpc", 22), ("google", "organic", 25), ("linkedin", "social", 18), ("facebook", "paid", 12),
     ("chatgpt.com", "referral", 5), ("partenaire-ucm", "referral", 8), ("", "", 10),
@@ -53,6 +66,13 @@ def seed(db: DB, days: int = 120) -> date:
                          ("site:social_organique", 16), ("site:referral", 11), ("site:direct", 35)):
             add(day, "ga4", ch, "sessions", base * growth * weekday * noise())
         add(day, "ga4", "geo", "ai_sessions", 3 * growth ** 2 * noise())
+        for site, base, since in (("ucm.be", 4, 0), ("startit.be", 3, 0), ("trends.knack.be", 2, 40),
+                                  ("lecho.be", 9, days - 5), ("google-business-directory.be", 1, 0)):
+            if i >= since and rnd.random() < 0.8:
+                v = base * weekday * noise() * (2.5 if site == "lecho.be" else 1)
+                add(day, "ga4", f"referral:{site}", "referral_sessions", v)
+                if rnd.random() < 0.08 * base:
+                    add(day, "ga4", f"referral:{site}", "referral_signups", 1)
         if rnd.random() < 0.9 * weekday:
             add(day, "google_calendar", "demos", "demos_booked", rnd.choice([1, 1, 1, 2]) * (0 if last_week and rnd.random() < .5 else 1))
         if rnd.random() < 0.75 * weekday:

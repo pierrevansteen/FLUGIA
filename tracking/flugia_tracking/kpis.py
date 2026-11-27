@@ -36,6 +36,23 @@ SITE_FAMILY = {
     "site:referral": "Referral",
     "site:social_payant": "Meta",
     "site:social_organique": "LinkedIn",
+    "site:geo_ia": "GEO",
+}
+
+
+SITE_LABELS = {
+    "site:seo": "Recherche Google (SEO)",
+    "site:direct": "Accès direct",
+    "site:referral": "Sites référents",
+    "site:google_ads": "Google Ads",
+    "site:social_payant": "Réseaux sociaux payants",
+    "site:social_organique": "Réseaux sociaux (organique)",
+    "site:geo_ia": "Assistants IA (GEO)",
+    "site:email": "E-mail",
+    "site:unassigned": "Non attribué",
+    "site:paid_other": "Autre publicité",
+    "site:display": "Display",
+    "site:organic_video": "Vidéo (organique)",
 }
 
 
@@ -44,6 +61,8 @@ def label(channel: str) -> str:
         return CHANNEL_LABELS[channel]
     if channel.startswith("manuel:"):
         return "Manuel · " + channel.split(":", 1)[1].replace("_", " ")
+    if channel in SITE_LABELS:
+        return "Site · " + SITE_LABELS[channel]
     if channel.startswith("site:"):
         return "Site · " + channel.split(":", 1)[1].replace("_", " ")
     return channel
@@ -219,6 +238,7 @@ def compute(db: DB, as_of: date | None = None) -> dict:
             {"canal": label(ch), "cur": T(data.series("sessions", ch), c0, c1), "prev": T(data.series("sessions", ch), p0, p1)}
             for ch in data.channels("sessions")
         ],
+        "sites_referents": _referrers(data, as_of, cfg.get("referents", {})),
     }
 
     # ---------------- Acquisition ----------------
@@ -308,6 +328,45 @@ def _geo_detail(data: Data) -> list[dict]:
     return out
 
 
+def _referrers(data: Data, as_of: date, rules: dict) -> list[dict]:
+    """Sites qui envoient des visiteurs (presse, partenaires, annuaires) : 30 derniers jours vs 30 précédents.
+
+    Un site est « nouveau » s'il n'avait envoyé aucune visite pendant les `jours_historique` jours
+    précédant la semaine en cours.
+    """
+    history = rules.get("jours_historique", 60)
+    w0 = as_of - timedelta(days=6)
+    c0, p0 = as_of - timedelta(days=29), as_of - timedelta(days=59)
+    sites: dict[str, dict] = {}
+    for day, _s, ch, m, v in data.rows:
+        if not ch.startswith("referral:") or m not in ("referral_sessions", "referral_signups"):
+            continue
+        r = sites.setdefault(ch.split(":", 1)[1], {"site": ch.split(":", 1)[1], "visites_30j": 0.0, "visites_30j_prec": 0.0,
+                                                   "inscriptions_30j": 0.0, "visites_7j": 0.0, "avant": 0.0, "premiere_visite": day})
+        r["premiere_visite"] = min(r["premiere_visite"], day)
+        if m == "referral_sessions":
+            if c0 <= day <= as_of:
+                r["visites_30j"] += v
+            elif p0 <= day < c0:
+                r["visites_30j_prec"] += v
+            if w0 <= day <= as_of:
+                r["visites_7j"] += v
+            elif w0 - timedelta(days=history) <= day < w0:
+                r["avant"] += v
+        elif c0 <= day <= as_of:
+            r["inscriptions_30j"] += v
+    out = []
+    for r in sites.values():
+        if not (r["visites_30j"] or r["visites_30j_prec"]):
+            continue
+        r["nouveau"] = r["avant"] == 0 and r["visites_7j"] > 0
+        r["premiere_visite"] = r["premiere_visite"].isoformat()
+        del r["avant"]
+        out.append(r)
+    out.sort(key=lambda r: -r["visites_30j"])
+    return out
+
+
 def _attribution(data: Data, as_of: date) -> list[dict]:
     start = as_of - timedelta(days=89)
     rows = {f: {"canal": f, "inscriptions": 0, "clients": 0, "depenses": 0.0} for f in FAMILIES}
@@ -376,6 +435,7 @@ def _lists(data: Data, as_of: date, rules: dict) -> dict:
         if is_trial(a, as_of) and a["created_at"]:
             day = (as_of - a["created_at"]).days + 1
             usage = a.get("usage_7d") or 0
+            day = min(day, 15)
             if day >= r_hot["jour_essai_min"] and usage >= r_hot["usage_7j_min"]:
                 hot.append(row(a, jour_essai=day, usage_7j=usage, fin_essai=str(a["trial_ends_at"] or "")))
             if day > r_st["jours_depuis_inscription"] and not a["activated_at"]:

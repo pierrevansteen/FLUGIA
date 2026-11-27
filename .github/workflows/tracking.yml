@@ -12,6 +12,13 @@ on:
         description: "Forcer la synthèse hebdomadaire"
         type: boolean
         default: false
+      only:
+        description: "Sources à collecter uniquement (ex. geo ou ga4,search_console). Vide = toutes"
+        default: ""
+      test_notification:
+        description: "Envoyer un exemple d'alertes et de rapport PDF (données fictives)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -32,26 +39,26 @@ jobs:
       # Base : Postgres (ex. Supabase gratuit). Sans DATABASE_URL, une base SQLite est conservée dans le cache GitHub.
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       # Google (GA4, Search Console, Agenda) : connexion sans clé, voir l'étape « Connexion Google »
-      GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID }}
-      SEARCH_CONSOLE_SITE: ${{ vars.SEARCH_CONSOLE_SITE }}
-      GOOGLE_CALENDAR_ID: ${{ vars.GOOGLE_CALENDAR_ID }}
-      DEMO_KEYWORDS: ${{ vars.DEMO_KEYWORDS }}
-      BRAND_TERMS: ${{ vars.BRAND_TERMS }}
+      GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID || secrets.GA4_PROPERTY_ID }}
+      SEARCH_CONSOLE_SITE: ${{ vars.SEARCH_CONSOLE_SITE || secrets.SEARCH_CONSOLE_SITE }}
+      GOOGLE_CALENDAR_ID: ${{ vars.GOOGLE_CALENDAR_ID || secrets.GOOGLE_CALENDAR_ID }}
+      DEMO_KEYWORDS: ${{ vars.DEMO_KEYWORDS || secrets.DEMO_KEYWORDS }}
+      BRAND_TERMS: ${{ vars.BRAND_TERMS || secrets.BRAND_TERMS }}
       # Google Ads
       GOOGLE_ADS_DEVELOPER_TOKEN: ${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}
       GOOGLE_ADS_CLIENT_ID: ${{ secrets.GOOGLE_ADS_CLIENT_ID }}
       GOOGLE_ADS_CLIENT_SECRET: ${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}
       GOOGLE_ADS_REFRESH_TOKEN: ${{ secrets.GOOGLE_ADS_REFRESH_TOKEN }}
-      GOOGLE_ADS_CUSTOMER_ID: ${{ vars.GOOGLE_ADS_CUSTOMER_ID }}
-      GOOGLE_ADS_LOGIN_CUSTOMER_ID: ${{ vars.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}
+      GOOGLE_ADS_CUSTOMER_ID: ${{ vars.GOOGLE_ADS_CUSTOMER_ID || secrets.GOOGLE_ADS_CUSTOMER_ID }}
+      GOOGLE_ADS_LOGIN_CUSTOMER_ID: ${{ vars.GOOGLE_ADS_LOGIN_CUSTOMER_ID || secrets.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}
       # Meta
       META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
-      META_AD_ACCOUNT_ID: ${{ vars.META_AD_ACCOUNT_ID }}
-      META_IG_USER_ID: ${{ vars.META_IG_USER_ID }}
+      META_AD_ACCOUNT_ID: ${{ vars.META_AD_ACCOUNT_ID || secrets.META_AD_ACCOUNT_ID }}
+      META_IG_USER_ID: ${{ vars.META_IG_USER_ID || secrets.META_IG_USER_ID }}
       # LinkedIn
       LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
-      LINKEDIN_AD_ACCOUNT_ID: ${{ vars.LINKEDIN_AD_ACCOUNT_ID }}
-      LINKEDIN_ORGANIZATION_ID: ${{ vars.LINKEDIN_ORGANIZATION_ID }}
+      LINKEDIN_AD_ACCOUNT_ID: ${{ vars.LINKEDIN_AD_ACCOUNT_ID || secrets.LINKEDIN_AD_ACCOUNT_ID }}
+      LINKEDIN_ORGANIZATION_ID: ${{ vars.LINKEDIN_ORGANIZATION_ID || secrets.LINKEDIN_ORGANIZATION_ID }}
       # IA : mesure GEO + synthèse hebdomadaire
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       # Plus tard : base de l'app et facturation
@@ -59,13 +66,15 @@ jobs:
       STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
       # Notifications
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}        # pour joindre le PDF (droits chat:write, files:write)
+      SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID || secrets.SLACK_CHANNEL_ID }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_PORT: ${{ secrets.SMTP_PORT }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
       SMTP_FROM: ${{ secrets.SMTP_FROM }}
       ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
-      DASHBOARD_URL: ${{ vars.DASHBOARD_URL }}
+      DASHBOARD_URL: ${{ vars.DASHBOARD_URL || secrets.DASHBOARD_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -86,6 +95,9 @@ jobs:
 
       - run: pip install -r requirements.txt
 
+      - name: Navigateur pour le rapport PDF
+        run: python -m playwright install --with-deps chromium
+
       - name: Restaurer la base SQLite (si pas de DATABASE_URL)
         if: env.DATABASE_URL == ''
         uses: actions/cache/restore@v4
@@ -98,6 +110,8 @@ jobs:
         run: |
           ARGS="--days ${{ github.event.inputs.days || '7' }}"
           if [ "${{ github.event.inputs.weekly }}" = "true" ]; then ARGS="$ARGS --weekly"; fi
+          if [ -n "${{ github.event.inputs.only }}" ]; then ARGS="$ARGS --only ${{ github.event.inputs.only }}"; fi
+          if [ "${{ github.event.inputs.test_notification }}" = "true" ]; then python -m flugia_tracking test-notify; fi
           python -m flugia_tracking run $ARGS
 
       - name: Sauvegarder la base SQLite
@@ -107,7 +121,7 @@ jobs:
           path: tracking/data/tracking.db
           key: tracking-db-${{ github.run_id }}
 
-      - name: Publier le tableau de bord (artefact téléchargeable)
+      - name: Publier le tableau de bord et le rapport PDF (artefact téléchargeable)
         uses: actions/upload-artifact@v4
         with:
           name: tableau-de-bord

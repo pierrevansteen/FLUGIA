@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Rapport de pilotage commercial Flugia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: Inter, Arial, sans-serif; color: {{ C.ink }}; font-size: 9.4pt; line-height: 1.45; background: #fff; }
+  .page { page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+  .avoid { break-inside: avoid; page-break-inside: avoid; }
+
+  /* En-tête */
+  .cover { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 12px; }
+  .cover .logo svg { height: 26px; width: auto; display: block; }
+  .cover .meta { text-align: right; }
+  td .wrap { white-space: normal; }
+  .cover h1 { font-size: 17pt; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+  .cover .period { color: {{ C.muted }}; font-size: 9pt; margin-top: 2px; }
+  .bar { height: 4px; border-radius: 4px; background: {{ gradient }}; margin-bottom: 10px; }
+  .demo { background: #FFF5E0; color: #7A5200; border-radius: 6px; padding: 6px 10px; margin-bottom: 12px; font-size: 8.5pt; }
+
+  h2 { font-size: 12pt; font-weight: 700; margin: 13px 0 7px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+  h2 .num { display: inline-flex; width: 20px; height: 20px; border-radius: 6px; background: {{ gradient }}; color: #fff; font-size: 9pt; align-items: center; justify-content: center; }
+  h3 { font-size: 9.5pt; font-weight: 600; margin: 0 0 6px; }
+  .sub { color: {{ C.muted }}; font-size: 8.3pt; margin: -4px 0 8px; }
+
+  /* Synthèse */
+  .summary { background: {{ C.bg_softer }}; border: 1px solid #E3EAF3; border-left: 3px solid {{ C.cta }}; border-radius: 8px; padding: 10px 14px; }
+  .summary p { margin: 0 0 4px; } .summary p:last-child { margin: 0; }
+  .summary ol, .summary ul { margin: 4px 0 6px; padding-left: 18px; } .summary li { margin: 2px 0; }
+  .summary h4 { margin: 8px 0 4px; font-size: 9.5pt; }
+
+  /* Indicateurs */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .kpi { border: 1px solid #E3EAF3; border-radius: 8px; padding: 10px 11px; }
+  .kpi .stage { font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: {{ C.cta }}; margin-bottom: 6px; }
+  .kpi .lbl { color: {{ C.muted }}; font-size: 7.8pt; }
+  .kpi .val { font-size: 16pt; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+  .kpi .row { margin-top: 6px; padding-top: 6px; border-top: 1px solid #EEF2F7; }
+  .kpi .row .v { font-weight: 600; font-size: 10pt; }
+  .kpi .na { color: {{ C.muted }}; font-size: 8pt; margin-top: 6px; }
+  .d { font-size: 7.6pt; font-weight: 600; padding: 1px 5px; border-radius: 10px; margin-left: 4px; white-space: nowrap; }
+  .d.good { color: {{ C.good }}; background: #E7F5EA; } .d.bad { color: {{ C.bad }}; background: #FDEDED; } .d.flat { color: {{ C.muted }}; background: #F1F3F6; }
+
+  /* Alertes */
+  .alert { display: grid; grid-template-columns: 92px 1fr; gap: 10px; padding: 6px 0; border-bottom: 1px solid #EEF2F7; }
+  .alert:last-child { border-bottom: 0; }
+  .sev { font-size: 7.3pt; font-weight: 700; border-radius: 4px; padding: 2px 6px; text-align: center; align-self: start; letter-spacing: .02em; }
+  .alert .t { font-weight: 600; }
+  .alert .dt { color: {{ C.ink_2 }}; font-size: 8.4pt; }
+  .alert .ac { font-size: 8.4pt; margin-top: 2px; } .alert .ac b { color: {{ C.cta }}; font-weight: 600; }
+  .stage-tag { color: {{ C.muted }}; font-weight: 500; font-size: 7.8pt; margin-right: 4px; }
+
+  /* Tableaux et cartes */
+  .card { border: 1px solid #E3EAF3; border-radius: 8px; padding: 10px 12px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th { text-align: left; font-size: 7.6pt; font-weight: 600; color: {{ C.muted }}; text-transform: uppercase; letter-spacing: .04em; padding: 5px 6px; border-bottom: 1px solid {{ C.line }}; }
+  td { padding: 5px 6px; border-bottom: 1px solid #EEF2F7; font-size: 8.6pt; }
+  tr:last-child td { border-bottom: 0; }
+  td.n, th.n { text-align: right; }
+  tr.total td { font-weight: 700; border-top: 1px solid {{ C.line }}; }
+  .ok { color: {{ C.good }}; font-weight: 600; } .ko { color: {{ C.bad }}; font-weight: 600; }
+  .badge { font-size: 7pt; font-weight: 600; color: {{ C.cta }}; background: #EAF0FF; border-radius: 10px; padding: 1px 6px; margin-left: 4px; }
+  .legend { display: flex; gap: 12px; font-size: 7.8pt; color: {{ C.ink_2 }}; margin-bottom: 4px; }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .empty { color: {{ C.muted }}; font-style: italic; font-size: 8.4pt; padding: 8px 0; }
+  .note { color: {{ C.muted }}; font-size: 7.8pt; margin-top: 6px; }
+  svg .ax { font-family: Inter, Arial, sans-serif; font-size: 8px; fill: {{ C.muted }}; }
+  svg .lbl { font-family: Inter, Arial, sans-serif; font-size: 8.5px; font-weight: 600; fill: {{ C.ink }}; }
+</style>
+</head>
+<body>
+{% set v = s.visibilite %}{% set i = s.interet %}{% set a = s.acquisition %}{% set r = s.retention %}
+
+{% macro dl(cur, prev, good_up=True, points=False) -%}
+  {%- set d = delta(cur, prev, good_up, points) -%}
+  {%- if d %}<span class="d {{ d.tone }}">{{ d.text }}</span>{% endif -%}
+{%- endmacro %}
+
+<!-- =========================== PAGE 1 : SYNTHÈSE =========================== -->
+<section class="page">
+  <div class="cover">
+    <div class="logo">{{ logo | safe }}</div>
+    <div class="meta">
+      <h1>Rapport de pilotage commercial</h1>
+      <div class="period">Semaine du {{ s.periode.debut | day }} au {{ s.periode.fin | day(True) }} · comparée à la semaine précédente</div>
+    </div>
+  </div>
+  <div class="bar"></div>
+  {% if demo %}<div class="demo"><b>Données de démonstration</b> : chiffres fictifs, pour illustrer la mise en page.</div>{% endif %}
+
+  {% if summary_html %}
+  <h2>L'essentiel de la semaine</h2>
+  <div class="summary avoid">{{ summary_html | safe }}</div>
+  {% endif %}
+
+  <h2>Indicateurs clés</h2>
+  <div class="kpis avoid">
+    <div class="kpi">
+      <div class="stage">1 · Visibilité</div>
+      <div class="lbl">Vues, tous canaux (7 j)</div>
+      <div class="val">{{ v.total.cur | num }}{{ dl(v.total.cur, v.total.prev) }}</div>
+      <div class="row"><div class="lbl">Recherches « flugia »</div><div class="v">{{ v.recherches_marque.cur | num }}{{ dl(v.recherches_marque.cur, v.recherches_marque.prev) }}</div></div>
+      <div class="row"><div class="lbl">Citée par les assistants IA</div><div class="v">{{ v.geo_taux_citation.cur | pct(0) }}{{ dl(v.geo_taux_citation.cur, v.geo_taux_citation.prev, True, True) }}</div></div>
+    </div>
+    <div class="kpi">
+      <div class="stage">2 · Intérêt</div>
+      <div class="lbl">Inscriptions à l'essai (7 j)</div>
+      <div class="val">{{ i.inscriptions.cur | num }}{{ dl(i.inscriptions.cur, i.inscriptions.prev) }}</div>
+      <div class="row"><div class="lbl">Démos réservées</div><div class="v">{{ i.demos_reservees.cur | num }}{{ dl(i.demos_reservees.cur, i.demos_reservees.prev) }}</div></div>
+      <div class="row"><div class="lbl">Visites du site</div><div class="v">{{ i.visites.cur | num }}{{ dl(i.visites.cur, i.visites.prev) }}</div></div>
+    </div>
+    <div class="kpi">
+      <div class="stage">3 · Acquisition</div>
+      {% if a.branche %}
+      <div class="lbl">Conversion après l'essai (28 j)</div>
+      <div class="val">{{ a.taux_conversion.cur | pct(0) }}{{ dl(a.taux_conversion.cur, a.taux_conversion.prev, True, True) }}</div>
+      <div class="row"><div class="lbl">Nouveaux clients (7 j)</div><div class="v">{{ a.nouveaux_clients.cur | num }}{{ dl(a.nouveaux_clients.cur, a.nouveaux_clients.prev) }}</div></div>
+      <div class="row"><div class="lbl">Essais activés</div><div class="v">{{ a.taux_activation | pct(0) }}</div></div>
+      {% else %}
+      <div class="lbl">Conversion après l'essai</div><div class="val">—</div>
+      <div class="na">Disponible après le raccordement de la base de l'application.</div>
+      {% endif %}
+    </div>
+    <div class="kpi">
+      <div class="stage">4 · Rétention</div>
+      {% if r.branche %}
+      <div class="lbl">Clients payants</div>
+      <div class="val">{{ r.clients_payants | num }}</div>
+      <div class="row"><div class="lbl">MRR</div><div class="v">{{ r.mrr | eur }}</div></div>
+      <div class="row"><div class="lbl">Churn 30 j · prolongation 1 mois</div><div class="v">{{ r.taux_churn_30j | pct(0) }} · {{ r.prolongation_1_mois.taux | pct(0) }}</div></div>
+      {% else %}
+      <div class="lbl">Clients payants</div><div class="val">—</div>
+      <div class="na">Disponible après le raccordement de la facturation.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <h2>Points d'attention et actions recommandées</h2>
+  <div class="card">
+    {% for x in alerts[:4] %}
+    <div class="alert avoid">
+      <div class="sev" style="color: {{ SEV[x.severite].color }}; background: {{ SEV[x.severite].bg }}">{{ SEV[x.severite].label }}</div>
+      <div>
+        <div class="t"><span class="stage-tag">{{ x.etape }} ·</span>{{ x.titre }}</div>
+        <div class="dt">{{ x.detail }}</div>
+        <div class="ac"><b>Action :</b> {{ x.action }}</div>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty">Aucun point d'attention cette semaine : tous les indicateurs suivis sont dans les seuils fixés.</div>
+    {% endfor %}
+    {% set L0 = s.listes or {} %}<div class="note">{% if alerts | length > 4 %}{{ alerts | length - 4 }} autre(s) point(s) d'attention en annexe.{% endif %}{% if L0 %} Comptes à traiter : {{ (L0.essais_chauds or []) | length }} essai(s) à conclure, {{ (L0.clients_a_risque or []) | length }} client(s) à risque.{% endif %}</div>
+
+  </div>
+</section>
+
+<!-- =========================== PAGE 2 : VISIBILITÉ =========================== -->
+<section class="page">
+  <h2><span class="num">1</span>Visibilité</h2>
+  <div class="sub">Nombre de fois où la marque est vue, par canal et au total.</div>
+  <div class="card avoid">
+    <h3>Vues par semaine et par canal (13 semaines)</h3>
+    <div class="legend">{% for k, c in legend %}<span><i style="background: {{ c }}"></i>{{ k }}</span>{% endfor %}</div>
+    {{ charts.visibilite | safe }}
+  </div>
+  <div class="grid2" style="margin-top: 10px">
+    <div class="card avoid">
+      <h3>Vues par canal · 7 derniers jours</h3>
+      <table>
+        <tr><th>Canal</th><th class="n">7 jours</th><th class="n">Sem. préc.</th><th class="n">Évol.</th></tr>
+        {% for c in v.par_canal %}
+        <tr><td>{{ c.canal }}</td><td class="n">{{ c.cur | num }}</td><td class="n">{{ c.prev | num }}</td><td class="n">{{ dl(c.cur, c.prev) }}</td></tr>
+        {% else %}<tr><td colspan="4" class="empty">Aucune source publicitaire ou SEO raccordée.</td></tr>{% endfor %}
+        {% if v.par_canal %}<tr class="total"><td>Total</td><td class="n">{{ v.total.cur | num }}</td><td class="n">{{ v.total.prev | num }}</td><td class="n">{{ dl(v.total.cur, v.total.prev) }}</td></tr>{% endif %}
+      </table>
+      <div class="note">Dépenses publicitaires : {{ v.depenses.cur | eur }} (semaine précédente : {{ v.depenses.prev | eur }}).</div>
+    </div>
+    <div class="card avoid">
+      <h3>Visibilité dans les assistants IA (GEO)</h3>
+      {% set qs = v.geo_par_question | selectattr("question", "defined") | list %}
+      {% set comp = v.geo_par_question | selectattr("concurrents_cites", "defined") | list %}
+      {% if qs %}
+      <table>
+        <tr><th>Question posée</th><th class="n">Flugia citée</th></tr>
+        {% for q in qs %}<tr><td>{{ q.question | replace("_", " ") }}</td><td class="n">{% if q.citee %}<span class="ok">Oui</span>{% else %}<span class="ko">Non</span>{% endif %}</td></tr>{% endfor %}
+      </table>
+      {% if comp %}<div class="note">Concurrents cités : {% for k, n in comp[0].concurrents_cites.items() %}{{ k }} ({{ n }}){% if not loop.last %}, {% endif %}{% endfor %}.</div>{% endif %}
+      {% else %}<div class="empty">Première mesure à venir (mesure hebdomadaire, le lundi).</div>{% endif %}
+      <div class="note">Visites issues des assistants IA (7 j) : {{ v.trafic_ia.cur | num }} (semaine précédente : {{ v.trafic_ia.prev | num }}).</div>
+    </div>
+  </div>
+  <div class="card avoid" style="margin-top: 10px">
+    <h3>Taux de citation de Flugia par les assistants IA</h3>
+    {{ charts.geo | safe }}
+  </div>
+</section>
+
+<!-- =========================== PAGE 3 : INTÉRÊT & ACQUISITION =========================== -->
+<section class="page">
+  <h2><span class="num">2</span>Intérêt</h2>
+  <div class="sub">Visites, inscriptions à l'essai gratuit et demandes de démo.</div>
+  <div class="grid3 avoid">
+    <div class="card"><h3>Visites du site</h3>{{ charts.visites | safe }}</div>
+    <div class="card"><h3>Inscriptions</h3>{{ charts.inscriptions | safe }}</div>
+    <div class="card"><h3>Démos réservées</h3>{{ charts.demos | safe }}</div>
+  </div>
+  {% if i.source_inscriptions == "ga4" or not i.source_inscriptions %}<div class="note">Inscriptions mesurées par l'événement GA4 d'inscription, en attendant le raccordement de la base de l'application.</div>{% endif %}
+
+  <div class="grid2" style="margin-top: 10px">
+    <div class="card avoid">
+      <h3>Visites par canal · 7 derniers jours</h3>
+      <table>
+        <tr><th>Canal</th><th class="n">7 jours</th><th class="n">Sem. préc.</th><th class="n">Évol.</th></tr>
+        {% for c in i.visites_par_canal if c.cur or c.prev %}
+        <tr><td>{{ c.canal | replace("Site · ", "") }}</td><td class="n">{{ c.cur | num }}</td><td class="n">{{ c.prev | num }}</td><td class="n">{{ dl(c.cur, c.prev) }}</td></tr>
+        {% else %}<tr><td colspan="4" class="empty">Pas de données GA4.</td></tr>{% endfor %}
+      </table>
+    </div>
+    <div class="card avoid">
+      <h3>Sites référents (presse, partenaires) · 30 jours</h3>
+      <table>
+        <tr><th>Site</th><th class="n">Visites</th><th class="n">30 j préc.</th><th class="n">Inscr.</th></tr>
+        {% for x in (i.sites_referents or [])[:10] %}
+        <tr><td>{{ x.site }}{% if x.nouveau %}<span class="badge">nouveau</span>{% endif %}</td><td class="n">{{ x.visites_30j | num }}</td><td class="n">{{ x.visites_30j_prec | num }}</td><td class="n">{{ x.inscriptions_30j | num }}</td></tr>
+        {% else %}<tr><td colspan="4" class="empty">Aucun site référent sur la période.</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <h2><span class="num">3</span>Acquisition</h2>
+  <div class="sub">Origine des inscriptions et des clients payants sur 90 jours, et coût par canal.</div>
+  <div class="card avoid">
+    <table>
+      <tr><th>Canal</th><th class="n">Inscriptions</th><th class="n">Clients</th><th class="n">Taux</th><th class="n">Dépenses</th><th class="n">Coût / inscr.</th><th class="n">Coût / client</th></tr>
+      {% for x in a.attribution_90j %}
+      <tr><td>{{ x.canal }}</td><td class="n">{{ x.inscriptions | num }}</td>
+        <td class="n">{{ (x.clients | num) if a.branche else "—" }}</td>
+        <td class="n">{{ ((100 * x.clients / x.inscriptions) | pct(0)) if a.branche and x.inscriptions else "—" }}</td>
+        <td class="n">{{ (x.depenses | eur) if x.depenses else "—" }}</td><td class="n">{{ x.cout_par_inscription | eur }}</td><td class="n">{{ x.cout_par_client | eur }}</td></tr>
+      {% else %}<tr><td colspan="7" class="empty">Pas encore d'inscriptions attribuées à un canal.</td></tr>{% endfor %}
+    </table>
+    {% if not a.branche %}<div class="note">Les clients payants et le coût par client s'afficheront après le raccordement de la base de l'application.</div>{% endif %}
+  </div>
+  {% if not r.branche %}
+  <h2><span class="num">4</span>Rétention</h2>
+  <div class="card"><div class="empty">Les indicateurs de rétention (clients payants, churn, prolongations) et les listes de comptes à traiter s'afficheront après le raccordement de la base de l'application et de l'outil de facturation.</div></div>
+  {% endif %}
+</section>
+
+<!-- =========================== PAGE 4 : RÉTENTION & COMPTES =========================== -->
+{% if r.branche %}
+<section class="page">
+  <h2><span class="num">4</span>Rétention</h2>
+  <div class="grid2 avoid">
+    <div class="card"><h3>Nouveaux clients et résiliations par semaine</h3>
+      <div class="legend"><span><i style="background: {{ C.main }}"></i>Nouveaux clients</span><span><i style="background: #9AA5B1"></i>Résiliations</span></div>
+      {{ charts.conversions | safe }}</div>
+    <div class="card"><h3>Revenu mensuel récurrent (MRR)</h3>{{ charts.mrr | safe if charts.mrr else '<div class="empty">Pas encore de données.</div>' | safe }}</div>
+  </div>
+  <div class="card avoid" style="margin-top: 10px">
+    <table>
+      <tr><th>Indicateur</th><th class="n">Valeur</th></tr>
+      <tr><td>Clients payants</td><td class="n">{{ r.clients_payants | num }}</td></tr>
+      <tr><td>Résiliations sur 30 jours</td><td class="n">{{ r.resiliations_30j.cur | num }} (mois précédent : {{ r.resiliations_30j.prev | num }})</td></tr>
+      <tr><td>Taux de churn sur 30 jours</td><td class="n">{{ r.taux_churn_30j | pct }}</td></tr>
+      <tr><td>Clients qui prolongent après 1 mois</td><td class="n">{{ r.prolongation_1_mois.taux | pct }} ({{ r.prolongation_1_mois.cohorte }} clients)</td></tr>
+      <tr><td>Clients qui prolongent après 3 mois</td><td class="n">{{ r.prolongation_3_mois.taux | pct }} ({{ r.prolongation_3_mois.cohorte }} clients)</td></tr>
+    </table>
+  </div>
+
+  {% set L = s.listes or {} %}
+</section>
+<section class="page">
+  <h2>Comptes à traiter</h2>
+  <div class="sub">Listes nominatives issues de l'application, à répartir entre les personnes en charge du suivi commercial.</div>
+  <div class="grid2">
+    {% for key, title, cols in [
+      ("essais_chauds", "Essais à conclure", [("compte", "Compte"), ("jour_essai", "Jour"), ("usage_7j", "Crédits 7 j"), ("canal", "Origine")]),
+      ("essais_bloques", "Essais sans activation", [("compte", "Compte"), ("jour_essai", "Jour"), ("canal", "Origine")]),
+      ("clients_a_risque", "Clients à risque de départ", [("compte", "Compte"), ("baisse_pct", "Baisse %"), ("mrr", "MRR €")]),
+      ("renouvellements", "Renouvellements à venir", [("compte", "Compte"), ("echeance", "Échéance"), ("mrr", "MRR €")]),
+    ] %}
+    <div class="card avoid">
+      <h3>{{ title }} <span class="badge">{{ (L[key] or []) | length }}</span></h3>
+      <table>
+        <tr>{% for c, h in cols %}<th class="{{ 'n' if not loop.first }}">{{ h }}</th>{% endfor %}</tr>
+        {% for row in (L[key] or [])[:10] %}
+        <tr>{% for c, h in cols %}<td class="{{ 'n' if not loop.first }}">{% if row[c] is number %}{{ row[c] | num }}{% elif c == "echeance" %}{{ row[c] | day }}{% else %}{{ row[c] or "—" }}{% endif %}</td>{% endfor %}</tr>
+        {% else %}<tr><td colspan="{{ cols | length }}" class="empty">Aucun compte concerné.</td></tr>{% endfor %}
+      </table>
+      {% if (L[key] or []) | length > 10 %}<div class="note">Et {{ (L[key] or []) | length - 10 }} autre(s) : liste complète dans le tableau de bord.</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+<section class="page">
+  <h2>Annexe · Sources de données</h2>
+  <div class="card avoid">
+    <table>
+      <tr><th>Source</th><th>Statut</th><th>Dernière collecte</th></tr>
+      {% for src in s.sources %}
+      <tr><td>{{ src.nom }}</td>
+        <td>{% if not src.configuree %}<span style="color: {{ C.muted }}">Non raccordée</span>{% elif src.dernier_statut == "ok" %}<span class="ok">Opérationnelle</span>{% elif src.dernier_statut == "erreur" %}<span class="ko">En erreur</span>{% else %}—{% endif %}</td>
+        <td>{{ (src.derniere_collecte | day(True)) if src.derniere_collecte else "—" }}</td></tr>
+      {% endfor %}
+    </table>
+    <div class="note">Rapport généré automatiquement le {{ s.genere_le | day(True) }}. Évolutions calculées sur 7 jours par rapport aux 7 jours précédents, sauf mention contraire. Les chiffres sont calculés directement à partir des sources ; la synthèse rédigée est produite par l'IA à partir de ces chiffres.</div>
+  </div>
+
+  {% if alerts | length > 4 %}
+  <h2>Annexe · Autres points d'attention</h2>
+  <div class="card">
+    {% for x in alerts[4:] %}
+    <div class="alert avoid">
+      <div class="sev" style="color: {{ SEV[x.severite].color }}; background: {{ SEV[x.severite].bg }}">{{ SEV[x.severite].label }}</div>
+      <div><div class="t"><span class="stage-tag">{{ x.etape }} ·</span>{{ x.titre }}</div><div class="dt">{{ x.detail }}</div><div class="ac"><b>Action :</b> {{ x.action }}</div></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+</body>
+</html>

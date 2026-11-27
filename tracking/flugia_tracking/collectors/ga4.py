@@ -17,6 +17,7 @@ CHANNEL_MAP = {
     "organic social": "social_organique",
     "direct": "direct",
     "email": "email",
+    "ai assistant": "geo_ia",   # canal GA4 « AI Assistant » (ChatGPT, Perplexity, Gemini...)
 }
 
 
@@ -84,4 +85,29 @@ class GA4Collector(Collector):
             day = f"{d[:4]}-{d[4:6]}-{d[6:]}"
             metric = "web_signups" if name == event else "web_demo_requests"
             result.add(day, _channel(group), metric, count)
+
+        # 4. Détail des sites référents (presse, partenaires, annuaires...) : visites et inscriptions par site.
+        #    Métriques distinctes (referral_*) pour ne pas compter deux fois les visites du canal Referral.
+        own = [d.strip().lower() for d in os.environ.get("OWN_DOMAINS", "flugia.com").split(",") if d.strip()]
+        referral = {"filter": {"fieldName": "sessionDefaultChannelGroup", "stringFilter": {"matchType": "EXACT", "value": "Referral"}}}
+        for (d, source), (sessions,) in self._report(token, start, end, ["date", "sessionSource"], ["sessions"], referral):
+            site = _domain(source)
+            if any(site == o or site.endswith("." + o) for o in own):
+                continue  # auto-référencement (app.flugia.com -> flugia.com, etc.)
+            day = f"{d[:4]}-{d[4:6]}-{d[6:]}"
+            result.add(day, f"referral:{site}", "referral_sessions", sessions)
+        ref_events = {"andGroup": {"expressions": [referral, {"filter": {"fieldName": "eventName", "stringFilter": {"matchType": "EXACT", "value": event}}}]}}
+        for (d, source), (count,) in self._report(token, start, end, ["date", "sessionSource"], ["eventCount"], ref_events):
+            site = _domain(source)
+            if any(site == o or site.endswith("." + o) for o in own):
+                continue
+            day = f"{d[:4]}-{d[4:6]}-{d[6:]}"
+            result.add(day, f"referral:{site}", "referral_signups", count)
         return result
+
+
+def _domain(source: str) -> str:
+    s = (source or "(inconnu)").lower().strip()
+    for prefix in ("https://", "http://", "www.", "m.", "l.", "lm."):
+        s = s.removeprefix(prefix)
+    return s.split("/")[0] or "(inconnu)"

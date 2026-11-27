@@ -66,14 +66,20 @@ def test_ga4(monkeypatch):
         dims = [d["name"] for d in json["dimensions"]]
         if dims == ["date", "sessionDefaultChannelGroup"]:
             return {"rows": [{"dimensionValues": [{"value": "20261101"}, {"value": "Referral"}], "metricValues": [{"value": "40"}, {"value": "30"}]}]}
-        if dims == ["date", "sessionSource"]:
+        if dims == ["date", "sessionSource"] and "orGroup" in json["dimensionFilter"]:
             return {"rows": [{"dimensionValues": [{"value": "20261101"}, {"value": "chatgpt.com"}], "metricValues": [{"value": "4"}]}]}
+        if dims == ["date", "sessionSource"] and "andGroup" in json["dimensionFilter"]:
+            return {"rows": [{"dimensionValues": [{"value": "20261101"}, {"value": "www.lecho.be"}], "metricValues": [{"value": "1"}]}]}
+        if dims == ["date", "sessionSource"]:
+            return {"rows": [{"dimensionValues": [{"value": "20261101"}, {"value": "www.lecho.be"}], "metricValues": [{"value": "12"}]}]}
         return {"rows": [{"dimensionValues": [{"value": "20261101"}, {"value": "Organic Search"}, {"value": "sign_up"}], "metricValues": [{"value": "2"}]}]}
     monkeypatch.setattr(c, "http", http)
     r = by(c.collect(START, END))
     assert r[("2026-11-01", "site:referral", "sessions")] == 40
     assert r[("2026-11-01", "geo", "ai_sessions")] == 4
     assert r[("2026-11-01", "site:seo", "web_signups")] == 2
+    assert r[("2026-11-01", "referral:lecho.be", "referral_sessions")] == 12
+    assert r[("2026-11-01", "referral:lecho.be", "referral_signups")] == 1
 
 
 def test_search_console(monkeypatch):
@@ -124,4 +130,5 @@ def test_geo(monkeypatch):
     res = c.collect(START, END)
     totals = {(m.channel, m.metric): m.value for m in res.metrics}
     assert totals[("geo", "ai_mention_rate")] == 100.0
+    assert {m.day for m in res.metrics} == {str(END)}  # daté comme les autres sources
     assert ("geo_concurrent:Sintra", "ai_mentions") in totals
