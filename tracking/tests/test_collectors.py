@@ -132,3 +132,22 @@ def test_geo(monkeypatch):
     assert totals[("geo", "ai_mention_rate")] == 100.0
     assert {m.day for m in res.metrics} == {str(END)}  # daté comme les autres sources
     assert ("geo_concurrent:Sintra", "ai_mentions") in totals
+
+
+def test_linkedin_refresh_token(monkeypatch):
+    monkeypatch.delenv("LINKEDIN_ACCESS_TOKEN")
+    for k, v in {"LINKEDIN_REFRESH_TOKEN": "r", "LINKEDIN_CLIENT_ID": "id", "LINKEDIN_CLIENT_SECRET": "s"}.items():
+        monkeypatch.setenv(k, v)
+    c = linkedin.LinkedInCollector()
+    assert c.enabled()
+    seen = []
+
+    def http(method, url, **k):
+        if "accessToken" in url:
+            return {"access_token": "fresh"}
+        seen.append(k["headers"]["Authorization"])
+        return {"elements": []}
+
+    monkeypatch.setattr(c, "http", http)
+    c.collect(START, END)
+    assert seen and all(h == "Bearer fresh" for h in seen)
