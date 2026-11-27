@@ -55,9 +55,13 @@ jobs:
       META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
       META_AD_ACCOUNT_ID: ${{ vars.META_AD_ACCOUNT_ID || secrets.META_AD_ACCOUNT_ID }}
       META_IG_USER_ID: ${{ vars.META_IG_USER_ID || secrets.META_IG_USER_ID }}
-      META_PAGE_ID: ${{ vars.META_PAGE_ID }}
+      META_PAGE_ID: ${{ vars.META_PAGE_ID || secrets.META_PAGE_ID }}
       # LinkedIn
       LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+      LINKEDIN_REFRESH_TOKEN: ${{ secrets.LINKEDIN_REFRESH_TOKEN }}       # évite l'expiration du jeton tous les 60 jours
+      LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
+      LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+      LINKEDIN_ORGANIC_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ORGANIC_ACCESS_TOKEN }}  # si la page passe par une 2e app
       LINKEDIN_AD_ACCOUNT_ID: ${{ vars.LINKEDIN_AD_ACCOUNT_ID || secrets.LINKEDIN_AD_ACCOUNT_ID }}
       LINKEDIN_ORGANIZATION_ID: ${{ vars.LINKEDIN_ORGANIZATION_ID || secrets.LINKEDIN_ORGANIZATION_ID }}
       # IA : mesure GEO + synthèse hebdomadaire

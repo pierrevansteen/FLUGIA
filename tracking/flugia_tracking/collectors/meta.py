@@ -1,4 +1,4 @@
-"""Meta : publicités Facebook/Instagram + organique Instagram et page Facebook (API Graph)."""
+"""Meta : publicités Facebook/Instagram + portée organique Instagram (API Graph)."""
 from __future__ import annotations
 
 import json
@@ -11,7 +11,7 @@ from .base import CollectResult, Collector, env
 class MetaCollector(Collector):
     name = "meta"
     label = "Meta (Facebook / Instagram)"
-    required_env = ["META_ACCESS_TOKEN"]  # + META_AD_ACCOUNT_ID, META_IG_USER_ID et/ou META_PAGE_ID
+    required_env = ["META_ACCESS_TOKEN"]  # + META_AD_ACCOUNT_ID et/ou META_IG_USER_ID
 
     def _base(self) -> str:
         return f"https://graph.facebook.com/{os.environ.get('META_API_VERSION', 'v23.0')}"
@@ -29,10 +29,10 @@ class MetaCollector(Collector):
         if os.environ.get("META_PAGE_ID"):
             try:
                 self._facebook_page(result, token, start, end)
-            except Exception as exc:  # idem : la page ne doit pas bloquer le reste
-                result.warnings.append(f"Page Facebook : {exc}")
-        if not any(os.environ.get(k) for k in ("META_AD_ACCOUNT_ID", "META_IG_USER_ID", "META_PAGE_ID")):
-            result.warnings.append("Ni META_AD_ACCOUNT_ID, ni META_IG_USER_ID, ni META_PAGE_ID définis : rien à collecter.")
+            except Exception as exc:
+                result.warnings.append(f"Page Facebook organique : {exc}")
+        if not os.environ.get("META_AD_ACCOUNT_ID") and not os.environ.get("META_IG_USER_ID"):
+            result.warnings.append("Ni META_AD_ACCOUNT_ID ni META_IG_USER_ID définis : rien à collecter.")
         return result
 
     def _ads(self, result, token, start, end):
@@ -60,75 +60,69 @@ class MetaCollector(Collector):
             data = self.http("GET", nxt)
 
     @staticmethod
-    def _windows(start, end, days):
-        """Découpe la période : Meta limite chaque appel de statistiques (30 jours pour Instagram)."""
+    def _windows(start, end, days: int = 30):
+        """Meta refuse plus de 30 jours entre since et until : on découpe la période."""
         cur = start
         while cur <= end:
             stop = min(end, cur + timedelta(days=days - 1))
-            since = datetime(cur.year, cur.month, cur.day, tzinfo=timezone.utc)
-            until = datetime(stop.year, stop.month, stop.day, tzinfo=timezone.utc) + timedelta(days=1)
-            yield int(since.timestamp()), int(until.timestamp())
+            yield cur, stop
             cur = stop + timedelta(days=1)
+
+    @staticmethod
+    def _ts(d, plus_one=False):
+        dt = datetime(d.year, d.month, d.day, tzinfo=timezone.utc) + (timedelta(days=1) if plus_one else timedelta())
+        return int(dt.timestamp())
+
+    def _insights(self, object_id, metric, token, start, end):
+        """Valeurs journalières d'une statistique, période par période. Renvoie {jour: valeur}."""
+        out = {}
+        for a, b in self._windows(start, end):
+            data = self.http("GET", f"{self._base()}/{object_id}/insights", params={
+                "metric": metric, "period": "day", "since": self._ts(a), "until": self._ts(b, True), "access_token": token,
+            })
+            for serie in data.get("data", []):
+                for point in serie.get("values", []):
+                    v = point.get("value", 0)
+                    # end_time marque la fin de la journée mesurée (minuit, heure du Pacifique) : la valeur porte sur la veille
+                    day = (datetime.fromisoformat(point["end_time"].replace("+0000", "+00:00")) - timedelta(days=1)).date()
+                    if isinstance(v, (int, float)) and start <= day <= end:
+                        out[day] = v
+        return out
 
     def _instagram(self, result, token, start, end):
         ig = env("META_IG_USER_ID")
-        for since, until in self._windows(start, end, 30):
-            data = self.http(
-                "GET",
-                f"{self._base()}/{ig}/insights",
-                params={
-                    "metric": "reach",
-                    "period": "day",
-                    "since": since,
-                    "until": until,
-                    "access_token": token,
-                },
-            )
-            for serie in data.get("data", []):
-                for point in serie.get("values", []):
-                    day = point["end_time"][:10]
-                    result.add(day, "instagram", "reach", point.get("value", 0))
+        for day, v in self._insights(ig, "reach", token, start, end).items():
+            result.add(day, "instagram", "reach", v)
 
-    # Meta remplace progressivement les « impressions » de page par les « vues » : on essaie dans l'ordre.
+    # Statistiques de page Facebook : Meta a renommé plusieurs métriques en 2025.
+    # On essaie les noms dans l'ordre et on garde le premier qui répond.
     PAGE_METRICS = {
-        "impressions": ("page_media_view", "page_impressions"),
-        "engagement": ("page_post_engagements",),
+        "impressions": ["page_media_view", "page_impressions"],
+        "reach": ["page_total_media_view_unique", "page_impressions_unique"],
+        "page_views": ["page_views_total"],
+        "engagement": ["page_post_engagements"],
     }
 
     def _facebook_page(self, result, token, start, end):
         page = env("META_PAGE_ID")
-        # Les statistiques de page exigent un jeton de page, que le jeton système permet d'obtenir.
-        page_token = self.http(
-            "GET", f"{self._base()}/{page}", params={"fields": "access_token", "access_token": token}
-        ).get("access_token") or token
-        windows = list(self._windows(start, end, 90))
-        for name, candidates in self.PAGE_METRICS.items():
-            errors = []
-            for metric in candidates:
+        # Les statistiques de page demandent un jeton de page, obtenu à partir du jeton utilisateur système.
+        try:
+            page_token = self.http("GET", f"{self._base()}/{page}", params={"fields": "access_token", "access_token": token}).get("access_token") or token
+        except Exception:
+            page_token = token
+        used, failed = [], []
+        for metric, candidates in self.PAGE_METRICS.items():
+            for name in candidates:
                 try:
-                    responses = [
-                        self.http(
-                            "GET",
-                            f"{self._base()}/{page}/insights",
-                            params={
-                                "metric": metric,
-                                "period": "day",
-                                "since": since,
-                                "until": until,
-                                "access_token": page_token,
-                            },
-                        )
-                        for since, until in windows
-                    ]
+                    values = self._insights(page, name, page_token, start, end)
                 except Exception as exc:
-                    errors.append(f"{metric} : {exc}")
+                    failed.append(f"{name} ({str(exc)[:80]})")
                     continue
-                for data in responses:
-                    for serie in data.get("data", []):
-                        for point in serie.get("values", []):
-                            # end_time = minuit (heure du Pacifique) le lendemain du jour mesuré
-                            day = (datetime.fromisoformat(point["end_time"].replace("+0000", "+00:00")) - timedelta(days=1)).date()
-                            result.add(day, "facebook", name, point.get("value", 0))
+                for day, v in values.items():
+                    result.add(day, "facebook_organique", metric, v)
+                used.append(name)
                 break
-            else:
-                result.warnings.append(f"Page Facebook, {name} indisponible ({'; '.join(errors)[:300]})")
+        if failed:
+            result.warnings.append("Page Facebook, statistiques indisponibles : " + "; ".join(failed))
+        if used:
+            result.warnings.append("Page Facebook, statistiques utilisées : " + ", ".join(used))

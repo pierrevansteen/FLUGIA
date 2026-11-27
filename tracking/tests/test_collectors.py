@@ -53,26 +53,29 @@ def test_google_ads_compte_de_service(monkeypatch):
 
 
 def test_meta(monkeypatch):
+    monkeypatch.setenv("META_PAGE_ID", "p1")
     c = meta.MetaCollector()
-    def http(method, url, **k):
-        if "insights" in url and "act_" in url:
+    calls = []
+
+    def http(method, url, params=None, **k):
+        calls.append((url, dict(params or {})))
+        if "act_" in url:
             return {"data": [{"date_start": "2026-11-01", "impressions": "500", "reach": "400", "clicks": "5", "spend": "12.3"}]}
-        if url.endswith("/x"):  # jeton de page
-            return {"access_token": "page-tok"}
-        if k["params"].get("metric") == "page_media_view":
-            raise base.CollectorError("métrique retirée")
-        if k["params"].get("metric", "").startswith("page_"):
-            assert k["params"]["access_token"] == "page-tok"
-            return {"data": [{"values": [{"value": 90, "end_time": "2026-11-02T08:00:00+0000"}]}]}
+        if url.endswith("/p1"):
+            return {"access_token": "page-token"}
+        if params and params.get("metric") == "page_media_view":
+            raise base.CollectorError("Erreur 400 : metric non valide")
         return {"data": [{"values": [{"value": 77, "end_time": "2026-11-02T08:00:00+0000"}]}]}
+
     monkeypatch.setattr(c, "http", http)
-    res = c.collect(START, END)
+    res = c.collect(date(2026, 8, 29), date(2026, 11, 26))
     r = by(res)
     assert r[("2026-11-01", "meta_ads", "spend")] == 12.3
-    assert r[("2026-11-02", "instagram", "reach")] == 77
-    assert r[("2026-11-01", "facebook", "impressions")] == 90  # repli sur page_impressions
-    assert r[("2026-11-01", "facebook", "engagement")] == 90
-    assert not res.warnings
+    assert r[("2026-11-01", "instagram", "reach")] == 77
+    assert r[("2026-11-01", "facebook_organique", "impressions")] == 77  # repli sur page_impressions
+    ig = [p for u, p in calls if u.endswith("/x/insights")]
+    assert len(ig) == 3 and all(p["until"] - p["since"] <= 30 * 86400 for p in ig)  # fenêtres de 30 jours max
+    assert any("page_impressions" in w for w in res.warnings)
 
 
 def test_meta_instagram_decoupe_30_jours(monkeypatch):
@@ -194,3 +197,22 @@ def test_geo(monkeypatch):
     assert totals[("geo", "ai_mention_rate")] == 100.0
     assert {m.day for m in res.metrics} == {str(END)}  # daté comme les autres sources
     assert ("geo_concurrent:Sintra", "ai_mentions") in totals
+
+
+def test_linkedin_refresh_token(monkeypatch):
+    monkeypatch.delenv("LINKEDIN_ACCESS_TOKEN")
+    for k, v in {"LINKEDIN_REFRESH_TOKEN": "r", "LINKEDIN_CLIENT_ID": "id", "LINKEDIN_CLIENT_SECRET": "s"}.items():
+        monkeypatch.setenv(k, v)
+    c = linkedin.LinkedInCollector()
+    assert c.enabled()
+    seen = []
+
+    def http(method, url, **k):
+        if "accessToken" in url:
+            return {"access_token": "fresh"}
+        seen.append(k["headers"]["Authorization"])
+        return {"elements": []}
+
+    monkeypatch.setattr(c, "http", http)
+    c.collect(START, END)
+    assert seen and all(h == "Bearer fresh" for h in seen)
