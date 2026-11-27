@@ -220,7 +220,7 @@
       <table>
         <tr><th>Canal</th><th class="n">7 jours</th><th class="n">Sem. préc.</th><th class="n">Évol.</th></tr>
         {% for c in i.visites_par_canal if c.cur or c.prev %}
-        <tr><td>{{ c.canal | replace("Site · ", "") | capitalize }}</td><td class="n">{{ c.cur | num }}</td><td class="n">{{ c.prev | num }}</td><td class="n">{{ dl(c.cur, c.prev) }}</td></tr>
+        <tr><td>{{ c.canal | replace("Site · ", "") }}</td><td class="n">{{ c.cur | num }}</td><td class="n">{{ c.prev | num }}</td><td class="n">{{ dl(c.cur, c.prev) }}</td></tr>
         {% else %}<tr><td colspan="4" class="empty">Pas de données GA4.</td></tr>{% endfor %}
       </table>
     </div>
@@ -249,12 +249,16 @@
     </table>
     {% if not a.branche %}<div class="note">Les clients payants et le coût par client s'afficheront après le raccordement de la base de l'application.</div>{% endif %}
   </div>
+  {% if not r.branche %}
+  <h2><span class="num">4</span>Rétention</h2>
+  <div class="card"><div class="empty">Les indicateurs de rétention (clients payants, churn, prolongations) et les listes de comptes à traiter s'afficheront après le raccordement de la base de l'application et de l'outil de facturation.</div></div>
+  {% endif %}
 </section>
 
 <!-- =========================== PAGE 4 : RÉTENTION & COMPTES =========================== -->
+{% if r.branche %}
 <section class="page">
   <h2><span class="num">4</span>Rétention</h2>
-  {% if r.branche %}
   <div class="grid2 avoid">
     <div class="card"><h3>Nouveaux clients et résiliations par semaine</h3>
       <div class="legend"><span><i style="background: {{ C.main }}"></i>Nouveaux clients</span><span><i style="background: #9AA5B1"></i>Résiliations</span></div>
@@ -296,11 +300,8 @@
     </div>
     {% endfor %}
   </div>
-  {% else %}
-  <div class="card"><div class="empty">Les indicateurs de rétention (clients payants, churn, prolongations) et les listes de comptes à traiter s'afficheront après le raccordement de la base de l'application et de l'outil de facturation.</div></div>
-  {% endif %}
-
 </section>
+{% endif %}
 <section class="page">
   <h2>Annexe · Sources de données</h2>
   <div class="card avoid">

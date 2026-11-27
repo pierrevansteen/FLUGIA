@@ -40,13 +40,29 @@ SITE_FAMILY = {
 }
 
 
+SITE_LABELS = {
+    "site:seo": "Recherche Google (SEO)",
+    "site:direct": "Accès direct",
+    "site:referral": "Sites référents",
+    "site:google_ads": "Google Ads",
+    "site:social_payant": "Réseaux sociaux payants",
+    "site:social_organique": "Réseaux sociaux (organique)",
+    "site:geo_ia": "Assistants IA (GEO)",
+    "site:email": "E-mail",
+    "site:unassigned": "Non attribué",
+    "site:paid_other": "Autre publicité",
+    "site:display": "Display",
+    "site:organic_video": "Vidéo (organique)",
+}
+
+
 def label(channel: str) -> str:
     if channel in CHANNEL_LABELS:
         return CHANNEL_LABELS[channel]
     if channel.startswith("manuel:"):
         return "Manuel · " + channel.split(":", 1)[1].replace("_", " ")
-    if channel == "site:geo_ia":
-        return "Site · assistants IA (GEO)"
+    if channel in SITE_LABELS:
+        return "Site · " + SITE_LABELS[channel]
     if channel.startswith("site:"):
         return "Site · " + channel.split(":", 1)[1].replace("_", " ")
     return channel

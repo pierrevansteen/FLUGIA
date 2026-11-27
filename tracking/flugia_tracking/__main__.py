@@ -123,7 +123,8 @@ def cmd_run(args):
     snap = kpis.compute(db)
     all_alerts = alerts_mod.evaluate(snap)
     weekly = args.weekly or date.today().weekday() == 0
-    new_alerts = alerts_mod.only_new(db, all_alerts)
+    # En semaine : seules les alertes urgentes sont diffusées (et une seule fois) ; le reste va dans le rapport du lundi.
+    new_alerts = alerts_mod.only_new(db, alerts_mod.urgent(all_alerts))
 
     summary = None
     if weekly and os.environ.get("ANTHROPIC_API_KEY") and not args.no_ai:

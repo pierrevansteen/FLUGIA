@@ -70,7 +70,7 @@ def evaluate(snapshot: dict) -> list[Alert]:
 
         for ch, s1, s2, mult in pairs:
             if s2 is None:
-                ref_total = sum(v for d, v in s1.items() if r0 <= d <= r1)
+                ref_total = ref_volume = sum(v for d, v in s1.items() if r0 <= d <= r1)
                 if ref_total < g["volume_minimum"]:
                     continue
                 cur, ref = _avg(s1, c0, as_of), _avg(s1, r0, r1)
@@ -79,6 +79,7 @@ def evaluate(snapshot: dict) -> list[Alert]:
                 cur_den = sum(v for d, v in s2.items() if c0 <= d <= as_of)
                 if ref_den < g["volume_minimum"] or not cur_den:
                     continue
+                ref_volume = ref_den
                 cur = mult * sum(v for d, v in s1.items() if c0 <= d <= as_of) / cur_den
                 ref = mult * sum(v for d, v in s1.items() if r0 <= d <= r1) / ref_den
             if not ref:
@@ -91,7 +92,7 @@ def evaluate(snapshot: dict) -> list[Alert]:
                 alerts.append(Alert(
                     key=f"{rule['id']}:{ch or 'total'}",
                     etape=rule["etape"],
-                    severite=rule["severite"],
+                    severite=_severity(rule, var, ref_volume, cfg.get("notifications", {})),
                     titre=f"{_titre(rule['id'])}{where} : {'+' if var > 0 else '−'}{num(abs(var), 0)} %",
                     detail=_variation_detail(rule, cur, ref, g, s2 is not None),
                     action=rule["action"],
@@ -210,6 +211,23 @@ def evaluate(snapshot: dict) -> list[Alert]:
 
     alerts.sort(key=lambda a: (SEVERITY_ORDER.get(a.severite, 9), a.etape))
     return alerts
+
+
+def _severity(rule: dict, var: float, ref_volume: float, ncfg: dict) -> str:
+    """Une variation très forte, sur un volume significatif, devient urgente."""
+    factor = ncfg.get("escalade_variation", 2)
+    if abs(var) >= factor * abs(rule["variation"]) and ref_volume >= ncfg.get("volume_minimum_urgent", 30):
+        return "haute"
+    if rule["severite"] == "haute" and ref_volume < ncfg.get("volume_minimum_urgent", 30):
+        return "moyenne"  # signal réel mais volume trop faible pour justifier une alerte immédiate
+    return rule["severite"]
+
+
+def urgent(alerts: list) -> list:
+    """Alertes à diffuser en cours de semaine (par défaut : priorité haute uniquement)."""
+    order = {"haute": 0, "moyenne": 1, "info": 2}
+    level = order.get(alerts_config().get("notifications", {}).get("severite_quotidienne", "haute"), 0)
+    return [a for a in alerts if order.get(a.severite, 9) <= level]
 
 
 def _variation_detail(rule, cur, ref, g, is_ratio: bool) -> str:

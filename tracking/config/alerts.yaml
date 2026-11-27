@@ -7,6 +7,17 @@ general:
   volume_minimum: 30        # en dessous (sur la période de référence), on n'alerte pas : bruit statistique
   repetition_jours: 7       # une même alerte n'est renvoyée qu'au bout de N jours
 
+# Qui reçoit quoi
+notifications:
+  # Messages Slack en cours de semaine : uniquement les situations qui demandent une action rapide.
+  # Tout le reste figure dans le rapport PDF du lundi.
+  severite_quotidienne: haute      # haute | moyenne | info
+  # Une variation deux fois plus forte que le seuil de la règle devient « Priorité haute »
+  # (ex. seuil −30 % → alerte urgente à partir de −60 %).
+  escalade_variation: 2
+  # En dessous de ce volume de référence (sur 28 jours), une variation n'est jamais jugée urgente.
+  volume_minimum_urgent: 30
+
 # Objectifs hebdomadaires (mettez vos chiffres). Alerte si la semaine finit en dessous.
 objectifs_semaine:
   demos_booked: 5

@@ -37,3 +37,16 @@ def test_replace_metrics_drops_renamed_channels(tmp_path):
     db.commit()
     rows = db.query("SELECT channel FROM metrics_daily")
     assert [r["channel"] for r in rows] == ["site:geo_ia"]
+
+
+def test_only_major_changes_are_urgent():
+    from flugia_tracking.alerts import Alert, _severity, urgent
+
+    rule = {"variation": -30, "severite": "moyenne"}
+    ncfg = {"escalade_variation": 2, "volume_minimum_urgent": 100}
+    assert _severity(rule, -35, 500, ncfg) == "moyenne"     # baisse notable : rapport du lundi
+    assert _severity(rule, -65, 500, ncfg) == "haute"       # chute majeure : alerte immédiate
+    assert _severity(rule, -90, 40, ncfg) == "moyenne"      # petit volume : jamais urgent
+    assert _severity({"variation": -30, "severite": "haute"}, -40, 40, ncfg) == "moyenne"
+    al = [Alert("a", "Intérêt", "haute", "t", "d", "x"), Alert("b", "Intérêt", "moyenne", "t", "d", "x")]
+    assert [a.key for a in urgent(al)] == ["a"]
