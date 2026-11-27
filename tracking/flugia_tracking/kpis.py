@@ -25,6 +25,7 @@ CHANNEL_LABELS = {
     "seo": "SEO (Google)",
     "seo_marque": "Recherches « flugia »",
     "geo": "GEO (IA)",
+    "clarity": "Clarity (comportement sur le site)",
     "demos": "Démos",
     "facturation": "Facturation",
 }
