@@ -19,6 +19,7 @@ CHANNEL_LABELS = {
     "meta_ads": "Meta Ads",
     "instagram": "Instagram (organique)",
     "facebook_organique": "Facebook (page, organique)",
+    "facebook": "Facebook (organique)",
     "linkedin_ads": "LinkedIn Ads",
     "linkedin_organique": "LinkedIn (organique)",
     "seo": "SEO (Google)",
@@ -403,7 +404,7 @@ def _weekly(data: Data, as_of: date, weeks: int = 13) -> dict:
         return [round(sum(v for d, v in series.items() if e - timedelta(days=6) <= d <= e), 2) for e in ends]
 
     fam_vis = defaultdict(lambda: defaultdict(float))
-    fam_of = {"google_ads": "Google Ads", "meta_ads": "Meta", "instagram": "Meta", "facebook_organique": "Meta", "linkedin_ads": "LinkedIn",
+    fam_of = {"google_ads": "Google Ads", "meta_ads": "Meta", "instagram": "Meta", "facebook_organique": "Meta", "facebook": "Meta", "linkedin_ads": "LinkedIn",
               "linkedin_organique": "LinkedIn", "seo": "SEO"}
     for day, _s, ch, m, v in data.rows:
         if m == "impressions" or (ch == "instagram" and m == "reach"):
