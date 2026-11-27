@@ -1,5 +1,6 @@
 """Google Analytics 4 : sessions par canal (dont Referral et Organic Search), trafic venant des IA (GEO),
-et inscriptions par canal via l'événement d'inscription."""
+inscriptions par canal via l'événement d'inscription, et démos réservées sur le site
+(visites des pages de remerciement du formulaire de réservation)."""
 from __future__ import annotations
 
 import os
@@ -103,6 +104,24 @@ class GA4Collector(Collector):
                 continue
             day = f"{d[:4]}-{d[4:6]}-{d[6:]}"
             result.add(day, f"referral:{site}", "referral_signups", count)
+
+        # 5. Démos réservées sur le site : le formulaire de réservation renvoie vers une page de remerciement
+        #    (/thank-you-page/, /fr/merci/, /nl/bedankt/). On compte les sessions qui l'ont vue, par canal.
+        paths = [p.strip() for p in os.environ.get("DEMO_THANKYOU_PATHS", "/thank-you-page/,/fr/merci/,/nl/bedankt/").split(",") if p.strip()]
+        if paths and not demo_event:
+            variants = sorted({v for p in paths for v in (p, p.rstrip("/") or "/")})
+            page_filter = {"filter": {"fieldName": "pagePath", "inListFilter": {"values": variants}}}
+            per_day = {}
+            for (d, group), (sessions,) in self._report(
+                token, start, end, ["date", "sessionDefaultChannelGroup"], ["sessions"], page_filter
+            ):
+                day = f"{d[:4]}-{d[4:6]}-{d[6:]}"
+                result.add(day, _channel(group), "web_demo_requests", sessions)
+                per_day[day] = per_day.get(day, 0) + sessions
+            # Total des démos réservées, sauf si l'agenda des démos est branché (il fait alors foi).
+            if not os.environ.get("GOOGLE_CALENDAR_ID"):
+                for day, n in per_day.items():
+                    result.add(day, "demos", "demos_booked", n)
         return result
 
 
