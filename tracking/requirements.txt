@@ -12,3 +12,8 @@ playwright>=1.48
 anthropic>=2.14
 # Optionnel : base de l'app en MySQL
 # pymysql>=1.1
+
+# Interface de pilotage (Streamlit)
+streamlit>=1.40
+plotly>=5.20
+pandas>=2.0
