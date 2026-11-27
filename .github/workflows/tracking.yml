@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write   # connexion Google sans clé (fédération d'identité)
 
 concurrency:
   group: tracking
@@ -30,8 +31,7 @@ jobs:
     env:
       # Base : Postgres (ex. Supabase gratuit). Sans DATABASE_URL, une base SQLite est conservée dans le cache GitHub.
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      # Google (GA4, Search Console, Agenda)
-      GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+      # Google (GA4, Search Console, Agenda) : connexion sans clé, voir l'étape « Connexion Google »
       GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID }}
       SEARCH_CONSOLE_SITE: ${{ vars.SEARCH_CONSOLE_SITE }}
       GOOGLE_CALENDAR_ID: ${{ vars.GOOGLE_CALENDAR_ID }}
@@ -68,6 +68,15 @@ jobs:
       DASHBOARD_URL: ${{ vars.DASHBOARD_URL }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Connexion Google (sans clé)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/1059369323896/locations/global/workloadIdentityPools/github/providers/github-provider
+          service_account: tracking@flugia-tracking.iam.gserviceaccount.com
+
+      - name: Transmettre les identifiants Google aux collecteurs
+        run: echo "GOOGLE_SERVICE_ACCOUNT_JSON=$GOOGLE_APPLICATION_CREDENTIALS" >> "$GITHUB_ENV"
 
       - uses: actions/setup-python@v5
         with:
