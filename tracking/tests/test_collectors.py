@@ -35,15 +35,29 @@ def test_google_ads(monkeypatch):
 
 
 def test_meta(monkeypatch):
+    monkeypatch.setenv("META_PAGE_ID", "p1")
     c = meta.MetaCollector()
-    def http(method, url, **k):
-        if "insights" in url and "act_" in url:
+    calls = []
+
+    def http(method, url, params=None, **k):
+        calls.append((url, dict(params or {})))
+        if "act_" in url:
             return {"data": [{"date_start": "2026-11-01", "impressions": "500", "reach": "400", "clicks": "5", "spend": "12.3"}]}
+        if url.endswith("/p1"):
+            return {"access_token": "page-token"}
+        if params and params.get("metric") == "page_media_view":
+            raise base.CollectorError("Erreur 400 : metric non valide")
         return {"data": [{"values": [{"value": 77, "end_time": "2026-11-02T08:00:00+0000"}]}]}
+
     monkeypatch.setattr(c, "http", http)
-    r = by(c.collect(START, END))
+    res = c.collect(date(2026, 8, 29), date(2026, 11, 26))
+    r = by(res)
     assert r[("2026-11-01", "meta_ads", "spend")] == 12.3
-    assert r[("2026-11-02", "instagram", "reach")] == 77
+    assert r[("2026-11-01", "instagram", "reach")] == 77
+    assert r[("2026-11-01", "facebook_organique", "impressions")] == 77  # repli sur page_impressions
+    ig = [p for u, p in calls if u.endswith("/x/insights")]
+    assert len(ig) == 3 and all(p["until"] - p["since"] <= 30 * 86400 for p in ig)  # fenêtres de 30 jours max
+    assert any("page_impressions" in w for w in res.warnings)
 
 
 def test_linkedin(monkeypatch):
