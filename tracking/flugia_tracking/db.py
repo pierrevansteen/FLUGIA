@@ -134,6 +134,17 @@ class DB:
             rows,
         )
 
+    def replace_metrics(self, source: str, rows: list[tuple]):
+        """Remplace les données d'une source pour les jours re-collectés (gère les canaux renommés ou disparus)."""
+        days = sorted({r[0] for r in rows})
+        for i in range(0, len(days), 500):
+            chunk = days[i:i + 500]
+            self.execute(
+                f"DELETE FROM metrics_daily WHERE source = ? AND day IN ({', '.join('?' for _ in chunk)})",
+                [source, *chunk],
+            )
+        self.upsert_metrics(rows)
+
     def upsert_accounts(self, accounts: list[dict], updated_at: str):
         cols = ACCOUNT_COLUMNS + ["updated_at"]
         placeholders = ", ".join("?" for _ in cols)

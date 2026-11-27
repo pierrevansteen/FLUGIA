@@ -88,14 +88,21 @@ class GA4Collector(Collector):
 
         # 4. Détail des sites référents (presse, partenaires, annuaires...) : visites et inscriptions par site.
         #    Métriques distinctes (referral_*) pour ne pas compter deux fois les visites du canal Referral.
+        own = [d.strip().lower() for d in os.environ.get("OWN_DOMAINS", "flugia.com").split(",") if d.strip()]
         referral = {"filter": {"fieldName": "sessionDefaultChannelGroup", "stringFilter": {"matchType": "EXACT", "value": "Referral"}}}
         for (d, source), (sessions,) in self._report(token, start, end, ["date", "sessionSource"], ["sessions"], referral):
+            site = _domain(source)
+            if any(site == o or site.endswith("." + o) for o in own):
+                continue  # auto-référencement (app.flugia.com -> flugia.com, etc.)
             day = f"{d[:4]}-{d[4:6]}-{d[6:]}"
-            result.add(day, f"referral:{_domain(source)}", "referral_sessions", sessions)
+            result.add(day, f"referral:{site}", "referral_sessions", sessions)
         ref_events = {"andGroup": {"expressions": [referral, {"filter": {"fieldName": "eventName", "stringFilter": {"matchType": "EXACT", "value": event}}}]}}
         for (d, source), (count,) in self._report(token, start, end, ["date", "sessionSource"], ["eventCount"], ref_events):
+            site = _domain(source)
+            if any(site == o or site.endswith("." + o) for o in own):
+                continue
             day = f"{d[:4]}-{d[4:6]}-{d[6:]}"
-            result.add(day, f"referral:{_domain(source)}", "referral_signups", count)
+            result.add(day, f"referral:{site}", "referral_signups", count)
         return result
 
 

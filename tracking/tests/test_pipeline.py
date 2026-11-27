@@ -28,3 +28,12 @@ def test_attribution_utm():
     assert kpis.family_from_utm("google", "organic") == "SEO"
     assert kpis.family_from_utm("partenaire-ucm", "referral") == "Referral"
     assert kpis.family_from_utm(None, None) == "Direct / autre"
+
+
+def test_replace_metrics_drops_renamed_channels(tmp_path):
+    db = DB(f"sqlite:///{tmp_path / 'r.db'}")
+    db.upsert_metrics([("2026-11-01", "ga4", "site:ai_assistant", "sessions", 3, "t")])
+    db.replace_metrics("ga4", [("2026-11-01", "ga4", "site:geo_ia", "sessions", 3, "t")])
+    db.commit()
+    rows = db.query("SELECT channel FROM metrics_daily")
+    assert [r["channel"] for r in rows] == ["site:geo_ia"]

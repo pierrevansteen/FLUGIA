@@ -62,7 +62,7 @@ def collect(db: DB, days: int, only: list[str] | None) -> list[str]:
             res = c.collect(start, end)
             now = datetime.now(timezone.utc).isoformat(timespec="seconds")
             with db.transaction():
-                db.upsert_metrics([(m.day, c.name, m.channel, m.metric, m.value, now) for m in res.metrics])
+                db.replace_metrics(c.name, [(m.day, c.name, m.channel, m.metric, m.value, now) for m in res.metrics])
                 if res.accounts:
                     db.upsert_accounts(res.accounts, now)
                 db.log_run(run_at, c.name, "ok", len(res.metrics) + len(res.accounts), " | ".join(res.warnings))
