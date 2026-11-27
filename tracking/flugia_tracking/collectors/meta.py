@@ -59,25 +59,35 @@ class MetaCollector(Collector):
                 break
             data = self.http("GET", nxt)
 
+    @staticmethod
+    def _windows(start, end, days):
+        """Découpe la période : Meta limite chaque appel de statistiques (30 jours pour Instagram)."""
+        cur = start
+        while cur <= end:
+            stop = min(end, cur + timedelta(days=days - 1))
+            since = datetime(cur.year, cur.month, cur.day, tzinfo=timezone.utc)
+            until = datetime(stop.year, stop.month, stop.day, tzinfo=timezone.utc) + timedelta(days=1)
+            yield int(since.timestamp()), int(until.timestamp())
+            cur = stop + timedelta(days=1)
+
     def _instagram(self, result, token, start, end):
         ig = env("META_IG_USER_ID")
-        since = datetime(start.year, start.month, start.day, tzinfo=timezone.utc)
-        until = datetime(end.year, end.month, end.day, tzinfo=timezone.utc) + timedelta(days=1)
-        data = self.http(
-            "GET",
-            f"{self._base()}/{ig}/insights",
-            params={
-                "metric": "reach",
-                "period": "day",
-                "since": int(since.timestamp()),
-                "until": int(until.timestamp()),
-                "access_token": token,
-            },
-        )
-        for serie in data.get("data", []):
-            for point in serie.get("values", []):
-                day = point["end_time"][:10]
-                result.add(day, "instagram", "reach", point.get("value", 0))
+        for since, until in self._windows(start, end, 30):
+            data = self.http(
+                "GET",
+                f"{self._base()}/{ig}/insights",
+                params={
+                    "metric": "reach",
+                    "period": "day",
+                    "since": since,
+                    "until": until,
+                    "access_token": token,
+                },
+            )
+            for serie in data.get("data", []):
+                for point in serie.get("values", []):
+                    day = point["end_time"][:10]
+                    result.add(day, "instagram", "reach", point.get("value", 0))
 
     # Meta remplace progressivement les « impressions » de page par les « vues » : on essaie dans l'ordre.
     PAGE_METRICS = {
@@ -91,31 +101,34 @@ class MetaCollector(Collector):
         page_token = self.http(
             "GET", f"{self._base()}/{page}", params={"fields": "access_token", "access_token": token}
         ).get("access_token") or token
-        since = datetime(start.year, start.month, start.day, tzinfo=timezone.utc)
-        until = datetime(end.year, end.month, end.day, tzinfo=timezone.utc) + timedelta(days=1)
+        windows = list(self._windows(start, end, 90))
         for name, candidates in self.PAGE_METRICS.items():
             errors = []
             for metric in candidates:
                 try:
-                    data = self.http(
-                        "GET",
-                        f"{self._base()}/{page}/insights",
-                        params={
-                            "metric": metric,
-                            "period": "day",
-                            "since": int(since.timestamp()),
-                            "until": int(until.timestamp()),
-                            "access_token": page_token,
-                        },
-                    )
+                    responses = [
+                        self.http(
+                            "GET",
+                            f"{self._base()}/{page}/insights",
+                            params={
+                                "metric": metric,
+                                "period": "day",
+                                "since": since,
+                                "until": until,
+                                "access_token": page_token,
+                            },
+                        )
+                        for since, until in windows
+                    ]
                 except Exception as exc:
                     errors.append(f"{metric} : {exc}")
                     continue
-                for serie in data.get("data", []):
-                    for point in serie.get("values", []):
-                        # end_time = minuit (heure du Pacifique) le lendemain du jour mesuré
-                        day = (datetime.fromisoformat(point["end_time"].replace("+0000", "+00:00")) - timedelta(days=1)).date()
-                        result.add(day, "facebook", name, point.get("value", 0))
+                for data in responses:
+                    for serie in data.get("data", []):
+                        for point in serie.get("values", []):
+                            # end_time = minuit (heure du Pacifique) le lendemain du jour mesuré
+                            day = (datetime.fromisoformat(point["end_time"].replace("+0000", "+00:00")) - timedelta(days=1)).date()
+                            result.add(day, "facebook", name, point.get("value", 0))
                 break
             else:
                 result.warnings.append(f"Page Facebook, {name} indisponible ({'; '.join(errors)[:300]})")
