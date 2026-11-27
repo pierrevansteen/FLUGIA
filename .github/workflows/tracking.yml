@@ -55,6 +55,7 @@ jobs:
       META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
       META_AD_ACCOUNT_ID: ${{ vars.META_AD_ACCOUNT_ID || secrets.META_AD_ACCOUNT_ID }}
       META_IG_USER_ID: ${{ vars.META_IG_USER_ID || secrets.META_IG_USER_ID }}
+      META_PAGE_ID: ${{ vars.META_PAGE_ID }}
       # LinkedIn
       LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
       LINKEDIN_AD_ACCOUNT_ID: ${{ vars.LINKEDIN_AD_ACCOUNT_ID || secrets.LINKEDIN_AD_ACCOUNT_ID }}
