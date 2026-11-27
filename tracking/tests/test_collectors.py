@@ -34,6 +34,24 @@ def test_google_ads(monkeypatch):
     assert r[("2026-11-01", "google_ads", "spend")] == 25.5
 
 
+def test_google_ads_compte_de_service(monkeypatch):
+    for k in ("GOOGLE_ADS_DEVELOPER_TOKEN", "GOOGLE_ADS_CLIENT_ID", "GOOGLE_ADS_CLIENT_SECRET", "GOOGLE_ADS_REFRESH_TOKEN"):
+        monkeypatch.delenv(k)
+    monkeypatch.setattr(google_ads, "google_access_token", lambda scopes: "sa-tok")
+    c = google_ads.GoogleAdsCollector()
+    assert c.enabled()
+    seen = {}
+    def http(method, url, headers=None, **k):
+        seen.update(headers=headers, url=url)
+        return [{"results": [{"segments": {"date": "2026-11-01"}, "metrics": {"clicks": "7"}}]}]
+    monkeypatch.setattr(c, "http", http)
+    r = by(c.collect(START, END))
+    assert r[("2026-11-01", "google_ads", "clicks")] == 7
+    assert seen["headers"] == {"Authorization": "Bearer sa-tok"}  # pas de jeton développeur
+    monkeypatch.delenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+    assert not c.enabled()
+
+
 def test_meta(monkeypatch):
     c = meta.MetaCollector()
     def http(method, url, **k):
