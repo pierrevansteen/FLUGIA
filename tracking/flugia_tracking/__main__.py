@@ -4,6 +4,7 @@
   collect      collecte les données (par défaut les 7 derniers jours, re-collectés chaque nuit)
   run          collecte + KPIs + alertes + notification + tableau de bord (ce que lance GitHub Actions)
   dashboard    régénère le tableau de bord sans collecter
+  test-notify  envoie un message de test sur Slack / e-mail
   demo         remplit une base de démonstration et génère le tableau de bord (données fictives)
 """
 from __future__ import annotations
@@ -80,7 +81,14 @@ def cmd_collect(args):
     collect(db, args.days, args.only.split(",") if args.only else None)
 
 
+def cmd_test_notify(_args):
+    sent = notify.send("Flugia · Test de notification", "✅ Si vous lisez ce message, les alertes arriveront bien ici.")
+    print("Message de test envoyé via : " + (", ".join(sent) if sent else "aucun canal configuré"))
+
+
 def cmd_run(args):
+    cmd_status(args)
+    print()
     db = DB()
     collect(db, args.days, args.only.split(",") if args.only else None)
     snap = kpis.compute(db)
@@ -145,6 +153,7 @@ def main(argv=None):
             sp.add_argument("--no-ai", action="store_true", help="ne pas appeler Claude pour la synthèse")
         sp.set_defaults(func=func)
     sub.add_parser("dashboard").set_defaults(func=cmd_dashboard)
+    sub.add_parser("test-notify").set_defaults(func=cmd_test_notify)
     sp = sub.add_parser("demo")
     sp.add_argument("--output")
     sp.set_defaults(func=cmd_demo)
