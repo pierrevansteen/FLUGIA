@@ -108,6 +108,9 @@ def test_ga4(monkeypatch):
     c = ga4.GA4Collector()
     def http(method, url, json=None, **k):
         dims = [d["name"] for d in json["dimensions"]]
+        if json.get("dimensionFilter", {}).get("filter", {}).get("fieldName") == "pagePath":
+            assert "/fr/merci/" in json["dimensionFilter"]["filter"]["inListFilter"]["values"]
+            return {"rows": [{"dimensionValues": [{"value": "20261101"}, {"value": "Paid Search"}], "metricValues": [{"value": "3"}]}]}
         if dims == ["date", "sessionDefaultChannelGroup"]:
             return {"rows": [{"dimensionValues": [{"value": "20261101"}, {"value": "Referral"}], "metricValues": [{"value": "40"}, {"value": "30"}]}]}
         if dims == ["date", "sessionSource"] and "orGroup" in json["dimensionFilter"]:
@@ -124,6 +127,21 @@ def test_ga4(monkeypatch):
     assert r[("2026-11-01", "site:seo", "web_signups")] == 2
     assert r[("2026-11-01", "referral:lecho.be", "referral_sessions")] == 12
     assert r[("2026-11-01", "referral:lecho.be", "referral_signups")] == 1
+    assert r[("2026-11-01", "site:google_ads", "web_demo_requests")] == 3
+    assert ("2026-11-01", "demos", "demos_booked") not in r  # l'agenda (GOOGLE_CALENDAR_ID) fait foi
+
+
+def test_ga4_demos_sans_agenda(monkeypatch):
+    monkeypatch.delenv("GOOGLE_CALENDAR_ID")
+    c = ga4.GA4Collector()
+    def http(method, url, json=None, **k):
+        if json.get("dimensionFilter", {}).get("filter", {}).get("fieldName") == "pagePath":
+            return {"rows": [{"dimensionValues": [{"value": "20261101"}, {"value": "Organic Search"}], "metricValues": [{"value": "2"}]},
+                             {"dimensionValues": [{"value": "20261101"}, {"value": "Direct"}], "metricValues": [{"value": "1"}]}]}
+        return {"rows": []}
+    monkeypatch.setattr(c, "http", http)
+    r = by(c.collect(START, END))
+    assert r[("2026-11-01", "demos", "demos_booked")] == 3
 
 
 def test_search_console(monkeypatch):
