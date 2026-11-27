@@ -1,4 +1,4 @@
-"""Meta : publicités Facebook/Instagram + portée organique Instagram (API Graph)."""
+"""Meta : publicités Facebook/Instagram + organique Instagram et page Facebook (API Graph)."""
 from __future__ import annotations
 
 import json
@@ -11,7 +11,7 @@ from .base import CollectResult, Collector, env
 class MetaCollector(Collector):
     name = "meta"
     label = "Meta (Facebook / Instagram)"
-    required_env = ["META_ACCESS_TOKEN"]  # + META_AD_ACCOUNT_ID et/ou META_IG_USER_ID
+    required_env = ["META_ACCESS_TOKEN"]  # + META_AD_ACCOUNT_ID, META_IG_USER_ID et/ou META_PAGE_ID
 
     def _base(self) -> str:
         return f"https://graph.facebook.com/{os.environ.get('META_API_VERSION', 'v23.0')}"
@@ -26,8 +26,13 @@ class MetaCollector(Collector):
                 self._instagram(result, token, start, end)
             except Exception as exc:  # l'organique ne doit pas bloquer les publicités
                 result.warnings.append(f"Instagram organique : {exc}")
-        if not os.environ.get("META_AD_ACCOUNT_ID") and not os.environ.get("META_IG_USER_ID"):
-            result.warnings.append("Ni META_AD_ACCOUNT_ID ni META_IG_USER_ID définis : rien à collecter.")
+        if os.environ.get("META_PAGE_ID"):
+            try:
+                self._facebook_page(result, token, start, end)
+            except Exception as exc:  # idem : la page ne doit pas bloquer le reste
+                result.warnings.append(f"Page Facebook : {exc}")
+        if not any(os.environ.get(k) for k in ("META_AD_ACCOUNT_ID", "META_IG_USER_ID", "META_PAGE_ID")):
+            result.warnings.append("Ni META_AD_ACCOUNT_ID, ni META_IG_USER_ID, ni META_PAGE_ID définis : rien à collecter.")
         return result
 
     def _ads(self, result, token, start, end):
@@ -73,3 +78,44 @@ class MetaCollector(Collector):
             for point in serie.get("values", []):
                 day = point["end_time"][:10]
                 result.add(day, "instagram", "reach", point.get("value", 0))
+
+    # Meta remplace progressivement les « impressions » de page par les « vues » : on essaie dans l'ordre.
+    PAGE_METRICS = {
+        "impressions": ("page_media_view", "page_impressions"),
+        "engagement": ("page_post_engagements",),
+    }
+
+    def _facebook_page(self, result, token, start, end):
+        page = env("META_PAGE_ID")
+        # Les statistiques de page exigent un jeton de page, que le jeton système permet d'obtenir.
+        page_token = self.http(
+            "GET", f"{self._base()}/{page}", params={"fields": "access_token", "access_token": token}
+        ).get("access_token") or token
+        since = datetime(start.year, start.month, start.day, tzinfo=timezone.utc)
+        until = datetime(end.year, end.month, end.day, tzinfo=timezone.utc) + timedelta(days=1)
+        for name, candidates in self.PAGE_METRICS.items():
+            errors = []
+            for metric in candidates:
+                try:
+                    data = self.http(
+                        "GET",
+                        f"{self._base()}/{page}/insights",
+                        params={
+                            "metric": metric,
+                            "period": "day",
+                            "since": int(since.timestamp()),
+                            "until": int(until.timestamp()),
+                            "access_token": page_token,
+                        },
+                    )
+                except Exception as exc:
+                    errors.append(f"{metric} : {exc}")
+                    continue
+                for serie in data.get("data", []):
+                    for point in serie.get("values", []):
+                        # end_time = minuit (heure du Pacifique) le lendemain du jour mesuré
+                        day = (datetime.fromisoformat(point["end_time"].replace("+0000", "+00:00")) - timedelta(days=1)).date()
+                        result.add(day, "facebook", name, point.get("value", 0))
+                break
+            else:
+                result.warnings.append(f"Page Facebook, {name} indisponible ({'; '.join(errors)[:300]})")
