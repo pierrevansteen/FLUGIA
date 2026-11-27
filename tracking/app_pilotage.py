@@ -6,6 +6,7 @@ En ligne :          Streamlit Community Cloud, fichier principal « tracking/app
 """
 from __future__ import annotations
 
+import html
 import os
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -116,14 +117,22 @@ def resample(df: pd.DataFrame, gran: str, by: str | None = None) -> pd.DataFrame
     return out
 
 
+SYSTEM_FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif'
+
+
 def style(fig, height=340, money=False, percent=False):
+    """Graphiques épurés : pas de cadre, grille discrète, légende compacte, barres arrondies."""
     fig.update_layout(
-        height=height, margin=dict(l=10, r=10, t=30, b=10), font=dict(family="Inter, sans-serif", size=12),
-        legend=dict(orientation="h", y=1.08, x=0, title=None), plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-        hoverlabel=dict(font_family="Inter, sans-serif"), bargap=0.25,
+        height=height, margin=dict(l=0, r=0, t=36, b=0), font=dict(family=SYSTEM_FONT, size=12, color="#6B7280"),
+        legend=dict(orientation="h", y=1.12, x=0, title=None, font=dict(size=12), itemclick="toggleothers"),
+        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+        hoverlabel=dict(font_family=SYSTEM_FONT, bgcolor="white", bordercolor="rgba(0,0,0,0.08)", font_color="#0F0F0F"),
+        bargap=0.35, hovermode="x unified",
     )
-    fig.update_xaxes(title=None, showgrid=False, tickformat="%d/%m", hoverformat="%d/%m/%Y")
-    fig.update_yaxes(title=None, gridcolor="rgba(150,160,175,0.18)", rangemode="tozero",
+    fig.update_traces(selector=dict(type="bar"), marker_cornerradius=4, marker_line_width=0)
+    fig.update_traces(selector=dict(type="scatter"), line_width=2.2, marker_size=6)
+    fig.update_xaxes(title=None, showgrid=False, showline=False, tickformat="%d/%m", hoverformat="%d %b %Y", ticks="")
+    fig.update_yaxes(title=None, gridcolor="rgba(120,130,145,0.14)", zeroline=False, rangemode="tozero", nticks=5,
                      ticksuffix=" %" if percent else (" €" if money else ""))
     return fig
 
@@ -133,14 +142,76 @@ def kpi(col, title, cur, prev, fmt=brand.num, inverse=False, help_=None):
     col.metric(title, fmt(cur) if cur is not None else "—", d, delta_color="inverse" if inverse else "normal", help=help_)
 
 
-# ------------------------------------------------------------------ en-tête et filtres
+def section(title: str, caption: str | None = None):
+    """Titre de section sobre : la hiérarchie vient du poids et de l'espace, pas des filets."""
+    st.markdown(f'<div class="fl-section"><h3>{title}</h3>' + (f"<p>{caption}</p>" if caption else "") + "</div>",
+                unsafe_allow_html=True)
+
+
+# ------------------------------------------------------------------ apparence (principes Apple : simplicité, hiérarchie, matière)
 st.logo(str(ROOT / "assets" / "logo-flugia.svg"), size="large")
 st.markdown(
     f"""<style>
-    h1, h2, h3 {{ letter-spacing: -0.01em; }}
-    div[data-testid="stMetric"] {{ background: {C['bg_softer']}; border: 1px solid #E3EAF3; border-radius: 10px; padding: 10px 14px; }}
-    @media (prefers-color-scheme: dark) {{ div[data-testid="stMetric"] {{ background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08); }} }}
-    .bar {{ height: 4px; border-radius: 4px; background: {brand.GRADIENT}; margin: -6px 0 14px; }}
+    .stApp, .stApp p, .stApp label, .stApp input, .stApp textarea, .stApp h1, .stApp h2, .stApp h3,
+    div[data-testid="stMetricValue"], div[data-testid="stMarkdownContainer"] {{ font-family: {SYSTEM_FONT}; }}
+    [data-testid="stIconMaterial"] {{ font-family: "Material Symbols Rounded" !important; }}
+    .block-container {{ padding-top: 4.6rem; padding-bottom: 4rem; max-width: 1240px; }}
+    header[data-testid="stHeader"] {{ background: rgba(255,255,255,0.62); backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%); }}
+    [data-testid="stToolbar"] {{ opacity: 0.55; }}
+
+    /* En-tête : grand titre à approche négative, ligne d'état discrète */
+    .fl-eyebrow {{ font-size: .78rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: {C['cta']}; margin: 0 0 .35rem; }}
+    .fl-title {{ font-size: clamp(1.9rem, 3.2vw, 2.6rem); font-weight: 700; line-height: 1.08; letter-spacing: -0.025em; margin: 0; }}
+    .fl-status {{ font-size: .9rem; color: #6B7280; margin: .5rem 0 1.4rem; display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }}
+    .fl-dot {{ width: .5rem; height: .5rem; border-radius: 50%; background: #34C759; display: inline-block; }}
+    .fl-dot.warn {{ background: #FF9F0A; }}
+
+    /* Sections */
+    .fl-section {{ margin: 2.2rem 0 .6rem; }}
+    .fl-section h3 {{ font-size: 1.15rem; font-weight: 650; letter-spacing: -0.012em; margin: 0; padding: 0; }}
+    .fl-section p {{ font-size: .86rem; color: #6B7280; margin: .2rem 0 0; }}
+
+    /* Indicateurs : surfaces calmes, chiffres lisibles, pas de bordure dure */
+    div[data-testid="stMetric"] {{ background: rgba(120,130,145,0.06); border-radius: 16px; padding: 16px 18px 14px;
+        transition: background-color .15s ease; }}
+    div[data-testid="stMetric"]:hover {{ background: rgba(120,130,145,0.1); }}
+    div[data-testid="stMetricLabel"] p {{ font-size: .82rem; color: #6B7280; font-weight: 500; }}
+    div[data-testid="stMetricValue"] {{ font-size: 1.85rem; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }}
+    div[data-testid="stMetricDelta"] {{ font-size: .8rem; font-weight: 600; }}
+
+    /* Onglets en contrôle segmenté */
+    div[role="tablist"] {{ gap: 2px; background: rgba(120,130,145,0.1); padding: 3px; border-radius: 11px; width: fit-content;
+        max-width: 100%; overflow-x: auto; border: 0 !important; margin-bottom: .6rem; }}
+    [data-testid="stTab"] {{ border-radius: 8px !important; padding: 6px 14px !important; margin: 0 !important; font-weight: 500; border: 0 !important; }}
+    [data-testid="stTab"][aria-selected="true"] {{ background: white !important; box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 1px rgba(0,0,0,0.04); }}
+    [data-testid="stTab"] p {{ font-size: .92rem; }}
+    [data-testid="stTab"][aria-selected="true"] p {{ color: inherit; font-weight: 600; }}
+    div[data-baseweb="tab-highlight"], div[data-baseweb="tab-border"], [data-testid="stTabsHighlight"] {{ display: none !important; }}
+
+    /* Panneau latéral : matière translucide */
+    section[data-testid="stSidebar"] > div {{ background: rgba(246,248,251,0.72); backdrop-filter: blur(24px) saturate(160%); }}
+    section[data-testid="stSidebar"] label p {{ font-size: .8rem; font-weight: 600; color: #6B7280; }}
+
+    /* Tableaux et cartes */
+    div[data-testid="stDataFrame"] {{ border-radius: 12px; overflow: hidden; }}
+    div[data-testid="stVerticalBlockBorderWrapper"] {{ border-radius: 14px; }}
+    .fl-alert {{ display: grid; grid-template-columns: 10px 1fr; gap: 12px; padding: 14px 4px; border-bottom: 1px solid rgba(120,130,145,0.16); }}
+    .fl-alert:last-child {{ border-bottom: 0; }}
+    .fl-alert i {{ width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; }}
+    .fl-alert b {{ font-weight: 600; letter-spacing: -0.005em; }}
+    .fl-alert small {{ display: block; color: #6B7280; margin: 2px 0 6px; }}
+    .fl-alert .act {{ color: {C['cta']}; font-weight: 500; }}
+
+    @media (prefers-color-scheme: dark) {{
+      header[data-testid="stHeader"] {{ background: rgba(14,17,23,0.62); }}
+      section[data-testid="stSidebar"] > div {{ background: rgba(28,31,38,0.72); }}
+      [data-testid="stTab"][aria-selected="true"] {{ background: rgba(255,255,255,0.14) !important; box-shadow: none; }}
+    }}
+    @media (prefers-reduced-motion: reduce) {{ * {{ transition: none !important; animation: none !important; }} }}
+    @media (prefers-reduced-transparency: reduce) {{
+      header[data-testid="stHeader"], section[data-testid="stSidebar"] > div {{ backdrop-filter: none; background: var(--background-color, #fff); }}
+    }}
     </style>""",
     unsafe_allow_html=True,
 )
@@ -148,20 +219,23 @@ st.markdown(
 db_url = _database_url()
 m_all, accounts, runs, alert_log = load(db_url)
 if m_all.empty:
-    st.warning("La base ne contient encore aucune donnée. Lancez une collecte depuis GitHub Actions.")
+    st.info("Aucune donnée pour l'instant. La première collecte de la nuit remplira cette page ; "
+            "vous pouvez aussi la lancer depuis GitHub, onglet Actions, « Run workflow ».")
     st.stop()
 
 last_day = m_all["day"].max().date()
+PERIODS = {"7 j": "7 derniers jours", "30 j": "30 derniers jours", "90 j": "90 derniers jours", "12 mois": "12 derniers mois", "Dates": "Personnalisée"}
 with st.sidebar:
-    st.header("Filtres")
-    preset = st.selectbox("Période", ["7 derniers jours", "30 derniers jours", "90 derniers jours", "12 derniers mois", "Personnalisée"], index=1)
-    custom = st.date_input("Dates", value=(last_day - timedelta(days=29), last_day), max_value=last_day,
+    choice = st.segmented_control("Période", list(PERIODS), default="30 j", key="periode") or "30 j"
+    preset = PERIODS[choice]
+    custom = st.date_input("Du … au", value=(last_day - timedelta(days=29), last_day), max_value=last_day,
                            format="DD/MM/YYYY") if preset == "Personnalisée" else None
-    gran = st.radio("Regrouper par", ["Jour", "Semaine", "Mois"], index=1, horizontal=True)
+    gran = st.segmented_control("Afficher par", ["Jour", "Semaine", "Mois"], default="Semaine", key="gran") or "Semaine"
     families = sorted(m_all["famille"].unique())
-    chosen = st.multiselect("Canaux", families, default=families)
-    st.caption(f"Données jusqu'au {brand.day(last_day, True)} · comparaison avec la période précédente de même durée.")
-    if st.button("Actualiser les données"):
+    with st.expander("Canaux", expanded=False):
+        chosen = st.pills("Canaux affichés", families, default=families, selection_mode="multi", label_visibility="collapsed") or families
+    st.caption("Chaque chiffre est comparé à la période précédente de même durée.")
+    if st.button("Actualiser les données", type="tertiary", icon=":material/refresh:"):
         st.cache_data.clear()
         st.rerun()
 
@@ -169,9 +243,24 @@ start, end, pstart, pend = period_bounds(preset, custom, last_day)
 m = m_all[m_all["famille"].isin(chosen)]
 cur, prev = between(m, "day", start, end), between(m, "day", pstart, pend)
 
-st.title("Pilotage commercial")
-st.markdown(f"Du **{brand.day(start.date())}** au **{brand.day(end.date(), True)}**", help="Période sélectionnée dans le panneau de gauche")
-st.markdown('<div class="bar"></div>', unsafe_allow_html=True)
+# En-tête : où suis-je, quelle période, quelle fraîcheur
+latest_run = pd.to_datetime(runs["run_at"].max(), utc=True) if not runs.empty else None
+age_h = (datetime.now(timezone.utc) - latest_run).total_seconds() / 3600 if latest_run is not None else None
+fresh = age_h is not None and age_h < 30
+failing = []
+if not runs.empty:
+    last_runs = runs.sort_values("run_at").groupby("collector").tail(1)
+    failing = list(last_runs[last_runs["status"] == "erreur"]["collector"])
+status = ("Données à jour" if fresh else "Données à vérifier") + (
+    f" · collecte il y a {brand.num(age_h, 0)} h" if age_h is not None else "") + (
+    f" · {len(failing)} source(s) en erreur" if failing else "")
+same_year = start.year == end.year
+st.markdown(
+    f"""<p class="fl-eyebrow">Pilotage commercial</p>
+    <h1 class="fl-title">{brand.day(start.date(), not same_year)} – {brand.day(end.date(), True)}</h1>
+    <div class="fl-status"><span class="fl-dot {'warn' if (failing or not fresh) else ''}"></span>{status}</div>""",
+    unsafe_allow_html=True,
+)
 
 
 def tot(df, metric, channel=None, prefix=None):
@@ -190,7 +279,7 @@ def signups_series(a0, a1):
     return tot(between(m, "day", a0, a1), "web_signups")
 
 
-tabs = st.tabs(["Vue d'ensemble", "Visibilité", "GEO (IA)", "Intérêt", "Acquisition & rétention", "Alertes", "Explorateur"])
+tabs = st.tabs(["Synthèse", "Visibilité", "Assistants IA", "Intérêt", "Clients", "Alertes", "Explorer"])
 
 # ------------------------------------------------------------------ 1. Vue d'ensemble
 with tabs[0]:
@@ -210,24 +299,24 @@ with tabs[0]:
     geo = m_all[(m_all["metric"] == "ai_mention_rate") & (m_all["channel"] == "geo")].sort_values("day")
     g_cur = geo["value"].iloc[-1] if len(geo) else None
     g_prev = geo["value"].iloc[-2] if len(geo) > 1 else None
-    c[3].metric("Citée par les IA (dernière mesure)", brand.pct(g_cur, 0) if g_cur is not None else "—",
+    c[3].metric("Citée par les IA", brand.pct(g_cur, 0) if g_cur is not None else "—",
                 f"{'+' if g_cur >= g_prev else '-'}{brand.num(abs(g_cur - g_prev), 0)} pt" if g_prev is not None else None)
 
     vis = resample(visibility_rows(cur), gran, "famille")
     if not vis.empty:
         fig = px.bar(vis, x="day", y="value", color="famille", color_discrete_map=FAMILY_COLORS,
                      labels={"day": "", "value": "Vues", "famille": "Canal"})
-        st.subheader("Vues de la marque par canal")
+        section("Vues de la marque par canal")
         st.plotly_chart(style(fig), use_container_width=True)
 
     left, right = st.columns(2)
     with left:
-        st.subheader("Visites du site")
+        section("Visites du site")
         s = resample(cur[cur["metric"] == "sessions"], gran)
         if not s.empty:
             st.plotly_chart(style(px.bar(s, x="day", y="value", color_discrete_sequence=[C["main"]], labels={"value": "Visites", "day": ""}), 280), use_container_width=True)
     with right:
-        st.subheader("Inscriptions et démos")
+        section("Inscriptions et démos")
         frames = []
         sg = cur[cur["metric"] == "web_signups"] if accounts.empty else pd.DataFrame(
             {"day": accounts["created_at"], "value": 1.0}).dropna().pipe(lambda d: between(d, "day", start, end))
@@ -267,7 +356,7 @@ with tabs[1]:
     else:
         st.plotly_chart(style(fig, 380, money=metric_label.startswith(("Dépenses", "Coût")), percent=metric_label == "Taux de clic"), use_container_width=True)
 
-    st.subheader("Détail par canal")
+    section("Détail par canal")
     rows = []
     for ch in sorted(set(visibility_rows(m)["channel"])):
         vc = visibility_rows(cur[cur["channel"] == ch])["value"].sum()
@@ -292,7 +381,7 @@ with tabs[2]:
     if rate.empty:
         st.info("Pas encore de mesure GEO. La mesure est faite chaque lundi : Claude pose les questions de config/geo_prompts.yaml et vérifie si Flugia est citée.")
     else:
-        st.subheader("Part des questions où une IA cite Flugia")
+        section("Part des questions où une IA cite Flugia")
         fig = px.line(rate, x="day", y="value", markers=True, color_discrete_sequence=[C["cta"]], labels={"value": "", "day": ""})
         fig.update_yaxes(range=[0, 100])
         st.plotly_chart(style(fig, 300, percent=True), use_container_width=True)
@@ -300,24 +389,24 @@ with tabs[2]:
         q["question"] = q["channel"].str.split(":", n=1).str[1].str.replace("_", " ")
         pivot = q.pivot_table(index="question", columns="day", values="value", aggfunc="max").sort_index(axis=1).iloc[:, -12:]
         pivot.columns = [d_.strftime("%d/%m") for d_ in pivot.columns]
-        st.subheader("Historique par question (12 dernières mesures)")
+        section("Historique par question (12 dernières mesures)")
         st.dataframe(pivot.astype(object).map(lambda v: "✅ citée" if v == 1 else ("—" if v == 0 else "")), use_container_width=True)
         comp = geo_all[geo_all["metric"] == "ai_mentions"]
         comp = comp[comp["channel"].str.startswith("geo_concurrent:")]
         if not comp.empty:
             comp = comp.assign(concurrent=comp["channel"].str.split(":", n=1).str[1])
-            st.subheader("Concurrents cités par les IA")
+            section("Concurrents cités par les IA")
             fig = px.bar(comp.groupby(["day", "concurrent"])["value"].sum().reset_index(), x="day", y="value", color="concurrent",
                          barmode="group", labels={"value": "Nombre de réponses", "day": ""})
             st.plotly_chart(style(fig, 300), use_container_width=True)
     ai = resample(cur[cur["metric"] == "ai_sessions"], gran)
     if not ai.empty:
-        st.subheader("Visites venant des assistants IA")
+        section("Visites venant des assistants IA")
         st.plotly_chart(style(px.bar(ai, x="day", y="value", color_discrete_sequence=[C["cta"]], labels={"value": "Visites", "day": ""}), 260), use_container_width=True)
 
 # ------------------------------------------------------------------ 4. Intérêt
 with tabs[3]:
-    st.subheader("Visites par canal")
+    section("Visites par canal")
     s = cur[cur["metric"] == "sessions"]
     if not s.empty:
         fig = px.bar(resample(s, gran, "canal"), x="day", y="value", color="canal", labels={"value": "Visites", "day": "", "canal": "Canal"})
@@ -332,7 +421,7 @@ with tabs[3]:
         st.dataframe(t.sort_values("Visites", ascending=False), hide_index=True, use_container_width=True,
                      column_config={"Taux d'inscription": st.column_config.NumberColumn(format="%.2f %%")})
 
-    st.subheader("Sites référents (presse, partenaires, annuaires)")
+    section("Sites référents (presse, partenaires, annuaires)")
     r = m[(m["metric"].isin(["referral_sessions", "referral_signups"]))].copy()
     if r.empty:
         st.info("Aucune visite venant de sites tiers pour l'instant.")
@@ -350,7 +439,7 @@ with tabs[3]:
         out = out[(out["Visites"] > 0) | (out["Période précédente"] > 0)].sort_values("Visites", ascending=False)
         st.dataframe(out.reset_index().rename(columns={"site": "Site"}), hide_index=True, use_container_width=True)
 
-    st.subheader("Démos")
+    section("Démos")
     d = cur[cur["metric"].isin(["demos_booked", "demos_held", "web_demo_requests"])]
     if d.empty:
         st.info("Pas de démos mesurées sur la période (Google Agenda ou pages de remerciement GA4).")
@@ -383,7 +472,7 @@ with tabs[4]:
         c[2].metric("Clients payants", brand.num(len(paying)), help="Aujourd'hui")
         c[3].metric("Résiliations sur la période", brand.num(len(churned)), delta_color="inverse")
 
-        st.subheader("Origine des inscriptions et des clients")
+        section("Origine des inscriptions et des clients")
         g = a_cur.groupby("canal").agg(Inscriptions=("account_id", "count"), Clients=("converted_at", "count")).reset_index()
         spend = cur[cur["metric"] == "spend"].groupby("famille")["value"].sum()
         g["Taux"] = (100 * g["Clients"] / g["Inscriptions"]).round(1)
@@ -392,7 +481,7 @@ with tabs[4]:
         st.dataframe(g.rename(columns={"canal": "Canal"}).sort_values("Inscriptions", ascending=False), hide_index=True, use_container_width=True,
                      column_config={"Taux": st.column_config.NumberColumn(format="%.1f %%")})
 
-        st.subheader("Comptes")
+        section("Comptes")
         f1, f2, f3 = st.columns(3)
         statuses = sorted(a["status"].dropna().unique())
         sel_status = f1.multiselect("Statut", statuses, default=[s_ for s_ in statuses if s_ in ("trial", "active")] or statuses)
@@ -433,13 +522,18 @@ with tabs[5]:
                                   selection_mode="multi", format_func=lambda s_: brand.SEVERITY[s_]["label"])
     shown = [x for x in al if x["severite"] in (levels or [])]
     if not shown:
-        st.success("Aucun point d'attention pour ces critères.")
-    for x in shown:
-        icon = {"haute": "🔴", "moyenne": "🟠", "info": "🔵"}[x["severite"]]
+        st.success("Rien à signaler : tous les indicateurs suivis sont dans les seuils fixés.", icon=":material/check_circle:")
+    else:
+        dot = {"haute": "#FF3B30", "moyenne": "#FF9F0A", "info": C["main"]}
+        esc = lambda t: html.escape(str(t))  # noqa: E731
+        items = "".join(
+            f'<div class="fl-alert"><i style="background:{dot[x["severite"]]}"></i><div><b>{esc(x["titre"])}</b>'
+            f'<small>{esc(brand.SEVERITY[x["severite"]]["label"])} · {esc(x["etape"])}</small>{esc(x["detail"])}'
+            f'<div class="act">{esc(x["action"])}</div></div></div>'
+            for x in shown
+        )
         with st.container(border=True):
-            st.markdown(f"{icon} **{x['titre']}**  \n<small>{brand.SEVERITY[x['severite']]['label']} · {x['etape']}</small>", unsafe_allow_html=True)
-            st.write(x["detail"])
-            st.markdown(f"**Action recommandée :** {x['action']}")
+            st.markdown(items, unsafe_allow_html=True)
     if not alert_log.empty:
         with st.expander("Historique des alertes envoyées"):
             import json as _json
@@ -471,13 +565,3 @@ with tabs[6]:
         st.dataframe(table, use_container_width=True)
         st.download_button("Télécharger en CSV", ex.drop(columns=["famille"]).to_csv(index=False, sep=";", decimal=",").encode("utf-8-sig"),
                            file_name=f"flugia-export-{start.date()}-{end.date()}.csv", mime="text/csv")
-
-# ------------------------------------------------------------------ pied de page
-with st.sidebar:
-    st.divider()
-    if not runs.empty:
-        last = runs.sort_values("run_at").groupby("collector").tail(1)
-        ko = last[last["status"] == "erreur"]
-        st.caption(f"Dernière collecte : {pd.to_datetime(runs['run_at'].max()).strftime('%d/%m/%Y %H:%M')} UTC")
-        if not ko.empty:
-            st.error("Sources en erreur : " + ", ".join(ko["collector"]))
