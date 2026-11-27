@@ -1,5 +1,6 @@
 from .app_db import AppDBCollector
 from .base import Collector, CollectorError, CollectResult
+from .clarity import ClarityCollector
 from .ga4 import GA4Collector
 from .geo import GeoCollector
 from .google_ads import GoogleAdsCollector
@@ -16,6 +17,7 @@ ALL_COLLECTORS: list[type[Collector]] = [
     LinkedInCollector,
     SearchConsoleCollector,
     GA4Collector,
+    ClarityCollector,
     GeoCollector,
     GoogleCalendarCollector,
     AppDBCollector,
