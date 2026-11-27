@@ -74,15 +74,23 @@ def env(name: str, default: str | None = None) -> str:
 
 
 def google_access_token(scopes: list[str], subject: str | None = None) -> str:
-    """Jeton d'accès à partir du JSON du compte de service (GOOGLE_SERVICE_ACCOUNT_JSON)."""
+    """Jeton d'accès Google à partir de GOOGLE_SERVICE_ACCOUNT_JSON (contenu JSON ou chemin du fichier).
+
+    Accepte une clé de compte de service classique, ou le fichier d'identifiants créé par
+    google-github-actions/auth (fédération d'identité de charge de travail, sans clé).
+    """
+    from google.auth import identity_pool
     from google.auth.transport.requests import Request
     from google.oauth2 import service_account
 
     raw = env("GOOGLE_SERVICE_ACCOUNT_JSON")
     info = json.loads(raw) if raw.strip().startswith("{") else json.load(open(raw))
-    creds = service_account.Credentials.from_service_account_info(info, scopes=scopes)
-    if subject:
-        creds = creds.with_subject(subject)
+    if info.get("type") == "service_account":
+        creds = service_account.Credentials.from_service_account_info(info, scopes=scopes)
+        if subject:
+            creds = creds.with_subject(subject)
+    else:
+        creds = identity_pool.Credentials.from_info(info, scopes=scopes)
     creds.refresh(Request())
     return creds.token
 
