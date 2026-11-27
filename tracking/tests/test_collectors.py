@@ -75,6 +75,21 @@ def test_meta(monkeypatch):
     assert not res.warnings
 
 
+def test_meta_instagram_decoupe_30_jours(monkeypatch):
+    from datetime import timedelta
+    c = meta.MetaCollector()
+    monkeypatch.delenv("META_AD_ACCOUNT_ID")
+    monkeypatch.delenv("META_PAGE_ID")
+    calls = []
+    def http(method, url, params=None, **k):
+        assert params["until"] - params["since"] <= 30 * 86400
+        calls.append(params["since"])
+        return {"data": []}
+    monkeypatch.setattr(c, "http", http)
+    res = c.collect(END - timedelta(days=89), END)
+    assert len(calls) == 3 and not res.warnings
+
+
 def test_linkedin(monkeypatch):
     c = linkedin.LinkedInCollector()
     def http(method, url, **k):
