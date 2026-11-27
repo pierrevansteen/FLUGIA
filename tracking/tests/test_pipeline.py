@@ -16,6 +16,10 @@ def test_demo_pipeline(tmp_path):
     assert any(a.key == "nouveau_referent:lecho.be" for a in al)  # article de presse simulé
     # les visites par site ne doivent pas gonfler le total des visites
     assert snap["interet"]["visites"]["cur"] == sum(c["cur"] for c in snap["interet"]["visites_par_canal"])
+    beh = snap["comportement"]
+    assert beh["branche"] and beh["jours_mesures"] == 7
+    rows = {r["indicateur"]: r for r in beh["lignes"]}
+    assert rows["Sessions"]["cur"] > 1000 and not rows["Sessions avec rage clicks"]["hausse_bien"]
     first = alerts.only_new(db, al)
     assert first and alerts.only_new(db, al) == []  # pas de doublon le lendemain
     out = dashboard.build(snap, al, output=tmp_path / "index.html")
