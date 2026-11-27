@@ -235,6 +235,24 @@
     </div>
   </div>
 
+  {% set b = s.comportement or {} %}
+  {% if b.branche %}
+  <div class="card avoid" style="margin-top: 10px">
+    <h3>Comportement sur le site · 7 derniers jours (Microsoft Clarity)</h3>
+    <table>
+      <tr><th>Indicateur</th><th class="n">7 jours</th><th class="n">Sem. préc.</th><th class="n">Évol.</th></tr>
+      {% for x in b.lignes %}
+      <tr><td>{{ x.indicateur }}</td>
+        <td class="n">{% if x.unite == "%" %}{{ x.cur | pct }}{% elif x.cur is none %}—{% else %}{{ x.cur | num }}{% if x.unite %} {{ x.unite }}{% endif %}{% endif %}</td>
+        <td class="n">{% if x.unite == "%" %}{{ x.prev | pct }}{% elif x.prev is none %}—{% else %}{{ x.prev | num }}{% if x.unite %} {{ x.unite }}{% endif %}{% endif %}</td>
+        <td class="n">{{ dl(x.cur, x.prev, x.hausse_bien, x.points) }}</td></tr>
+      {% endfor %}
+    </table>
+    <div class="note">Moyennes des relevés quotidiens Clarity (totaux pour sessions et visiteurs){% if b.jours_mesures < 7 %}, sur {{ b.jours_mesures }} jour(s) mesuré(s) : Clarity ne fournit pas d'historique, il se constitue jour après jour{% endif %}. Rage clicks, clics morts, retours rapides : part des sessions concernées (plus bas = mieux).</div>
+  </div>
+  {% endif %}
+
+  <div class="avoid">
   <h2><span class="num">3</span>Acquisition</h2>
   <div class="sub">Origine des inscriptions et des clients payants sur 90 jours, et coût par canal.</div>
   <div class="card avoid">
@@ -248,6 +266,7 @@
       {% else %}<tr><td colspan="7" class="empty">Pas encore d'inscriptions attribuées à un canal.</td></tr>{% endfor %}
     </table>
     {% if not a.branche %}<div class="note">Les clients payants et le coût par client s'afficheront après le raccordement de la base de l'application.</div>{% endif %}
+  </div>
   </div>
   {% if not r.branche %}
   <h2><span class="num">4</span>Rétention</h2>

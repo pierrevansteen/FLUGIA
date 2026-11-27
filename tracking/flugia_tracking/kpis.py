@@ -25,6 +25,7 @@ CHANNEL_LABELS = {
     "seo": "SEO (Google)",
     "seo_marque": "Recherches « flugia »",
     "geo": "GEO (IA)",
+    "clarity": "Clarity (comportement sur le site)",
     "demos": "Démos",
     "facturation": "Facturation",
 }
@@ -305,12 +306,47 @@ def compute(db: DB, as_of: date | None = None) -> dict:
         "interet": interet,
         "acquisition": acq,
         "retention": ret,
+        "comportement": _behavior(data, c0, c1, p0, p1),
         "hebdo": _weekly(data, as_of),
         "listes": _lists(data, as_of, cfg["comptes"]) if data.has_accounts else {},
         "sources": _sources(data),
     }
     snapshot["_data"] = data  # usage interne (alertes) ; retiré avant export
     return snapshot
+
+
+# Comportement sur le site (Microsoft Clarity) : (libellé, métrique, agrégation, hausse = bien ?, unité)
+BEHAVIOR = [
+    ("Sessions", "clarity_sessions", "sum", True, ""),
+    ("Visiteurs", "clarity_users", "sum", True, ""),
+    ("Pages par session", "clarity_pages_per_session", "avg", True, ""),
+    ("Temps actif moyen", "clarity_active_time_s", "avg", True, "s"),
+    ("Profondeur de défilement", "clarity_scroll_depth_pct", "avg", True, "%"),
+    ("Sessions avec rage clicks", "clarity_rage_click_pct", "avg", False, "%"),
+    ("Sessions avec clics morts", "clarity_dead_click_pct", "avg", False, "%"),
+    ("Retours rapides", "clarity_quickback_pct", "avg", False, "%"),
+    ("Défilement excessif", "clarity_excessive_scroll_pct", "avg", False, "%"),
+    ("Sessions avec erreur JavaScript", "clarity_script_error_pct", "avg", False, "%"),
+]
+
+
+def _behavior(data: Data, c0: date, c1: date, p0: date, p1: date) -> dict:
+    """Moyenne (ou total) des relevés quotidiens Clarity sur 7 jours, comparée à la semaine précédente."""
+    def agg(metric, how, a, b):
+        vals = [v for d, v in data.series(metric, "clarity").items() if a <= d <= b]
+        if not vals:
+            return None
+        return sum(vals) if how == "sum" else round(sum(vals) / len(vals), 1)
+
+    days = {d for d, _s, ch, _m, _v in data.rows if ch == "clarity" and c0 <= d <= c1}
+    rows = []
+    for label_, metric, how, good_up, unit in BEHAVIOR:
+        cur, prev = agg(metric, how, c0, c1), agg(metric, how, p0, p1)
+        if cur is None and prev is None:
+            continue
+        rows.append({"indicateur": label_, "cur": cur, "prev": prev, "hausse_bien": good_up, "unite": unit,
+                     "points": unit == "%"})
+    return {"branche": bool(rows), "jours_mesures": len(days), "lignes": rows}
 
 
 def _geo_detail(data: Data) -> list[dict]:
