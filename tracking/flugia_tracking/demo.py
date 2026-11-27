@@ -30,6 +30,7 @@ CITIES = ["Liège", "Namur", "Gand", "Bruxelles", "Mons", "Anvers", "Wavre", "Lo
 
 def seed(db: DB, days: int = 120) -> date:
     rnd = random.Random(42)
+    rnd_clarity = random.Random(7)  # tirage séparé : ne change pas les autres données de démonstration
     as_of = datetime.now(timezone.utc).date() - timedelta(days=1)
     start = as_of - timedelta(days=days - 1)
     now = datetime.now(timezone.utc).isoformat()
@@ -44,6 +45,13 @@ def seed(db: DB, days: int = 120) -> date:
         weekday = 0.65 if day.weekday() >= 5 else 1.0
         last_week = (as_of - day).days < 7
         noise = lambda: rnd.uniform(0.85, 1.15)  # noqa: E731
+        if (as_of - day).days < 21:  # Clarity n'a que quelques semaines d'historique
+            n = lambda: rnd_clarity.uniform(0.85, 1.15)  # noqa: E731
+            for metric, base in (("clarity_sessions", 190), ("clarity_users", 150), ("clarity_pages_per_session", 2),
+                                 ("clarity_active_time_s", 64), ("clarity_scroll_depth_pct", 52), ("clarity_rage_click_pct", 3),
+                                 ("clarity_dead_click_pct", 11), ("clarity_quickback_pct", 6), ("clarity_excessive_scroll_pct", 2),
+                                 ("clarity_script_error_pct", 1)):
+                add(day, "clarity", "clarity", metric, base * n())
 
         imp = 1500 * growth * weekday * noise()
         add(day, "google_ads", "google_ads", "impressions", imp)
