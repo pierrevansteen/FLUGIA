@@ -5,6 +5,9 @@ PyYAML>=6.0
 psycopg[binary]>=3.1
 # Comptes de service Google (GA4, Search Console)
 google-auth>=2.29
+# Rapport PDF (mise en page HTML -> PDF via Chromium)
+Jinja2>=3.1
+playwright>=1.48
 # Synthèse IA
 anthropic>=2.14
 # Optionnel : base de l'app en MySQL

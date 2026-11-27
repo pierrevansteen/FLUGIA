@@ -16,7 +16,7 @@ on:
         description: "Sources à collecter uniquement (ex. geo ou ga4,search_console). Vide = toutes"
         default: ""
       test_notification:
-        description: "Envoyer un message de test sur Slack / e-mail"
+        description: "Envoyer un exemple d'alertes et de rapport PDF (données fictives)"
         type: boolean
         default: false
 
@@ -66,6 +66,8 @@ jobs:
       STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
       # Notifications
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}        # pour joindre le PDF (droits chat:write, files:write)
+      SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID || secrets.SLACK_CHANNEL_ID }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_PORT: ${{ secrets.SMTP_PORT }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
@@ -93,6 +95,9 @@ jobs:
 
       - run: pip install -r requirements.txt
 
+      - name: Navigateur pour le rapport PDF
+        run: python -m playwright install --with-deps chromium
+
       - name: Restaurer la base SQLite (si pas de DATABASE_URL)
         if: env.DATABASE_URL == ''
         uses: actions/cache/restore@v4
@@ -116,7 +121,7 @@ jobs:
           path: tracking/data/tracking.db
           key: tracking-db-${{ github.run_id }}
 
-      - name: Publier le tableau de bord (artefact téléchargeable)
+      - name: Publier le tableau de bord et le rapport PDF (artefact téléchargeable)
         uses: actions/upload-artifact@v4
         with:
           name: tableau-de-bord

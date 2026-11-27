@@ -419,6 +419,7 @@ def _lists(data: Data, as_of: date, rules: dict) -> dict:
         if is_trial(a, as_of) and a["created_at"]:
             day = (as_of - a["created_at"]).days + 1
             usage = a.get("usage_7d") or 0
+            day = min(day, 15)
             if day >= r_hot["jour_essai_min"] and usage >= r_hot["usage_7j_min"]:
                 hot.append(row(a, jour_essai=day, usage_7j=usage, fin_essai=str(a["trial_ends_at"] or "")))
             if day > r_st["jours_depuis_inscription"] and not a["activated_at"]:

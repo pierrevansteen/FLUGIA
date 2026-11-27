@@ -4,7 +4,7 @@
   collect      collecte les données (par défaut les 7 derniers jours, re-collectés chaque nuit)
   run          collecte + KPIs + alertes + notification + tableau de bord (ce que lance GitHub Actions)
   dashboard    régénère le tableau de bord sans collecter
-  test-notify  envoie un message de test sur Slack / e-mail
+  test-notify  envoie un exemple d'alertes et de rapport PDF (données fictives) sur Slack / e-mail
   demo         remplit une base de démonstration et génère le tableau de bord (données fictives)
 """
 from __future__ import annotations
@@ -81,8 +81,37 @@ def cmd_collect(args):
     collect(db, args.days, args.only.split(",") if args.only else None)
 
 
+def make_pdf(snap, alerts, summary, demo=False, output=None):
+    """Rapport PDF ; une erreur de rendu ne doit jamais bloquer la collecte ni les alertes."""
+    try:
+        from .report import build_pdf
+
+        pdf = build_pdf(snap, alerts, summary, demo=demo, output=output)
+        print(f"Rapport PDF : {pdf}")
+        return pdf
+    except Exception as exc:
+        print(f"Rapport PDF non généré : {type(exc).__name__}: {exc}", file=sys.stderr)
+        return None
+
+
+def demo_snapshot():
+    from .demo import DEMO_SUMMARY, seed
+
+    path = ROOT / "data" / "demo.db"
+    if path.exists():
+        path.unlink()
+    db = DB(f"sqlite:///{path}")
+    as_of = seed(db)
+    snap = kpis.compute(db, as_of)
+    return snap, alerts_mod.evaluate(snap), DEMO_SUMMARY
+
+
 def cmd_test_notify(_args):
-    sent = notify.send("Flugia · Test de notification", "✅ Si vous lisez ce message, les alertes arriveront bien ici.")
+    """Envoie un exemple complet (données fictives) : alertes mises en forme + rapport PDF."""
+    snap, al, summary = demo_snapshot()
+    pdf = make_pdf(snap, al, summary, demo=True, output=ROOT / "site" / "rapport-flugia-exemple.pdf")
+    summary = "_Message de test avec des données fictives : il montre la mise en forme des alertes et du rapport._\n\n" + summary
+    sent = notify.send_report(pdf, summary, snap, al)
     print("Message de test envoyé via : " + (", ".join(sent) if sent else "aucun canal configuré"))
 
 
@@ -103,14 +132,15 @@ def cmd_run(args):
 
     dashboard.build(snap, all_alerts, summary)
     print(f"Tableau de bord : {dashboard.OUTPUT}")
+    pdf = make_pdf(snap, all_alerts, summary)
 
     if args.no_notify:
         return
     if weekly:
-        body = (summary + "\n\n" if summary else "") + "*Alertes en cours*\n" + notify.format_alerts(all_alerts)
-        notify.send(f"Flugia · Pilotage de la semaine ({snap['periode']['debut']} → {snap['periode']['fin']})", body)
-    elif new_alerts:
-        notify.send(f"Flugia · {len(new_alerts)} nouvelle(s) alerte(s)", notify.format_alerts(new_alerts))
+        sent = notify.send_report(pdf, summary, snap, all_alerts)
+    else:
+        sent = notify.send_alerts(new_alerts, snap)
+    print("Diffusion : " + (", ".join(sent) if sent else "rien à envoyer"))
 
 
 def cmd_dashboard(args):
@@ -121,21 +151,12 @@ def cmd_dashboard(args):
 
 
 def cmd_demo(args):
-    from .demo import seed
-
-    path = ROOT / "data" / "demo.db"
-    if path.exists():
-        path.unlink()
-    db = DB(f"sqlite:///{path}")
-    as_of = seed(db)
-    snap = kpis.compute(db, as_of)
-    al = alerts_mod.evaluate(snap)
+    snap, al, summary = demo_snapshot()
     out = Path(args.output) if args.output else ROOT / "site" / "demo.html"
-    summary = ("Exemple de synthèse : la visibilité progresse (+12 %), portée par LinkedIn, mais les inscriptions "
-               "stagnent et le taux visite → inscription recule. Priorités : 1) appeler les 4 essais chauds, "
-               "2) débloquer les essais sans outil connecté, 3) contacter les 2 clients dont l'usage chute.")
     dashboard.build(snap, al, summary, demo=True, output=out)
     print(f"{len(al)} alertes de démonstration\nTableau de bord de démonstration : {out}")
+    if args.pdf:
+        make_pdf(snap, al, summary, demo=True, output=out.with_name("rapport-demo.pdf"))
 
 
 def main(argv=None):
@@ -156,6 +177,7 @@ def main(argv=None):
     sub.add_parser("test-notify").set_defaults(func=cmd_test_notify)
     sp = sub.add_parser("demo")
     sp.add_argument("--output")
+    sp.add_argument("--pdf", action="store_true", help="générer aussi le rapport PDF de démonstration")
     sp.set_defaults(func=cmd_demo)
     args = p.parse_args(argv)
     args.func(args)

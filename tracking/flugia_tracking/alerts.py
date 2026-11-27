@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 from .config import alerts_config
 from .db import DB
+from .brand import day as fday, num
 from .kpis import Data, label
 
 SEVERITY_ORDER = {"haute": 0, "moyenne": 1, "info": 2}
@@ -28,7 +29,18 @@ def _avg(series, start, end):
 
 
 def _fmt(v):
-    return f"{v:,.0f}".replace(",", " ") if abs(v) >= 100 else f"{v:,.2f}".rstrip("0").rstrip(".")
+    return num(v, 0 if abs(v) >= 100 else 1)
+
+
+METRIC_LABELS = {
+    "impressions": ("vues", "par jour"),
+    "branded_searches": ("recherches « flugia »", "par jour"),
+    "ai_sessions": ("visites venant des assistants IA", "par jour"),
+    "sessions": ("visites", "par jour"),
+    "signups": ("inscriptions", "par jour"),
+    "demos_booked": ("démos réservées", "par jour"),
+    "churned": ("résiliations", "par jour"),
+}
 
 
 def evaluate(snapshot: dict) -> list[Alert]:
@@ -44,9 +56,9 @@ def evaluate(snapshot: dict) -> list[Alert]:
     # 1. Variations
     for rule in cfg.get("variations", []):
         if "ratio" in rule:
-            num, den, mult = rule["ratio"]
-            chans = sorted(set(data.channels(num)) & set(data.channels(den))) if rule.get("par_canal") else [None]
-            pairs = [(ch, data.series(num, ch), data.series(den, ch), mult) for ch in chans]
+            num_m, den_m, mult = rule["ratio"]
+            chans = sorted(set(data.channels(num_m)) & set(data.channels(den_m))) if rule.get("par_canal") else [None]
+            pairs = [(ch, data.series(num_m, ch), data.series(den_m, ch), mult) for ch in chans]
         else:
             m = rule["metrique"]
             if m == "impressions":
@@ -80,10 +92,8 @@ def evaluate(snapshot: dict) -> list[Alert]:
                     key=f"{rule['id']}:{ch or 'total'}",
                     etape=rule["etape"],
                     severite=rule["severite"],
-                    titre=f"{_titre(rule['id'])}{where} : {var:+.0f} %",
-                    detail=(f"{what} : {_fmt(cur)} par jour sur {g['fenetre_jours']} j contre {_fmt(ref)} sur les {g['reference_jours']} j précédents."
-                            if s2 is None else
-                            f"{_ratio_label(rule['id'])} : {_fmt(cur)} sur {g['fenetre_jours']} j contre {_fmt(ref)} sur les {g['reference_jours']} j précédents."),
+                    titre=f"{_titre(rule['id'])}{where} : {'+' if var > 0 else '−'}{num(abs(var), 0)} %",
+                    detail=_variation_detail(rule, cur, ref, g, s2 is not None),
                     action=rule["action"],
                 ))
 
@@ -101,9 +111,9 @@ def evaluate(snapshot: dict) -> list[Alert]:
                 key=f"objectif:{metric}:{as_of.isocalendar()[1]}",
                 etape="Intérêt" if metric != "trial_conversions" else "Acquisition",
                 severite="moyenne",
-                titre=f"Objectif hebdo non atteint : {_titre(metric)} {got:.0f} / {target}",
-                detail=f"Sur les 7 derniers jours ({w0} → {as_of}).",
-                action="Identifier le canal qui a décroché (tableau de bord) et relancer les prospects en cours.",
+                titre=f"Objectif hebdomadaire non atteint : {num(got, 0)} {_titre(metric)} sur {target}",
+                detail=f"Période du {fday(w0)} au {fday(as_of)} ; il manque {num(target - got, 0)} pour atteindre l'objectif.",
+                action="Identifier le canal en retrait dans le rapport et relancer les prospects en cours.",
             ))
 
     # 2 bis. Nouveaux sites référents (article de presse, mention, partenaire...)
@@ -112,10 +122,10 @@ def evaluate(snapshot: dict) -> list[Alert]:
         if site["nouveau"] and site["visites_7j"] >= rcfg.get("visites_min_nouveau", 5):
             alerts.append(Alert(
                 key=f"nouveau_referent:{site['site']}", etape="Visibilité", severite="info",
-                titre=f"Nouveau site qui parle de Flugia : {site['site']} ({site['visites_7j']:.0f} visites en 7 j)",
+                titre=f"Nouveau site référent : {site['site']} ({num(site['visites_7j'], 0)} visites en 7 jours)",
                 detail=f"Aucune visite venant de ce site les {rcfg.get('jours_historique', 60)} jours précédents. "
-                       f"Inscriptions venant de ce site (30 j) : {site['inscriptions_30j']:.0f}.",
-                action="Retrouver l'article ou la mention, le relayer sur LinkedIn et remercier l'auteur.",
+                       f"{num(site['inscriptions_30j'], 0)} inscription(s) issue(s) de ce site sur 30 jours.",
+                action="Identifier l'article ou la mention, le relayer sur LinkedIn et prendre contact avec l'auteur.",
             ))
 
     # 3. GEO
@@ -125,17 +135,17 @@ def evaluate(snapshot: dict) -> list[Alert]:
         if geo["cur"] < gcfg.get("taux_minimum", 0):
             alerts.append(Alert(
                 key=f"geo_taux_bas:{geo['date']}", etape="Visibilité", severite="moyenne",
-                titre=f"GEO : Flugia citée dans seulement {geo['cur']:.0f} % des réponses IA",
-                detail="Questions non citées : " + ", ".join(
-                    q["question"] for q in snapshot["visibilite"]["geo_par_question"] if "question" in q and not q["citee"]),
-                action="Publier des pages qui répondent précisément à ces questions (comparatifs, cas clients, FAQ) et obtenir des mentions sur des sites tiers.",
+                titre=f"Visibilité IA : Flugia citée dans {num(geo['cur'], 0)} % des réponses seulement",
+                detail="Questions où Flugia n'apparaît pas : " + ", ".join(
+                    q["question"].replace("_", " ") for q in snapshot["visibilite"]["geo_par_question"] if "question" in q and not q["citee"]),
+                action="Publier des contenus qui répondent précisément à ces questions (comparatifs, cas clients, FAQ) et obtenir des mentions sur des sites tiers.",
             ))
         if geo["prev"] is not None and geo["prev"] - geo["cur"] >= gcfg.get("baisse_points", 999):
             alerts.append(Alert(
                 key=f"geo_baisse:{geo['date']}", etape="Visibilité", severite="haute",
-                titre=f"GEO : taux de citation en chute ({geo['prev']:.0f} % → {geo['cur']:.0f} %)",
-                detail="Comparaison avec la mesure précédente.",
-                action="Vérifier quelles questions ne citent plus Flugia et quels concurrents ont pris la place.",
+                titre=f"Visibilité IA en recul : {num(geo['prev'], 0)} % → {num(geo['cur'], 0)} % de citations",
+                detail="Comparaison avec la mesure de la semaine précédente.",
+                action="Analyser les questions perdues et les concurrents désormais cités à la place de Flugia.",
             ))
 
     # 4. Conversion des essais
@@ -146,9 +156,9 @@ def evaluate(snapshot: dict) -> list[Alert]:
         if rate is not None and rate < ccfg.get("taux_minimum", 0):
             alerts.append(Alert(
                 key=f"conversion_basse:{as_of.isocalendar()[1]}", etape="Acquisition", severite="haute",
-                titre=f"Conversion essai → payant à {rate:.0f} % (objectif {ccfg['taux_minimum']} %)",
-                detail=f"{acq['convertis_28j']} clients sur {acq['essais_termines_28j']} essais terminés en 28 jours.",
-                action="Contacter les essais en cours avant J10, vérifier l'onboarding et l'activation.",
+                titre=f"Conversion des essais à {num(rate, 0)} % (objectif : {ccfg['taux_minimum']} %)",
+                detail=f"{acq['convertis_28j']} client(s) sur {acq['essais_termines_28j']} essais arrivés à terme ces 28 derniers jours.",
+                action="Contacter les essais en cours avant le 10e jour et revoir le parcours d'activation.",
             ))
 
     # 5. Listes par compte
@@ -156,23 +166,23 @@ def evaluate(snapshot: dict) -> list[Alert]:
     for item in lists.get("essais_chauds", []):
         alerts.append(Alert(
             key=f"essai_chaud:{item['compte']}", etape="Acquisition", severite="haute",
-            titre=f"Essai chaud à convertir : {item['compte']}",
-            detail=f"Jour {item['jour_essai']} de l'essai, {item['usage_7j']:.0f} crédits utilisés en 7 jours (canal : {item['canal']}).",
-            action="Appeler aujourd'hui pour proposer l'offre adaptée avant la fin de l'essai.",
+            titre=f"Essai à conclure : {item['compte']}",
+            detail=f"Jour {item['jour_essai']} sur 15 · {num(item['usage_7j'], 0)} crédits utilisés en 7 jours · origine : {item['canal']}.",
+            action="Appeler le contact pour proposer l'offre adaptée avant la fin de l'essai.",
         ))
     for item in lists.get("essais_bloques", []):
         alerts.append(Alert(
             key=f"essai_bloque:{item['compte']}", etape="Acquisition", severite="moyenne",
-            titre=f"Essai bloqué : {item['compte']} (jour {item['jour_essai']}, rien activé)",
-            detail=f"Inscrit le {item['inscrit_le']}, aucun outil connecté ni Co-Worker lancé.",
-            action="Proposer une session d'onboarding de 15 minutes.",
+            titre=f"Essai sans activation : {item['compte']} (jour {item['jour_essai']})",
+            detail=f"Inscription le {fday(item['inscrit_le'])} ; aucun outil connecté ni Co-Worker lancé depuis.",
+            action="Proposer une session d'accompagnement de 15 minutes.",
         ))
     for item in lists.get("clients_a_risque", []):
         alerts.append(Alert(
             key=f"risque:{item['compte']}", etape="Rétention", severite="haute",
-            titre=f"Risque de churn : {item['compte']} (usage −{item['baisse_pct']} %)",
-            detail=f"{item['usage_30j']:.0f} crédits sur 30 j contre {item['usage_30j_precedents']:.0f} avant. MRR : {item.get('mrr') or '?'} €.",
-            action="Appel du responsable du compte : comprendre le blocage, proposer un nouveau cas d'usage.",
+            titre=f"Risque de départ : {item['compte']} (usage −{item['baisse_pct']} %)",
+            detail=f"{num(item['usage_30j'], 0)} crédits sur 30 jours contre {num(item['usage_30j_precedents'], 0)} le mois précédent · MRR : {num(item.get('mrr') or 0, 0)} €.",
+            action="Planifier un échange avec le client pour comprendre le blocage et proposer un nouveau cas d'usage.",
         ))
     if cfg["comptes"]["renouvellement"].get("alerte", False):
         for item in lists.get("renouvellements", []):
@@ -185,8 +195,8 @@ def evaluate(snapshot: dict) -> list[Alert]:
     if snapshot["retention"].get("paiements_echoues_7j"):
         alerts.append(Alert(
             key=f"paiements:{as_of}", etape="Rétention", severite="haute",
-            titre=f"{snapshot['retention']['paiements_echoues_7j']:.0f} paiement(s) échoué(s) cette semaine",
-            detail="Voir l'outil de facturation.", action="Relancer les clients concernés pour mettre à jour leur carte.",
+            titre=f"{num(snapshot['retention']['paiements_echoues_7j'], 0)} paiement(s) échoué(s) cette semaine",
+            detail="Détail disponible dans l'outil de facturation.", action="Inviter les clients concernés à mettre à jour leur moyen de paiement.",
         ))
 
     # 6. Santé des sources
@@ -194,12 +204,22 @@ def evaluate(snapshot: dict) -> list[Alert]:
         if src["configuree"] and src["dernier_statut"] == "erreur":
             alerts.append(Alert(
                 key=f"source:{src['id']}:{(src['derniere_collecte'] or '')[:10]}", etape="Système", severite="haute",
-                titre=f"Collecte en échec : {src['nom']}",
-                detail=src["message"] or "", action="Vérifier le jeton d'accès de cette source (souvent expiré).",
+                titre=f"Source indisponible : {src['nom']}",
+                detail=src["message"] or "", action="Renouveler l'accès à cette source (jeton probablement expiré).",
             ))
 
     alerts.sort(key=lambda a: (SEVERITY_ORDER.get(a.severite, 9), a.etape))
     return alerts
+
+
+def _variation_detail(rule, cur, ref, g, is_ratio: bool) -> str:
+    w, r = g["fenetre_jours"], g["reference_jours"]
+    if is_ratio:
+        if rule["id"] == "cpm_hausse":
+            return f"Coût pour 1 000 vues : {num(cur, 2)} € sur {w} jours, contre {num(ref, 2)} € sur les {r} jours précédents."
+        return f"{_ratio_label(rule['id'])} : {_fmt(cur)} sur {w} jours, contre {_fmt(ref)} sur les {r} jours précédents."
+    what, unit = METRIC_LABELS.get(rule.get("metrique"), (rule.get("metrique"), "par jour"))
+    return f"Moyenne de {_fmt(cur)} {what} {unit} sur {w} jours, contre {_fmt(ref)} sur les {r} jours précédents."
 
 
 def _ratio_label(rule_id: str) -> str:
@@ -208,15 +228,15 @@ def _ratio_label(rule_id: str) -> str:
 
 def _titre(key: str) -> str:
     return {
-        "visibilite_baisse": "Visibilité en baisse",
-        "cpm_hausse": "Coût pour 1000 impressions en hausse",
-        "recherches_marque_baisse": "Recherches « flugia » en baisse",
-        "trafic_ia_baisse": "Trafic venant des IA en baisse",
-        "sessions_baisse": "Visites en baisse",
+        "visibilite_baisse": "Visibilité en recul",
+        "cpm_hausse": "Coût publicitaire en hausse",
+        "recherches_marque_baisse": "Notoriété en recul (recherches « flugia »)",
+        "trafic_ia_baisse": "Moins de visites issues des assistants IA",
+        "sessions_baisse": "Trafic en recul",
         "inscriptions_baisse": "Inscriptions en baisse",
-        "taux_inscription_baisse": "Taux d'inscription du site en baisse",
+        "taux_inscription_baisse": "Le site convertit moins de visiteurs",
         "demos_baisse": "Démos réservées en baisse",
-        "churn_hausse": "Résiliations en hausse",
+        "churn_hausse": "Hausse des résiliations",
         "demos_booked": "démos réservées",
         "signups": "inscriptions",
         "trial_conversions": "essais convertis",

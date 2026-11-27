@@ -7,6 +7,19 @@ from datetime import date, datetime, timedelta, timezone
 
 from .db import DB
 
+DEMO_SUMMARY = """**En une phrase** : la visibilité se maintient, mais les inscriptions reculent nettement cette semaine.
+
+**Les 4 étapes**
+- **Visibilité** : vues en léger recul, pénalisées par Meta Ads.
+- **Intérêt** : inscriptions et démos réservées en baisse.
+- **Acquisition** : conversion après l'essai proche de 20 %.
+- **Rétention** : base de clients payants stable, churn à surveiller.
+
+**3 priorités de la semaine**
+1. Appeler les essais à conclure avant la fin de leur période d'essai.
+2. Tester le parcours d'inscription : le taux de conversion du site a été divisé par deux.
+3. Contacter les clients dont l'usage chute de plus de 50 %."""
+
 FAMILY_UTM = [  # (utm_source, utm_medium, poids)
     ("google", "cpc", 22), ("google", "organic", 25), ("linkedin", "social", 18), ("facebook", "paid", 12),
     ("chatgpt.com", "referral", 5), ("partenaire-ucm", "referral", 8), ("", "", 10),

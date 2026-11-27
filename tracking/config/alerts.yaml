@@ -22,7 +22,7 @@ variations:
     par_canal: true
     variation: -30
     severite: moyenne
-    action: "Vérifier le budget, une campagne en pause ou une publication manquante sur ce canal."
+    action: "Contrôler le budget et le statut des campagnes, ainsi que le rythme de publication sur ce canal."
 
   - id: cpm_hausse
     etape: Visibilité
@@ -30,21 +30,21 @@ variations:
     par_canal: true
     variation: 40
     severite: moyenne
-    action: "Les visuels fatiguent probablement : renouveler les annonces ou élargir l'audience."
+    action: "Renouveler les visuels publicitaires ou élargir l'audience ciblée."
 
   - id: recherches_marque_baisse
     etape: Visibilité
     metrique: branded_searches
     variation: -25
     severite: haute
-    action: "La notoriété recule : renforcer la présence (LinkedIn organique, presse, salons)."
+    action: "Renforcer la présence de marque : publications LinkedIn, relations presse, événements."
 
   - id: trafic_ia_baisse
     etape: Visibilité
     metrique: ai_sessions
     variation: -40
     severite: moyenne
-    action: "Moins de visites depuis les IA : vérifier le contenu cité et les pages comparatives (GEO)."
+    action: "Mettre à jour les contenus repris par les IA : pages comparatives, FAQ, cas clients."
 
   - id: sessions_baisse
     etape: Intérêt
@@ -52,35 +52,35 @@ variations:
     par_canal: true
     variation: -30
     severite: moyenne
-    action: "Moins de visites sur ce canal : vérifier les liens, le référencement et les campagnes."
+    action: "Vérifier les liens, le référencement et les campagnes actives sur ce canal."
 
   - id: inscriptions_baisse
     etape: Intérêt
     metrique: signups
     variation: -30
     severite: haute
-    action: "Vérifier le formulaire d'inscription (bug ?), la page tarifs et les campagnes en cours."
+    action: "Tester le formulaire d'inscription, puis revoir la page tarifs et les campagnes en cours."
 
   - id: taux_inscription_baisse
     etape: Intérêt
     ratio: [signups, sessions, 100]
     variation: -30
     severite: haute
-    action: "Le site convertit moins : tester le parcours d'inscription de bout en bout."
+    action: "Tester le parcours d'inscription de bout en bout et vérifier la qualité du trafic entrant."
 
   - id: demos_baisse
     etape: Intérêt
     metrique: demos_booked
     variation: -40
     severite: moyenne
-    action: "Moins de démos réservées : relancer les prospects chauds et mettre la démo en avant."
+    action: "Relancer les prospects qualifiés et rendre la prise de démo plus visible sur le site."
 
   - id: churn_hausse
     etape: Rétention
     metrique: churned
     variation: 50
     severite: haute
-    action: "Plus de résiliations : appeler les clients partis pour connaître la raison."
+    action: "Contacter les clients sortants pour comprendre les raisons de leur départ."
 
 # Sites référents (presse, partenaires, annuaires) vus dans GA4
 referents:
