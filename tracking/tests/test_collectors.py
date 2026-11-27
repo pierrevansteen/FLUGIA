@@ -14,7 +14,7 @@ def fake_env(monkeypatch):
     for k in ["GOOGLE_ADS_DEVELOPER_TOKEN", "GOOGLE_ADS_CLIENT_ID", "GOOGLE_ADS_CLIENT_SECRET", "GOOGLE_ADS_REFRESH_TOKEN",
               "GOOGLE_ADS_CUSTOMER_ID", "META_ACCESS_TOKEN", "META_AD_ACCOUNT_ID", "META_IG_USER_ID", "LINKEDIN_ACCESS_TOKEN",
               "LINKEDIN_AD_ACCOUNT_ID", "LINKEDIN_ORGANIZATION_ID", "GA4_PROPERTY_ID", "SEARCH_CONSOLE_SITE",
-              "GOOGLE_CALENDAR_ID", "STRIPE_API_KEY", "GOOGLE_SERVICE_ACCOUNT_JSON"]:
+              "GOOGLE_CALENDAR_ID", "STRIPE_API_KEY", "GOOGLE_SERVICE_ACCOUNT_JSON", "META_PAGE_ID"]:
         monkeypatch.setenv(k, "x")
     for mod in (ga4, search_console, google_calendar):
         monkeypatch.setattr(mod, "google_access_token", lambda *a, **k: "tok")
@@ -39,11 +39,22 @@ def test_meta(monkeypatch):
     def http(method, url, **k):
         if "insights" in url and "act_" in url:
             return {"data": [{"date_start": "2026-11-01", "impressions": "500", "reach": "400", "clicks": "5", "spend": "12.3"}]}
+        if url.endswith("/x"):  # jeton de page
+            return {"access_token": "page-tok"}
+        if k["params"].get("metric") == "page_media_view":
+            raise base.CollectorError("métrique retirée")
+        if k["params"].get("metric", "").startswith("page_"):
+            assert k["params"]["access_token"] == "page-tok"
+            return {"data": [{"values": [{"value": 90, "end_time": "2026-11-02T08:00:00+0000"}]}]}
         return {"data": [{"values": [{"value": 77, "end_time": "2026-11-02T08:00:00+0000"}]}]}
     monkeypatch.setattr(c, "http", http)
-    r = by(c.collect(START, END))
+    res = c.collect(START, END)
+    r = by(res)
     assert r[("2026-11-01", "meta_ads", "spend")] == 12.3
     assert r[("2026-11-02", "instagram", "reach")] == 77
+    assert r[("2026-11-01", "facebook", "impressions")] == 90  # repli sur page_impressions
+    assert r[("2026-11-01", "facebook", "engagement")] == 90
+    assert not res.warnings
 
 
 def test_linkedin(monkeypatch):
