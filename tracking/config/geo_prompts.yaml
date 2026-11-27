@@ -6,8 +6,7 @@ marque: ["flugia"]
 pays: BE
 
 # Noms recherchés dans les réponses pour mesurer la part de voix face aux concurrents.
-# À compléter avec vos vrais concurrents.
-concurrents: ["Zapier", "Make", "n8n", "Lindy", "Relevance AI", "Microsoft Copilot"]
+concurrents: ["Sintra", "Limova", "Wonka", "ISAO", "Agentova", "Marblism"]
 
 questions:
   - id: pme_agent_ia_belgique
