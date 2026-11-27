@@ -94,3 +94,20 @@ python -m pytest -q tests
 ```
 
 Les tests simulent les réponses de chaque API : ils tournent sans aucun accès.
+
+## Interface de pilotage (consultation à la demande)
+
+`app_pilotage.py` est une application web (Streamlit) branchée en direct sur la base : vue d'ensemble, visibilité par canal,
+GEO, intérêt (visites, sites référents, démos), acquisition et rétention, alertes et explorateur libre avec export CSV.
+Filtres : période (7 jours à 12 mois ou dates libres), regroupement jour / semaine / mois, canaux.
+
+En local :
+
+```bash
+pip install -r tracking/requirements.txt
+DATABASE_URL=... streamlit run tracking/app_pilotage.py
+```
+
+En ligne (gratuit) : Streamlit Community Cloud → *Create app* → dépôt FLUGIA, branche principale,
+fichier `tracking/app_pilotage.py` → *Advanced settings* → secret `DATABASE_URL = "postgresql://…"`
+(utilisateur en lecture seule recommandé) → *Deploy*. Puis *Share* → limiter l'accès aux adresses e-mail autorisées.
