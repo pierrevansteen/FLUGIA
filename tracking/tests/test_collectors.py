@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from flugia_tracking.collectors import base, ga4, geo, google_ads, google_calendar, linkedin, meta, search_console, stripe_billing
+from flugia_tracking.collectors import base, clarity, ga4, geo, google_ads, google_calendar, linkedin, meta, search_console, stripe_billing
 
 START, END = date(2026, 11, 1), date(2026, 11, 2)
 
@@ -216,3 +216,26 @@ def test_linkedin_refresh_token(monkeypatch):
     monkeypatch.setattr(c, "http", http)
     c.collect(START, END)
     assert seen and all(h == "Bearer fresh" for h in seen)
+
+
+def test_clarity(monkeypatch):
+    monkeypatch.setenv("CLARITY_API_TOKEN", "t")
+    c = clarity.ClarityCollector()
+    seen = {}
+    def http(method, url, headers=None, params=None, **k):
+        seen.update(headers=headers, params=params)
+        return [
+            {"metricName": "Traffic", "information": [{"totalSessionCount": "120", "totalBotSessionCount": "4", "distinctUserCount": "95", "pagesPerSessionPercentage": 1.8}]},
+            {"metricName": "ScrollDepth", "information": [{"averageScrollDepth": 54.2}]},
+            {"metricName": "EngagementTime", "information": [{"totalTime": "300", "activeTime": "90"}]},
+            {"metricName": "RageClickCount", "information": [{"sessionsCount": "120", "sessionsWithMetricPercentage": 2.5, "subTotal": "3"}]},
+            {"metricName": "Popular pages", "information": []},
+        ]
+    monkeypatch.setattr(c, "http", http)
+    res = c.collect(START, END)
+    r = by(res)
+    assert seen["params"] == {"numOfDays": 1} and seen["headers"]["Authorization"] == "Bearer t"
+    assert r[("2026-11-02", "clarity", "clarity_sessions")] == 120
+    assert r[("2026-11-02", "clarity", "clarity_scroll_depth_pct")] == 54.2
+    assert r[("2026-11-02", "clarity", "clarity_rage_click_pct")] == 2.5
+    assert not res.warnings and ("2026-11-02", "clarity", "sessions") not in r
