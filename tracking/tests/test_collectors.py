@@ -117,11 +117,11 @@ def test_stripe(monkeypatch):
 def test_geo(monkeypatch):
     c = geo.GeoCollector()
     c.forced = True
-    resp = SimpleNamespace(stop_reason="end_turn", content=[SimpleNamespace(type="text", text="Essayez Flugia ou Zapier.")])
+    resp = SimpleNamespace(stop_reason="end_turn", content=[SimpleNamespace(type="text", text="Essayez Flugia ou Sintra.")])
     fake = SimpleNamespace(beta=SimpleNamespace(messages=SimpleNamespace(create=lambda **k: resp)))
     import anthropic
     monkeypatch.setattr(anthropic, "Anthropic", lambda: fake)
     res = c.collect(START, END)
     totals = {(m.channel, m.metric): m.value for m in res.metrics}
     assert totals[("geo", "ai_mention_rate")] == 100.0
-    assert ("geo_concurrent:Zapier", "ai_mentions") in totals
+    assert ("geo_concurrent:Sintra", "ai_mentions") in totals
