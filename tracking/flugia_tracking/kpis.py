@@ -36,6 +36,7 @@ SITE_FAMILY = {
     "site:referral": "Referral",
     "site:social_payant": "Meta",
     "site:social_organique": "LinkedIn",
+    "site:geo_ia": "GEO",
 }
 
 
@@ -44,6 +45,8 @@ def label(channel: str) -> str:
         return CHANNEL_LABELS[channel]
     if channel.startswith("manuel:"):
         return "Manuel · " + channel.split(":", 1)[1].replace("_", " ")
+    if channel == "site:geo_ia":
+        return "Site · assistants IA (GEO)"
     if channel.startswith("site:"):
         return "Site · " + channel.split(":", 1)[1].replace("_", " ")
     return channel
@@ -219,6 +222,7 @@ def compute(db: DB, as_of: date | None = None) -> dict:
             {"canal": label(ch), "cur": T(data.series("sessions", ch), c0, c1), "prev": T(data.series("sessions", ch), p0, p1)}
             for ch in data.channels("sessions")
         ],
+        "sites_referents": _referrers(data, as_of, cfg.get("referents", {})),
     }
 
     # ---------------- Acquisition ----------------
@@ -305,6 +309,45 @@ def _geo_detail(data: Data) -> list[dict]:
     out = [{"question": ch.split(":", 1)[1], "citee": bool(v), "date": d.isoformat()} for ch, (d, v) in sorted(latest.items())]
     if comp:
         out.append({"concurrents_cites": dict(sorted(comp.items(), key=lambda kv: -kv[1]))})
+    return out
+
+
+def _referrers(data: Data, as_of: date, rules: dict) -> list[dict]:
+    """Sites qui envoient des visiteurs (presse, partenaires, annuaires) : 30 derniers jours vs 30 précédents.
+
+    Un site est « nouveau » s'il n'avait envoyé aucune visite pendant les `jours_historique` jours
+    précédant la semaine en cours.
+    """
+    history = rules.get("jours_historique", 60)
+    w0 = as_of - timedelta(days=6)
+    c0, p0 = as_of - timedelta(days=29), as_of - timedelta(days=59)
+    sites: dict[str, dict] = {}
+    for day, _s, ch, m, v in data.rows:
+        if not ch.startswith("referral:") or m not in ("referral_sessions", "referral_signups"):
+            continue
+        r = sites.setdefault(ch.split(":", 1)[1], {"site": ch.split(":", 1)[1], "visites_30j": 0.0, "visites_30j_prec": 0.0,
+                                                   "inscriptions_30j": 0.0, "visites_7j": 0.0, "avant": 0.0, "premiere_visite": day})
+        r["premiere_visite"] = min(r["premiere_visite"], day)
+        if m == "referral_sessions":
+            if c0 <= day <= as_of:
+                r["visites_30j"] += v
+            elif p0 <= day < c0:
+                r["visites_30j_prec"] += v
+            if w0 <= day <= as_of:
+                r["visites_7j"] += v
+            elif w0 - timedelta(days=history) <= day < w0:
+                r["avant"] += v
+        elif c0 <= day <= as_of:
+            r["inscriptions_30j"] += v
+    out = []
+    for r in sites.values():
+        if not (r["visites_30j"] or r["visites_30j_prec"]):
+            continue
+        r["nouveau"] = r["avant"] == 0 and r["visites_7j"] > 0
+        r["premiere_visite"] = r["premiere_visite"].isoformat()
+        del r["avant"]
+        out.append(r)
+    out.sort(key=lambda r: -r["visites_30j"])
     return out
 
 

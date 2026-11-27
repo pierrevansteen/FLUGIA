@@ -36,8 +36,7 @@ class GeoCollector(Collector):
         import anthropic
 
         result = CollectResult()
-        today = date.today()
-        if not self.should_run_today(today):
+        if not self.should_run_today(date.today()):
             result.warnings.append("GEO : pas le jour de mesure (hebdomadaire), rien à faire.")
             return result
 
@@ -48,6 +47,8 @@ class GeoCollector(Collector):
         country = cfg.get("pays", "BE")
         client = anthropic.Anthropic()
 
+        # Daté de la fin de la fenêtre (hier), comme les autres sources : le tableau de bord s'arrête à hier.
+        today = end
         mentioned_total = 0
         for item in prompts:
             text = self._ask(client, item["question"], country)

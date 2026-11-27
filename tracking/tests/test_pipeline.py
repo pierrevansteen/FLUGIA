@@ -11,6 +11,11 @@ def test_demo_pipeline(tmp_path):
     assert snap["acquisition"]["branche"] and snap["acquisition"]["taux_conversion"]["cur"] is not None
     al = alerts.evaluate(snap)
     assert any(a.key.startswith("visibilite_baisse:meta_ads") for a in al)  # chute Meta simulée
+    refs = {r["site"]: r for r in snap["interet"]["sites_referents"]}
+    assert refs["lecho.be"]["nouveau"] and not refs["ucm.be"]["nouveau"]
+    assert any(a.key == "nouveau_referent:lecho.be" for a in al)  # article de presse simulé
+    # les visites par site ne doivent pas gonfler le total des visites
+    assert snap["interet"]["visites"]["cur"] == sum(c["cur"] for c in snap["interet"]["visites_par_canal"])
     first = alerts.only_new(db, al)
     assert first and alerts.only_new(db, al) == []  # pas de doublon le lendemain
     out = dashboard.build(snap, al, output=tmp_path / "index.html")

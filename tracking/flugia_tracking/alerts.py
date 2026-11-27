@@ -106,6 +106,18 @@ def evaluate(snapshot: dict) -> list[Alert]:
                 action="Identifier le canal qui a décroché (tableau de bord) et relancer les prospects en cours.",
             ))
 
+    # 2 bis. Nouveaux sites référents (article de presse, mention, partenaire...)
+    rcfg = cfg.get("referents", {})
+    for site in snapshot["interet"].get("sites_referents", []):
+        if site["nouveau"] and site["visites_7j"] >= rcfg.get("visites_min_nouveau", 5):
+            alerts.append(Alert(
+                key=f"nouveau_referent:{site['site']}", etape="Visibilité", severite="info",
+                titre=f"Nouveau site qui parle de Flugia : {site['site']} ({site['visites_7j']:.0f} visites en 7 j)",
+                detail=f"Aucune visite venant de ce site les {rcfg.get('jours_historique', 60)} jours précédents. "
+                       f"Inscriptions venant de ce site (30 j) : {site['inscriptions_30j']:.0f}.",
+                action="Retrouver l'article ou la mention, le relayer sur LinkedIn et remercier l'auteur.",
+            ))
+
     # 3. GEO
     geo = snapshot["visibilite"]["geo_taux_citation"]
     gcfg = cfg.get("geo", {})

@@ -82,6 +82,11 @@ variations:
     severite: haute
     action: "Plus de résiliations : appeler les clients partis pour connaître la raison."
 
+# Sites référents (presse, partenaires, annuaires) vus dans GA4
+referents:
+  visites_min_nouveau: 5    # alerte "nouveau site" à partir de 5 visites en 7 jours
+  jours_historique: 60      # "nouveau" = aucune visite de ce site pendant les 60 jours précédents
+
 # Seuils GEO (part des questions où Flugia est citée par l'IA)
 geo:
   taux_minimum: 20          # alerte si moins de 20 % des questions citent Flugia

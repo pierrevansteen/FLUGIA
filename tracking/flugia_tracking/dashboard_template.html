@@ -114,6 +114,9 @@ td.num, th.num { text-align: right; }
     <div class="card"><h3>Démos réservées par semaine</h3><div class="chart-box"><canvas id="cDemos"></canvas></div></div>
   </div>
 
+  <div class="card" style="margin-top:12px"><h3>Sites qui envoient des visiteurs (presse, partenaires, annuaires) — 30 jours</h3>
+    <div class="table-scroll"><table id="tRef"></table></div></div>
+
   <h2>Acquisition — d'où viennent les clients (90 jours)</h2>
   <div class="card"><div class="table-scroll"><table id="tAttr"></table></div><p class="muted small" id="attrNote"></p></div>
 
@@ -244,6 +247,13 @@ function render() {
   document.getElementById("attrNote").textContent = a.branche
     ? "Canal = source enregistrée à l'inscription (UTM). Les clients payants sont ceux inscrits sur la période et convertis depuis."
     : "Inscriptions issues de GA4 en attendant la base de l'app : les clients payants et le coût par client apparaîtront une fois l'app branchée.";
+
+  const refs = i.sites_referents || [];
+  document.getElementById("tRef").innerHTML = `<tr><th>Site</th><th class="num">Visites 30 j</th><th class="num">30 j précédents</th><th class="num">Évolution</th><th class="num">Inscriptions 30 j</th></tr>` +
+    (refs.length ? refs.slice(0, 15).map((r) => `<tr><td>${esc(r.site)}${r.nouveau ? ' <span class="badge">nouveau</span>' : ""}</td>
+      <td class="num">${fmt(r.visites_30j)}</td><td class="num">${fmt(r.visites_30j_prec)}</td><td class="num">${delta(r.visites_30j, r.visites_30j_prec)}</td>
+      <td class="num">${fmt(r.inscriptions_30j)}</td></tr>`).join("")
+      : `<tr><td colspan="5" class="empty">Pas encore de visites venant de sites tiers (source : GA4, canal Referral).</td></tr>`);
 
   // listes
   const L = d.listes || {};
