@@ -63,3 +63,21 @@ def test_read_only_db_does_not_create_tables(tmp_path):
     assert ro.query("SELECT COUNT(*) AS n FROM metrics_daily")[0]["n"] == 0
     empty = DB(f"sqlite:///{tmp_path / 'vide.db'}", read_only=True)
     assert empty.query("SELECT name FROM sqlite_master WHERE type='table'") == []
+
+
+def test_objectives_saved_and_used_by_alerts(tmp_path):
+    from flugia_tracking import objectives
+
+    db = DB(f"sqlite:///{tmp_path / 'o.db'}")
+    as_of = seed(db)
+    assert objectives.load(db) == objectives.defaults()  # rien d'enregistré : valeurs de config/alerts.yaml
+    objectives.save(db, {"sessions": 1_000_000, "signups": None, "budget_pub": 1})
+    saved = objectives.load(db)
+    assert saved == {"sessions": 1_000_000, "budget_pub": 1}
+    al = alerts.evaluate(kpis.compute(db, as_of), saved)
+    keys = [a.key for a in al]
+    assert any(k.startswith("objectif:sessions:") for k in keys)
+    assert any(k.startswith("budget:") for k in keys)
+    assert not any(k.startswith("objectif:signups:") for k in keys)
+    stages = {objectives.stage_of(a.__dict__) for a in al}
+    assert stages <= set(objectives.STAGES) | {"Système"}
