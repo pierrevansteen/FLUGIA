@@ -54,3 +54,12 @@ def test_only_major_changes_are_urgent():
     assert _severity({"variation": -30, "severite": "haute"}, -40, 40, ncfg) == "moyenne"
     al = [Alert("a", "Intérêt", "haute", "t", "d", "x"), Alert("b", "Intérêt", "moyenne", "t", "d", "x")]
     assert [a.key for a in urgent(al)] == ["a"]
+
+
+def test_read_only_db_does_not_create_tables(tmp_path):
+    path = tmp_path / "ro.db"
+    DB(f"sqlite:///{path}").close()  # crée le schéma
+    ro = DB(f"sqlite:///{path}", read_only=True)
+    assert ro.query("SELECT COUNT(*) AS n FROM metrics_daily")[0]["n"] == 0
+    empty = DB(f"sqlite:///{tmp_path / 'vide.db'}", read_only=True)
+    assert empty.query("SELECT name FROM sqlite_master WHERE type='table'") == []
