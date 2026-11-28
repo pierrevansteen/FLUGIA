@@ -16,6 +16,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from . import alerts as alerts_mod
+from . import objectives as objectives_mod
 from . import dashboard, kpis, notify
 from .collectors import ALL_COLLECTORS
 from .db import DB, ROOT
@@ -121,7 +122,7 @@ def cmd_run(args):
     db = DB()
     collect(db, args.days, args.only.split(",") if args.only else None)
     snap = kpis.compute(db)
-    all_alerts = alerts_mod.evaluate(snap)
+    all_alerts = alerts_mod.evaluate(snap, objectives_mod.load(db))
     weekly = args.weekly or date.today().weekday() == 0
     # En semaine : seules les alertes urgentes sont diffusées (et une seule fois) ; le reste va dans le rapport du lundi.
     new_alerts = alerts_mod.only_new(db, alerts_mod.urgent(all_alerts))
@@ -147,7 +148,7 @@ def cmd_run(args):
 def cmd_dashboard(args):
     db = DB()
     snap = kpis.compute(db)
-    dashboard.build(snap, alerts_mod.evaluate(snap))
+    dashboard.build(snap, alerts_mod.evaluate(snap, objectives_mod.load(db)))
     print(f"Tableau de bord : {dashboard.OUTPUT}")
 
 

@@ -60,6 +60,17 @@ SCHEMA = [
         last_sent_at TEXT NOT NULL,
         payload TEXT
     )""",
+    # Interface de pilotage : objectifs mensuels (onglet Paramétrages) et alertes marquées comme traitées.
+    """CREATE TABLE IF NOT EXISTS ui_objectifs (
+        cle TEXT PRIMARY KEY,
+        valeur DOUBLE PRECISION,
+        updated_at TEXT
+    )""",
+    """CREATE TABLE IF NOT EXISTS ui_alertes_traitees (
+        alert_key TEXT PRIMARY KEY,
+        done_at TEXT NOT NULL,
+        done_by TEXT
+    )""",
 ]
 
 ACCOUNT_COLUMNS = [
@@ -70,7 +81,7 @@ ACCOUNT_COLUMNS = [
 
 
 class DB:
-    def __init__(self, url: str | None = None, read_only: bool = False):
+    def __init__(self, url: str | None = None, read_only: bool = False, create_tables: bool | None = None):
         """read_only=True : simple lecture (ex. interface en ligne avec un utilisateur Postgres en lecture seule),
         sans création des tables ni écriture."""
         self.url = url if url is not None else os.environ.get("DATABASE_URL", "")
@@ -86,7 +97,8 @@ class DB:
             path.parent.mkdir(parents=True, exist_ok=True)
             self.kind = "sqlite"
             self.conn = sqlite3.connect(path)
-        if not read_only:
+        # create_tables=False : écriture possible sans créer les tables (utilisateur aux droits limités de l'interface).
+        if (not read_only) if create_tables is None else create_tables:
             self.init_schema()
 
     def _sql(self, sql: str) -> str:

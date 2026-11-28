@@ -1,6 +1,7 @@
 """Moteur d'alertes : applique config/alerts.yaml aux données et renvoie des alertes actionnables."""
 from __future__ import annotations
 
+import copy
 import json
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
@@ -9,6 +10,7 @@ from .config import alerts_config
 from .db import DB
 from .brand import day as fday, num
 from .kpis import Data, label
+from .objectives import DAYS_PER_MONTH
 
 SEVERITY_ORDER = {"haute": 0, "moyenne": 1, "info": 2}
 
@@ -21,6 +23,17 @@ class Alert:
     titre: str
     detail: str
     action: str
+
+
+OBJECTIVE_STAGE = {"impressions": "Visibilité", "sessions": "Intérêt", "signups": "Conversion", "demos_booked": "Conversion",
+                   "trial_conversions": "Acquisition"}
+OBJECTIVE_ACTION = {
+    "impressions": "Augmenter la diffusion : budget des campagnes les plus efficaces et rythme de publication organique.",
+    "sessions": "Renforcer les canaux qui amènent du trafic (SEO, campagnes, publications avec lien vers le site).",
+    "signups": "Mettre l'essai gratuit en avant sur les pages les plus visitées et tester le formulaire d'inscription.",
+    "demos_booked": "Relancer les prospects qualifiés et rendre la prise de démo plus visible sur le site.",
+    "trial_conversions": "Appeler les essais actifs avant le 10e jour et proposer l'offre adaptée.",
+}
 
 
 def _avg(series, start, end):
@@ -43,9 +56,15 @@ METRIC_LABELS = {
 }
 
 
-def evaluate(snapshot: dict) -> list[Alert]:
+def evaluate(snapshot: dict, objectives: dict | None = None) -> list[Alert]:
+    """objectives : objectifs mensuels saisis dans l'interface (voir objectives.py) ; à défaut, alerts.yaml."""
     data: Data = snapshot["_data"]
-    cfg = alerts_config()
+    cfg = copy.deepcopy(alerts_config())
+    if objectives is not None:
+        cfg["objectifs_semaine"] = {k: v * 7 / DAYS_PER_MONTH for k, v in objectives.items()
+                                    if k in ("impressions", "sessions", "signups", "demos_booked", "trial_conversions") and v}
+        if objectives.get("geo_taux") is not None:
+            cfg.setdefault("geo", {})["taux_minimum"] = objectives["geo_taux"]
     g = cfg["general"]
     as_of = data.as_of
     c0 = as_of - timedelta(days=g["fenetre_jours"] - 1)
@@ -103,18 +122,31 @@ def evaluate(snapshot: dict) -> list[Alert]:
     for metric, target in (cfg.get("objectifs_semaine") or {}).items():
         if metric == "trial_conversions" and not data.has_accounts:
             continue
-        s = data.series(metric)
+        s = data.visibility() if metric == "impressions" else data.series(metric)
         if not s:
             continue
         got = sum(v for d, v in s.items() if w0 <= d <= as_of)
         if got < target:
             alerts.append(Alert(
                 key=f"objectif:{metric}:{as_of.isocalendar()[1]}",
-                etape="Intérêt" if metric != "trial_conversions" else "Acquisition",
+                etape=OBJECTIVE_STAGE.get(metric, "Intérêt"),
                 severite="moyenne",
-                titre=f"Objectif hebdomadaire non atteint : {num(got, 0)} {_titre(metric)} sur {target}",
+                titre=f"Objectif hebdomadaire non atteint : {num(got, 0)} {_titre(metric)} sur {num(target, 0)}",
                 detail=f"Période du {fday(w0)} au {fday(as_of)} ; il manque {num(target - got, 0)} pour atteindre l'objectif.",
-                action="Identifier le canal en retrait dans le rapport et relancer les prospects en cours.",
+                action=OBJECTIVE_ACTION.get(metric, "Identifier le canal en retrait dans le rapport et relancer les prospects en cours."),
+            ))
+
+    # 2 ter. Budget publicitaire mensuel (plafond saisi dans l'interface)
+    if objectives and objectives.get("budget_pub"):
+        m0 = as_of.replace(day=1)
+        spent = sum(v for d, v in data.series("spend").items() if m0 <= d <= as_of)
+        budget = objectives["budget_pub"]
+        if spent > budget * ((as_of - m0).days + 1) / DAYS_PER_MONTH * 1.1:
+            alerts.append(Alert(
+                key=f"budget:{as_of:%Y-%m}", etape="Visibilité", severite="moyenne",
+                titre=f"Budget publicitaire en avance : {num(spent, 0)} € dépensés depuis le 1er (budget {num(budget, 0)} € / mois)",
+                detail="Au rythme actuel, le budget mensuel sera dépassé avant la fin du mois.",
+                action="Réduire les budgets journaliers des campagnes les moins rentables (coût par inscription le plus élevé).",
             ))
 
     # 2 bis. Nouveaux sites référents (article de presse, mention, partenaire...)
@@ -258,6 +290,8 @@ def _titre(key: str) -> str:
         "demos_booked": "démos réservées",
         "signups": "inscriptions",
         "trial_conversions": "essais convertis",
+        "impressions": "vues",
+        "sessions": "visites",
     }.get(key, key)
 
 
