@@ -129,3 +129,23 @@ def test_crunchbase_missing_profile_fields(tmp_path):
     crunchbase.mark_field(db, "logo")
     keys = [a.key for a in alerts.evaluate(snap, None, db) if a.key.startswith("crunchbase_fiche:")]
     assert keys == ["crunchbase_fiche:x"]
+
+
+def test_alternativeto_alerts(tmp_path):
+    from flugia_tracking import crunchbase
+
+    db = DB(f"sqlite:///{tmp_path / 'a.db'}")
+    as_of = seed(db)
+    snap = kpis.compute(db, as_of)
+    keys = [a.key for a in alerts.evaluate(snap, None, db) if a.key.startswith("alternativeto_")]
+    assert keys == []  # fiche non déclarée : aucune alerte AlternativeTo
+    crunchbase.set_param(db, "alternativeto_url", "https://alternativeto.net/software/flugia/about/")
+    crunchbase.set_param(db, "alternativeto_maj", as_of.isoformat())
+    crunchbase.set_param(db, "alternativeto_fiche", ",".join(k for k in crunchbase.AT_FIELDS if k not in ("captures", "alternatives")))
+    crunchbase.add_event(db, "Nouvelle offre ou nouveau produit", "Co-Worker juridique")
+    crunchbase.add_event(db, "Levée de fonds", "Seed")
+    al = {a.key: a for a in alerts.evaluate(snap, None, db) if a.key.startswith("alternativeto_")}
+    assert {k.split(":")[0] + ":" + k.split(":")[1] for k in al if "fiche" in k} == {"alternativeto_fiche:captures", "alternativeto_fiche:alternatives"}
+    assert "Sintra" in al["alternativeto_fiche:alternatives"].action
+    assert sum(k.startswith("alternativeto_evenement:") for k in al) == 1  # la levée de fonds ne concerne pas AlternativeTo
+    assert not any(k.startswith("alternativeto_revue:") for k in al)
