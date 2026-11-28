@@ -112,3 +112,20 @@ def test_crunchbase_watch_and_alerts(tmp_path):
         crunchbase.mark_event(db, e["id"])
     keys = [a.key for a in alerts.evaluate(snap, None, db)]
     assert not any(k.startswith(("crunchbase_revue:", "crunchbase_evenement:")) for k in keys)
+
+
+def test_crunchbase_missing_profile_fields(tmp_path):
+    from flugia_tracking import crunchbase
+
+    db = DB(f"sqlite:///{tmp_path / 'f.db'}")
+    as_of = seed(db)
+    snap = kpis.compute(db, as_of)
+    crunchbase.set_param(db, "crunchbase_url", "https://www.crunchbase.com/organization/flugia")
+    keys = [a.key for a in alerts.evaluate(snap, None, db)]
+    assert "crunchbase_fiche:liste" in keys  # liste jamais remplie
+    crunchbase.set_param(db, "crunchbase_fiche", ",".join(k for k in crunchbase.PROFILE_FIELDS if k not in ("logo", "x")))
+    keys = [a.key for a in alerts.evaluate(snap, None, db) if a.key.startswith("crunchbase_fiche:")]
+    assert sorted(keys) == ["crunchbase_fiche:logo", "crunchbase_fiche:x"]
+    crunchbase.mark_field(db, "logo")
+    keys = [a.key for a in alerts.evaluate(snap, None, db) if a.key.startswith("crunchbase_fiche:")]
+    assert keys == ["crunchbase_fiche:x"]
