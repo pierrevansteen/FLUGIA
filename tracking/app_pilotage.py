@@ -44,7 +44,7 @@ def _database_url() -> str:
 def load(db_url: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     from flugia_tracking.db import DB
 
-    db = DB(db_url)
+    db = DB(db_url, read_only=True)  # utilisateur en lecture seule : pas de création de tables
     m = pd.DataFrame(db.query("SELECT day, source, channel, metric, value FROM metrics_daily"))
     a = pd.DataFrame(db.query("SELECT * FROM accounts"))
     runs = pd.DataFrame(db.query("SELECT run_at, collector, status, rows_written, message FROM collector_runs"))
@@ -510,7 +510,7 @@ with tabs[5]:
 
     @st.cache_data(ttl=600, show_spinner=False)
     def current_alerts(db_url: str, as_of: date):
-        db = DB(db_url)
+        db = DB(db_url, read_only=True)
         snap = kpis_mod.compute(db, as_of)
         out = [a.__dict__ for a in alerts_mod.evaluate(snap)]
         db.close()
