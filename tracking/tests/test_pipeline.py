@@ -81,3 +81,34 @@ def test_objectives_saved_and_used_by_alerts(tmp_path):
     assert not any(k.startswith("objectif:signups:") for k in keys)
     stages = {objectives.stage_of(a.__dict__) for a in al}
     assert stages <= set(objectives.STAGES) | {"Système"}
+
+
+def test_crunchbase_watch_and_alerts(tmp_path):
+    from datetime import date as d_, datetime as dt, timezone as tz
+
+    from flugia_tracking import crunchbase
+
+    home = ('<title>AI co-workers | FLUGIA</title><meta name="description" content="Agents IA pour PME">'
+            '<h1>Put AI to work</h1><a href="/ai-sales-manager/">x</a><a href="https://www.linkedin.com/company/flugia_ai">in</a>')
+    pages = {"/": home, "/pricing-flugia/": "<p>From 59 € / month</p><p>999 €</p>"}
+    fetch = lambda url: pages[url.replace(crunchbase.SITE, "")]  # noqa: E731
+    db = DB(f"sqlite:///{tmp_path / 'c.db'}")
+    as_of = seed(db)
+    assert crunchbase.watch_site(db, fetch) == []  # premier relevé : référence
+    assert crunchbase.snapshot_site(fetch)["tarifs.prix"] == "59€, 999€"
+    pages["/"] = home.replace('/ai-sales-manager/">x</a>', '/ai-sales-manager/">x</a><a href="/ai-legal-manager/">y</a>')
+    changes = crunchbase.watch_site(db, fetch, now=dt.combine(as_of, dt.min.time(), tz.utc))
+    assert [c["champ"] for c in changes] == ["offre.co_workers"]
+
+    crunchbase.add_event(db, "Levée de fonds", "Seed de 1 M€")
+    snap = kpis.compute(db, as_of)
+    keys = [a.key for a in alerts.evaluate(snap, None, db)]
+    assert any(k.startswith("crunchbase_revue:") for k in keys)  # date jamais renseignée
+    assert any(k.startswith("crunchbase_site:offre.co_workers:") for k in keys)
+    assert any(k.startswith("crunchbase_evenement:") for k in keys)
+
+    crunchbase.set_param(db, "crunchbase_maj", d_.today().isoformat())
+    for e in crunchbase.events(db):
+        crunchbase.mark_event(db, e["id"])
+    keys = [a.key for a in alerts.evaluate(snap, None, db)]
+    assert not any(k.startswith(("crunchbase_revue:", "crunchbase_evenement:")) for k in keys)
