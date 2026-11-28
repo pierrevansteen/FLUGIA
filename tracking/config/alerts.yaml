@@ -103,6 +103,11 @@ geo:
   taux_minimum: 20          # alerte si moins de 20 % des questions citent Flugia
   baisse_points: 15         # ou si le taux perd 15 points d'une semaine à l'autre
 
+# Veille Crunchbase (sans API) : alertes quand le profil doit être mis à jour à la main
+crunchbase:
+  revue_jours: 90           # revue complète conseillée au-delà de N jours sans mise à jour
+  changements_jours: 45     # un changement détecté sur flugia.com reste signalé N jours
+
 # Conversion essai -> payant (sur les essais terminés pendant les 28 derniers jours)
 conversion_essai:
   taux_minimum: 15          # en %
