@@ -649,7 +649,7 @@ def restore_done(key: str):
 
 
 # Alertes ponctuelles : une fois cochées, elles ne reviennent pas (un changement de site, un article, un événement).
-PERMANENT_DONE = tuple(f"{p_}_{k_}:" for p_ in cb.PLATFORMS for k_ in ("site", "presse", "evenement", "fiche"))
+PERMANENT_DONE = tuple(f"{p_}_{k_}:" for p_ in cb.PLATFORMS for k_ in ("site", "presse", "evenement", "fiche", "avis"))
 
 
 def active_alerts():
@@ -1376,7 +1376,8 @@ def _cb_write(fn, *args):
         return False
 
 
-PLATFORM_URL_HINT = {"crunchbase": "https://www.crunchbase.com/organization/…", "alternativeto": "https://alternativeto.net/software/…/about/"}
+PLATFORM_URL_HINT = {"crunchbase": "https://www.crunchbase.com/organization/…", "alternativeto": "https://alternativeto.net/software/…/about/",
+                     "aiagentsdirectory": "https://aiagentsdirectory.com/agent/… (page publique)"}
 
 
 def platform_settings(platform: str, p: dict):
@@ -1418,8 +1419,8 @@ def platform_settings(platform: str, p: dict):
 def crunchbase_settings():
     data = load_crunchbase(DB_URL)
     p = data["params"]
-    section("Veille des annuaires", "Les fiches se mettent à jour à la main ; ces réglages déclenchent les alertes « Crunchbase » "
-                                    "et « AlternativeTo » de la vue d'ensemble.")
+    section("Veille des annuaires", "Les fiches se mettent à jour à la main ; ces réglages déclenchent les alertes "
+                                    "« Crunchbase », « AlternativeTo » et « AI Agents Directory » de la vue d'ensemble.")
     tabs = st.tabs([conf["nom"] for conf in cb.PLATFORMS.values()])
     for tab, platform in zip(tabs, cb.PLATFORMS):
         with tab:
