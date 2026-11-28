@@ -176,3 +176,35 @@ def test_aiagentsdirectory_badge_status_and_reviews(tmp_path):
     keys = [a.key for a in alerts.evaluate(snap, None, db) if a.key.startswith("aiagentsdirectory_")]
     assert not any(k.startswith(("aiagentsdirectory_badge", "aiagentsdirectory_statut")) for k in keys)
     assert "aiagentsdirectory_avis:1" in keys
+
+
+def test_producthunt_launch_alerts(tmp_path):
+    from datetime import timedelta as td
+
+    from flugia_tracking import crunchbase
+
+    db = DB(f"sqlite:///{tmp_path / 'p.db'}")
+    as_of = seed(db)  # 27/11/2026 (vendredi)
+    snap = kpis.compute(db, as_of)
+    ph = lambda: {a.key: a for a in alerts.evaluate(snap, None, db) if a.key.startswith("producthunt_")}  # noqa: E731
+    keys = ph()
+    attente = [a for k, a in keys.items() if k.startswith("producthunt_lancement:attente:")]
+    assert len(attente) == 1 and "G2 : 0 avis sur 5" in attente[0].detail and "mardi" in attente[0].action + attente[0].detail
+
+    crunchbase.set_param(db, "producthunt_g2", "6")
+    crunchbase.set_param(db, "producthunt_compte", (as_of - td(days=10)).isoformat())
+    crunchbase.set_param(db, "producthunt_prepa", ",".join(crunchbase.PH_PREP))
+    keys = ph()
+    assert "producthunt_lancement:pret" in keys
+    assert "mardi 1 déc. à 09:01" in keys["producthunt_lancement:pret"].detail
+
+    crunchbase.set_param(db, "producthunt_lancement", (as_of + td(days=1)).isoformat())  # un samedi
+    keys = ph()
+    assert any(k.startswith("producthunt_lancement:jour:") for k in keys)
+    assert any(k.startswith("producthunt_lancement:J-1:") and a.severite == "haute" for k, a in keys.items())
+
+    crunchbase.set_param(db, "producthunt_lancement", (as_of - td(days=1)).isoformat())
+    crunchbase.set_param(db, "producthunt_url", "https://www.producthunt.com/products/flugia")
+    keys = ph()
+    assert any(k.startswith("producthunt_lancement:suite:") for k in keys)
+    assert any(k.startswith("producthunt_revue:") or k.startswith("producthunt_fiche:") for k in keys)
