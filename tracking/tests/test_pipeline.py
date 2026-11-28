@@ -149,3 +149,30 @@ def test_alternativeto_alerts(tmp_path):
     assert "Sintra" in al["alternativeto_fiche:alternatives"].action
     assert sum(k.startswith("alternativeto_evenement:") for k in al) == 1  # la levée de fonds ne concerne pas AlternativeTo
     assert not any(k.startswith("alternativeto_revue:") for k in al)
+
+
+def test_aiagentsdirectory_badge_status_and_reviews(tmp_path):
+    from datetime import datetime as dt, timezone as tz
+
+    from flugia_tracking import crunchbase
+
+    home = '<title>FLUGIA</title><meta name="description" content="x"><h1>y</h1>'
+    listing = {"page": "<title>Page Not Found - AI Agents Directory</title>"}
+    pages = {"/": home, "/pricing-flugia/": "<p>59 €</p>"}
+    url = "https://aiagentsdirectory.com/agent/flugia"
+    fetch = lambda u: listing["page"] if u == url else pages[u.replace(crunchbase.SITE, "")]  # noqa: E731
+    db = DB(f"sqlite:///{tmp_path / 'd.db'}")
+    as_of = seed(db)
+    snap = kpis.compute(db, as_of)
+    crunchbase.set_param(db, "aiagentsdirectory_url", url)
+    crunchbase.watch_site(db, fetch)
+    keys = {a.key: a for a in alerts.evaluate(snap, None, db) if a.key.startswith("aiagentsdirectory_")}
+    assert keys["aiagentsdirectory_badge:attente"].severite == "haute"
+    assert "aiagentsdirectory_statut:attente" in keys
+
+    pages["/"] = home + f'<a href="{url}"><img src="https://aiagentsdirectory.com/featured-badge.svg"></a>'
+    listing["page"] = '<script>{"@type":"SoftwareApplication","aggregateRating":{"ratingValue":4.5,"reviewCount":1}}</script>'
+    crunchbase.watch_site(db, fetch, now=dt.combine(as_of, dt.min.time(), tz.utc))
+    keys = [a.key for a in alerts.evaluate(snap, None, db) if a.key.startswith("aiagentsdirectory_")]
+    assert not any(k.startswith(("aiagentsdirectory_badge", "aiagentsdirectory_statut")) for k in keys)
+    assert "aiagentsdirectory_avis:1" in keys
