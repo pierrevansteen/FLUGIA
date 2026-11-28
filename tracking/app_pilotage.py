@@ -616,6 +616,8 @@ def mark_done(key: str, title: str):
             cb.set_param(db, "crunchbase_maj", date.today().isoformat())
         elif key.startswith("crunchbase_evenement:"):
             cb.mark_event(db, key.split(":", 1)[1])
+        elif key.startswith("crunchbase_fiche:") and key.split(":", 1)[1] in cb.PROFILE_FIELDS:
+            cb.mark_field(db, key.split(":", 1)[1])
         db.close()
         load_done.clear()
         load_crunchbase.clear()
@@ -634,6 +636,8 @@ def restore_done(key: str):
         db.commit()
         if key.startswith("crunchbase_evenement:"):
             cb.mark_event(db, key.split(":", 1)[1], reported=False)
+        elif key.startswith("crunchbase_fiche:") and key.split(":", 1)[1] in cb.PROFILE_FIELDS:
+            cb.mark_field(db, key.split(":", 1)[1], present=False)
         db.close()
         load_done.clear()
         load_crunchbase.clear()
@@ -643,7 +647,7 @@ def restore_done(key: str):
 
 
 # Alertes ponctuelles : une fois cochées, elles ne reviennent pas (un changement de site, un article, un événement).
-PERMANENT_DONE = ("crunchbase_site:", "crunchbase_presse:", "crunchbase_evenement:")
+PERMANENT_DONE = ("crunchbase_site:", "crunchbase_presse:", "crunchbase_evenement:", "crunchbase_fiche:")
 
 
 def active_alerts():
@@ -1389,6 +1393,23 @@ def crunchbase_settings():
     st.caption(("Date non renseignée : une alerte de revue s'affiche." if age is None else
                 f"Dernière mise à jour il y a {age} jours. Une revue est demandée au-delà de {cb._cfg()['revue_jours']} jours.")
                + " Cocher « Fait » sur l'alerte de revue met cette date à jour automatiquement.")
+
+    st.markdown("**Contenu de la fiche Crunchbase**")
+    present = p.get("crunchbase_fiche")
+    done = set(filter(None, (present or "").split(",")))
+    with st.form("cb_fiche", border=False):
+        st.caption("Cochez ce qui figure déjà sur la fiche. Chaque information non cochée crée une alerte « information à ajouter » ; "
+                   "cocher « Fait » sur l'alerte la coche ici automatiquement.")
+        cols = st.columns(3)
+        ticks = {k: cols[i % 3].checkbox(lbl, value=k in done, key=f"cbf_{k}") for i, (k, (lbl, _s, _a)) in enumerate(cb.PROFILE_FIELDS.items())}
+        if st.form_submit_button("Enregistrer le contenu de la fiche"):
+            value = ",".join(sorted(k for k, v in ticks.items() if v)) or ","
+            if _cb_write(cb.set_param, "crunchbase_fiche", value):
+                st.toast("Contenu de la fiche enregistré.", icon=":material/check_circle:")
+                st.rerun()
+    if present is not None:
+        missing = [lbl for k, (lbl, _s, _a) in cb.PROFILE_FIELDS.items() if k not in done]
+        st.caption(("À ajouter : " + ", ".join(missing) + ".") if missing else "Fiche complète.")
 
     st.markdown("**Événements à reporter sur Crunchbase**")
     with st.form("cb_event", clear_on_submit=True, border=False):
