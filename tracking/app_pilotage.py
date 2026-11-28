@@ -18,6 +18,7 @@ import streamlit as st
 import yaml
 
 from flugia_tracking import brand
+from flugia_tracking import crunchbase as cb
 from flugia_tracking import objectives as obj_mod
 from flugia_tracking.kpis import BEHAVIOR, family_from_utm, label
 
@@ -150,6 +151,22 @@ def load_done(db_url: str) -> dict[str, str]:
         db.close()
 
 
+@st.cache_data(ttl=60, show_spinner=False)
+def load_crunchbase(db_url: str) -> dict:
+    from flugia_tracking.db import DB
+
+    db = DB(db_url, read_only=True)
+    try:
+        try:
+            changes = db.query("SELECT detecte_le, champ, avant, apres FROM veille_changements ORDER BY detecte_le DESC")
+            current = db.query("SELECT champ, valeur, vu_le FROM veille_site")
+        except Exception:
+            changes, current = [], []
+        return {"params": cb.params(db), "events": cb.events(db), "changes": changes, "current": current}
+    finally:
+        db.close()
+
+
 @st.cache_data(ttl=600, show_spinner="Calcul des alertes…")
 def compute_alerts(db_url: str, as_of: date, objectives: tuple):
     from flugia_tracking import alerts as alerts_mod, kpis as kpis_mod
@@ -158,7 +175,7 @@ def compute_alerts(db_url: str, as_of: date, objectives: tuple):
     db = DB(db_url, read_only=True)
     try:
         snap = kpis_mod.compute(db, as_of)
-        return [a.__dict__ for a in alerts_mod.evaluate(snap, dict(objectives))]
+        return [a.__dict__ for a in alerts_mod.evaluate(snap, dict(objectives), db)]
     finally:
         db.close()
 
@@ -595,8 +612,14 @@ def mark_done(key: str, title: str):
         db.execute("INSERT INTO ui_alertes_traitees (alert_key, done_at, done_by) VALUES (?, ?, ?)",
                    (key, datetime.now(timezone.utc).isoformat(), viewer()))
         db.commit()
+        if key.startswith("crunchbase_revue:"):  # revue faite = date de dernière mise à jour du profil
+            cb.set_param(db, "crunchbase_maj", date.today().isoformat())
+        elif key.startswith("crunchbase_evenement:"):
+            cb.mark_event(db, key.split(":", 1)[1])
         db.close()
         load_done.clear()
+        load_crunchbase.clear()
+        compute_alerts.clear()
         st.toast(f"Alerte traitée : {title[:60]}", icon=":material/check_circle:")
     except Exception:
         ss["persist_error"] = True
@@ -609,10 +632,18 @@ def restore_done(key: str):
         db = _write_db()
         db.execute("DELETE FROM ui_alertes_traitees WHERE alert_key = ?", (key,))
         db.commit()
+        if key.startswith("crunchbase_evenement:"):
+            cb.mark_event(db, key.split(":", 1)[1], reported=False)
         db.close()
         load_done.clear()
+        load_crunchbase.clear()
+        compute_alerts.clear()
     except Exception:
         ss["persist_error"] = True
+
+
+# Alertes ponctuelles : une fois cochées, elles ne reviennent pas (un changement de site, un article, un événement).
+PERMANENT_DONE = ("crunchbase_site:", "crunchbase_presse:", "crunchbase_evenement:")
 
 
 def active_alerts():
@@ -625,7 +656,9 @@ def active_alerts():
         a = {**a, "stage": obj_mod.stage_of(a)}
         d = done.get(a["key"])
         recent = False
-        if d:
+        if d and a["key"].startswith(PERMANENT_DONE):
+            recent = True
+        elif d:
             try:
                 recent = now - datetime.fromisoformat(d.replace("Z", "+00:00")) < timedelta(days=keep_days)
             except ValueError:
@@ -710,7 +743,7 @@ def page_accueil():
         with cols[k % 2]:
             alert_card(a, k)
     if hidden:
-        with st.expander(f"Alertes traitées ces 7 derniers jours ({len(hidden)})"):
+        with st.expander(f"Alertes traitées ({len(hidden)})"):
             for a in hidden:
                 h1, h2 = st.columns([5, 1], vertical_alignment="center")
                 h1.markdown(f"~~{esc(a['titre'])}~~  \n<span style='color:#6B7280;font-size:.8rem'>{esc(a['stage'])}</span>",
@@ -1248,7 +1281,12 @@ def page_explorer():
 SETUP_SQL = """-- À exécuter une fois dans Supabase (SQL Editor)
 CREATE TABLE IF NOT EXISTS ui_objectifs (cle TEXT PRIMARY KEY, valeur DOUBLE PRECISION, updated_at TEXT);
 CREATE TABLE IF NOT EXISTS ui_alertes_traitees (alert_key TEXT PRIMARY KEY, done_at TEXT NOT NULL, done_by TEXT);
-GRANT SELECT, INSERT, UPDATE, DELETE ON ui_objectifs, ui_alertes_traitees TO lecture_tableau;"""
+CREATE TABLE IF NOT EXISTS ui_parametres (cle TEXT PRIMARY KEY, valeur TEXT, updated_at TEXT);
+CREATE TABLE IF NOT EXISTS ui_evenements (id TEXT PRIMARY KEY, cree_le TEXT NOT NULL, type TEXT NOT NULL, description TEXT, reporte_le TEXT);
+CREATE TABLE IF NOT EXISTS veille_site (champ TEXT PRIMARY KEY, valeur TEXT, vu_le TEXT);
+CREATE TABLE IF NOT EXISTS veille_changements (detecte_le TEXT NOT NULL, champ TEXT NOT NULL, avant TEXT, apres TEXT);
+GRANT SELECT, INSERT, UPDATE, DELETE ON ui_objectifs, ui_alertes_traitees, ui_parametres, ui_evenements TO lecture_tableau;
+GRANT SELECT ON veille_site, veille_changements TO lecture_tableau;"""
 
 
 def page_parametres():
@@ -1309,10 +1347,96 @@ def page_parametres():
     else:
         empty("Aucun objectif fixé.")
 
+    crunchbase_settings()
+
     with st.expander("Enregistrement des objectifs et des alertes traitées", expanded=bool(ss.get("persist_error"))):
-        st.markdown("L'interface lit la base avec un utilisateur en lecture seule. Pour enregistrer les objectifs et les alertes "
-                    "cochées « Fait », cet utilisateur doit pouvoir écrire dans deux petites tables dédiées (et uniquement celles-ci) :")
+        st.markdown("L'interface lit la base avec un utilisateur en lecture seule. Pour enregistrer les objectifs, les alertes "
+                    "cochées « Fait » et la veille Crunchbase, cet utilisateur doit pouvoir écrire dans quatre petites tables dédiées "
+                    "(et uniquement celles-ci) :")
         st.code(SETUP_SQL, language="sql")
+
+
+def _cb_write(fn, *args):
+    try:
+        db = _write_db()
+        fn(db, *args)
+        db.close()
+        load_crunchbase.clear()
+        compute_alerts.clear()
+        return True
+    except Exception:  # noqa: BLE001
+        ss["persist_error"] = True
+        st.error("Enregistrement impossible : la base n'autorise pas encore l'écriture (voir ci-dessous).")
+        return False
+
+
+def crunchbase_settings():
+    data = load_crunchbase(DB_URL)
+    p = data["params"]
+    section("Veille Crunchbase", "Le profil se met à jour à la main ; ces réglages déclenchent les alertes « Crunchbase » de la vue d'ensemble.")
+    c1, c2, c3 = st.columns([2.4, 1.4, 1], vertical_alignment="bottom")
+    url = c1.text_input("Adresse du profil Crunchbase", value=p.get("crunchbase_url", ""),
+                        placeholder="https://www.crunchbase.com/organization/…")
+    last = p.get("crunchbase_maj")
+    maj = c2.date_input("Dernière mise à jour du profil", value=date.fromisoformat(last[:10]) if last else None,
+                        max_value=date.today(), format="DD/MM/YYYY")
+    if c3.button("Enregistrer", key="cb_save", type="secondary", use_container_width=True):
+        if _cb_write(lambda db: (cb.set_param(db, "crunchbase_url", url.strip()),
+                                 cb.set_param(db, "crunchbase_maj", maj.isoformat() if maj else None))):
+            st.toast("Réglages Crunchbase enregistrés.", icon=":material/check_circle:")
+            st.rerun()
+    age = (date.today() - date.fromisoformat(last[:10])).days if last else None
+    st.caption(("Date non renseignée : une alerte de revue s'affiche." if age is None else
+                f"Dernière mise à jour il y a {age} jours. Une revue est demandée au-delà de {cb._cfg()['revue_jours']} jours.")
+               + " Cocher « Fait » sur l'alerte de revue met cette date à jour automatiquement.")
+
+    st.markdown("**Événements à reporter sur Crunchbase**")
+    with st.form("cb_event", clear_on_submit=True, border=False):
+        e1, e2, e3 = st.columns([1.6, 3, 1], vertical_alignment="bottom")
+        kind = e1.selectbox("Type", cb.EVENT_TYPES)
+        desc = e2.text_input("Description", placeholder="Ex. : levée de 1,2 M€ auprès de …, lancement du Co-Worker juridique…")
+        if e3.form_submit_button("Ajouter", use_container_width=True) and desc.strip():
+            if _cb_write(cb.add_event, kind, desc.strip()):
+                st.rerun()
+    evs = data["events"]
+    pending = [e for e in evs if not e["reporte_le"]]
+    if not pending:
+        st.caption("Aucun événement en attente. Chaque événement ajouté crée une alerte jusqu'à ce qu'il soit reporté sur Crunchbase.")
+    for e in pending:
+        r1, r2, r3 = st.columns([5, 1.6, 0.8], vertical_alignment="center")
+        r1.markdown(f"**{esc(e['type'])}** · {esc(e['description'])}  \n<span style='color:#6B7280;font-size:.8rem'>"
+                    f"saisi le {brand.day(str(e['cree_le'])[:10], True)}</span>", unsafe_allow_html=True)
+        if r2.button("Reporté sur Crunchbase", key=f"cb_done_{e['id']}", type="tertiary"):
+            if _cb_write(cb.mark_event, e["id"]):
+                st.rerun()
+        if r3.button("", key=f"cb_del_{e['id']}", icon=":material/delete:", help="Supprimer", type="tertiary"):
+            if _cb_write(cb.delete_event, e["id"]):
+                st.rerun()
+    done_evs = [e for e in evs if e["reporte_le"]]
+    if done_evs:
+        with st.expander(f"Événements déjà reportés ({len(done_evs)})"):
+            for e in done_evs:
+                st.markdown(f"~~{esc(e['type'])} · {esc(e['description'])}~~ — reporté le {brand.day(str(e['reporte_le'])[:10], True)}")
+
+    st.markdown("**Veille de flugia.com**")
+    labels = {k: v[0] for k, v in cb.FIELDS.items()}
+    if not data["current"]:
+        st.caption("Premier relevé lors de la prochaine collecte de nuit. Ensuite, chaque changement (titre, description, accroche, "
+                   "gamme de Co-Workers, tarifs, réseaux sociaux) crée une alerte Crunchbase.")
+    else:
+        ch = pd.DataFrame(data["changes"][:20])
+        if ch.empty:
+            st.caption(f"Aucun changement détecté depuis le premier relevé ({len(data['current'])} éléments suivis).")
+        else:
+            ch["detecte_le"] = pd.to_datetime(ch["detecte_le"], utc=True).dt.strftime("%d/%m/%Y")
+            ch["champ"] = ch["champ"].map(lambda c: labels.get(c, c))
+            st.dataframe(ch.rename(columns={"detecte_le": "Détecté le", "champ": "Élément", "avant": "Avant", "apres": "Maintenant"}),
+                         hide_index=True, use_container_width=True)
+        with st.expander("Valeurs suivies actuellement"):
+            cur_df = pd.DataFrame(data["current"])
+            cur_df["champ"] = cur_df["champ"].map(lambda c: labels.get(c, c))
+            st.dataframe(cur_df[["champ", "valeur"]].rename(columns={"champ": "Élément", "valeur": "Valeur relevée"}),
+                         hide_index=True, use_container_width=True)
 
 
 nav.run()
