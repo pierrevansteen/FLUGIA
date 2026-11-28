@@ -70,19 +70,24 @@ ACCOUNT_COLUMNS = [
 
 
 class DB:
-    def __init__(self, url: str | None = None):
+    def __init__(self, url: str | None = None, read_only: bool = False):
+        """read_only=True : simple lecture (ex. interface en ligne avec un utilisateur Postgres en lecture seule),
+        sans création des tables ni écriture."""
         self.url = url if url is not None else os.environ.get("DATABASE_URL", "")
         if self.url.startswith(("postgres://", "postgresql://")):
             import psycopg  # import tardif : inutile en local
 
             self.kind = "postgres"
             self.conn = psycopg.connect(self.url, autocommit=False)
+            if read_only:
+                self.conn.read_only = True
         else:
             path = Path(self.url.removeprefix("sqlite:///")) if self.url else DEFAULT_SQLITE
             path.parent.mkdir(parents=True, exist_ok=True)
             self.kind = "sqlite"
             self.conn = sqlite3.connect(path)
-        self.init_schema()
+        if not read_only:
+            self.init_schema()
 
     def _sql(self, sql: str) -> str:
         return sql.replace("?", "%s") if self.kind == "postgres" else sql
