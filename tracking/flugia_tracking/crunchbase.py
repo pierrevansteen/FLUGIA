@@ -47,6 +47,25 @@ EVENT_ACTION = {
 }
 
 
+# Contenu attendu sur la fiche Crunchbase : clé -> (libellé, priorité, ce qu'il faut ajouter)
+PROFILE_FIELDS = {
+    "logo": ("Logo", "moyenne", "Ajouter le logo carré (« Profile Image ») : sans logo, la fiche paraît inactive."),
+    "description": ("Descriptions courte et complète", "moyenne", "Renseigner « Description » et « Full Description »."),
+    "site": ("Site web", "moyenne", "Renseigner « Website » : https://flugia.com."),
+    "linkedin": ("Page LinkedIn", "info", "Renseigner « LinkedIn » : https://www.linkedin.com/company/flugia_ai."),
+    "x": ("Compte X", "info", "Renseigner « X (Twitter) » : https://x.com/flugia_ai."),
+    "facebook": ("Page Facebook", "info", "Renseigner « Facebook » : https://www.facebook.com/FLUGIAapp."),
+    "creation": ("Date de création", "info", "Renseigner « Founded Date »."),
+    "effectif": ("Effectif", "info", "Renseigner « Number of Employees »."),
+    "siege": ("Siège", "info", "Renseigner « Headquarters » (Galerie Ravenstein 25, 1000 Bruxelles)."),
+    "secteurs": ("Secteurs", "info", "Ajouter les « Industries » (Artificial Intelligence, SaaS, Marketing Automation…)."),
+    "fondateurs": ("Fondateurs", "info", "Ajouter les fondateurs (« Founders ») avec leur profil."),
+    "equipe": ("Équipe mise en avant", "info", "Ajouter 2 ou 3 personnes clés dans « Featured Employees »."),
+    "actualites": ("Actualités (au moins un article)", "info", "Ajouter un article ou une annonce sur FLUGIA dans « News »."),
+    "contact": ("E-mail et téléphone de contact", "info", "Renseigner « Contact Email » et « Phone Number »."),
+}
+
+
 def _cfg() -> dict:
     return {"revue_jours": 90, "changements_jours": 45, **(alerts_config().get("crunchbase") or {})}
 
@@ -123,6 +142,13 @@ def set_param(db, key: str, value: str | None) -> None:
     db.commit()
 
 
+def mark_field(db, field: str, present: bool = True) -> None:
+    """Ajoute (ou retire) une information de la liste de ce qui figure sur la fiche."""
+    done = set(filter(None, (params(db).get("crunchbase_fiche") or "").split(",")))
+    done = done | {field} if present else done - {field}
+    set_param(db, "crunchbase_fiche", ",".join(sorted(done)) or ",")
+
+
 def events(db, pending_only: bool = False) -> list[dict]:
     try:
         rows = db.query("SELECT id, cree_le, type, description, reporte_le FROM ui_evenements ORDER BY cree_le DESC")
@@ -193,7 +219,7 @@ def alerts(db, snapshot: dict, as_of: date) -> list:
         out.append(Alert(
             key=f"crunchbase_site:{champ}:{hashlib.sha1((c['apres'] or '').encode()).hexdigest()[:8]}",
             etape="Visibilité", severite=sev,
-            titre=f"Crunchbase : changement sur flugia.com ({lbl.lower()})",
+            titre=f"Crunchbase : changement sur flugia.com ({lbl[0].lower() + lbl[1:]})",
             detail=f"Changement détecté le {fday(str(c['detecte_le'])[:10])}. Avant : « {_short(c['avant'])} ». "
                    f"Maintenant : « {_short(c['apres'])} ».",
             action=action + (f" Profil : {p['crunchbase_url']}." if p.get("crunchbase_url") else ""),
@@ -210,6 +236,26 @@ def alerts(db, snapshot: dict, as_of: date) -> list:
                        "probablement un article ou une mention de FLUGIA.",
                 action="Retrouver l'article et l'ajouter dans la section « News » du profil s'il parle de FLUGIA.",
             ))
+
+    # 4 bis. Informations manquantes sur la fiche (liste cochée dans Paramétrages)
+    present = p.get("crunchbase_fiche")
+    if present is None and p.get("crunchbase_url"):
+        out.append(Alert(
+            key="crunchbase_fiche:liste", etape="Visibilité", severite="info",
+            titre="Crunchbase : indiquer ce qui figure déjà sur la fiche",
+            detail="Sans cette liste, impossible de signaler les informations manquantes (logo, réseaux sociaux, actualités…).",
+            action="Dans Paramétrages > Veille Crunchbase, cocher les informations présentes sur la fiche et enregistrer.",
+        ))
+    elif present is not None:
+        done = set(filter(None, present.split(",")))
+        for k, (lbl, sev, action) in PROFILE_FIELDS.items():
+            if k not in done:
+                out.append(Alert(
+                    key=f"crunchbase_fiche:{k}", etape="Visibilité", severite=sev,
+                    titre=f"Crunchbase : information à ajouter sur la fiche ({lbl[0].lower() + lbl[1:]})",
+                    detail="Une fiche complète est mieux classée sur Crunchbase et inspire confiance aux investisseurs et partenaires.",
+                    action=action + where + " Cocher « Fait » une fois l'information ajoutée.",
+                ))
 
     # 4. Événements saisis, pas encore reportés
     for e in events(db, pending_only=True):
