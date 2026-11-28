@@ -26,6 +26,7 @@ from .config import alerts_config
 
 SITE = os.environ.get("SITE_URL", "https://flugia.com").rstrip("/")
 PAGES = {"accueil": "/", "tarifs": "/pricing-flugia/"}
+BADGE_DOMAINS = ("aiagentsdirectory.com", "alternativeto.net", "producthunt.com", "theresanaiforthat.com")
 SOCIAL = ("linkedin.com", "instagram.com", "x.com", "twitter.com", "facebook.com", "youtube.com", "tiktok.com")
 
 FIELDS = {
@@ -35,6 +36,11 @@ FIELDS = {
     "offre.co_workers": ("Gamme de Co-Workers", "moyenne", "Mettre à jour la description et les catégories (« Industries ») avec les Co-Workers ajoutés ou retirés."),
     "tarifs.prix": ("Tarifs", "info", "Vérifier les informations d'offre et de prix mentionnées dans la description."),
     "reseaux": ("Réseaux sociaux", "moyenne", "Mettre à jour les liens LinkedIn, Instagram et X du profil."),
+    # relevés propres aux annuaires (libellés pour l'interface ; pas d'alerte « changement sur flugia.com »)
+    "annuaire.badges": ("Badges d'annuaires sur flugia.com", "info", ""),
+    "annuaire.aiagentsdirectory.statut": ("AI Agents Directory : fiche publique", "info", ""),
+    "annuaire.aiagentsdirectory.avis": ("AI Agents Directory : nombre d'avis", "info", ""),
+    "annuaire.aiagentsdirectory.note": ("AI Agents Directory : note moyenne", "info", ""),
 }
 
 EVENT_TYPES = ["Levée de fonds", "Nouvelle offre ou nouveau produit", "Effectif (recrutements, départs)", "Partenariat",
@@ -99,6 +105,26 @@ AT_EVENT_ACTION = {
     "Prix ou distinction": "Mentionner la distinction dans la description.",
 }
 
+AAD_FIELDS = {
+    "logo": ("Logo", "moyenne", "Ajouter le logo carré (« Media > Logo »)."),
+    "miniature": ("Image de présentation", "info", "Ajouter une capture de l'interface (« Thumbnail image »)."),
+    "description": ("Accroche et description", "moyenne", "Renseigner « Tagline » et « Description »."),
+    "fonctionnalites": ("Fonctionnalités clés", "info", "Lister 4 à 6 « Key features »."),
+    "cas_usage": ("Cas d'usage", "info", "Lister 4 à 6 « Use cases »."),
+    "documentation": ("Lien vers la documentation", "info", "Renseigner « Documentation » : https://flugia.com/documentation/."),
+    "demo": ("Lien de démo", "info", "Renseigner « Demo » : https://flugia.com/demo-flugia/."),
+    "reseaux": ("LinkedIn et X", "info", "Renseigner « LinkedIn » et « Twitter »."),
+    "createur": ("Créateur (« Created by »)", "info", "Renseigner « Created by » : FLUGIA (elavi srl)."),
+}
+AAD_SITE_ACTIONS = {
+    "accueil.titre": "Mettre à jour la « Tagline ».",
+    "accueil.description": "Aligner la « Description » sur celle du site.",
+    "accueil.accroche": "Vérifier que la « Tagline » reflète toujours le positionnement.",
+    "offre.co_workers": "Mettre à jour la description, les « Key features » et les « Use cases ».",
+    "tarifs.prix": "Mettre à jour le prix cité dans la description (et le « Pricing model » si l'offre gratuite change).",
+    "reseaux": "Mettre à jour les liens LinkedIn et Twitter.",
+}
+
 PLATFORMS = {
     "crunchbase": {"nom": "Crunchbase", "fields": PROFILE_FIELDS, "presse": True,
                    "revue": "description, effectif, logo, catégories, liens et actualités",
@@ -108,7 +134,12 @@ PLATFORMS = {
                       "revue": "description, prix, fonctionnalités, captures, liens et concurrents liés",
                       "pourquoi": "les prospects y comparent FLUGIA à ses concurrents",
                       "complet": "Une fiche complète remonte dans les listes « alternatives à » et rassure les prospects qui comparent."},
+    "aiagentsdirectory": {"nom": "AI Agents Directory", "fields": AAD_FIELDS, "presse": False,
+                          "revue": "accroche, description, fonctionnalités, cas d'usage, prix, liens et images",
+                          "pourquoi": "les entreprises qui cherchent un agent IA y comparent les solutions",
+                          "complet": "Une fiche complète est mieux mise en avant dans les catégories et les recherches de l'annuaire."},
 }
+SITE_ACTIONS = {"alternativeto": AT_SITE_ACTIONS, "aiagentsdirectory": AAD_SITE_ACTIONS}
 
 
 def _cfg() -> dict:
@@ -134,7 +165,23 @@ def parse_home(page: str) -> dict[str, str]:
         "accueil.accroche": first(r"<h1[^>]*>(.*?)</h1>"),
         "offre.co_workers": ", ".join(p.strip("/") for p in paths),
         "reseaux": ", ".join(socials),
+        # badges « Featured on … » exigés par certains annuaires pour une fiche gratuite
+        "annuaire.badges": ", ".join(sorted({d for d in BADGE_DOMAINS if d in page})) or "aucun",
     }
+
+
+def parse_aad_listing(page: str) -> dict[str, str]:
+    """Fiche publique AI Agents Directory : publiée ou non, nombre d'avis et note (données structurées de la page)."""
+    if not page or "Page Not Found" in page[:5000] or "does not exist" in page[:20000]:
+        return {"annuaire.aiagentsdirectory.statut": "non publiée", "annuaire.aiagentsdirectory.avis": "0"}
+    out = {"annuaire.aiagentsdirectory.statut": "publiée"}
+    data = html_mod.unescape(page)
+    m = re.search(r'"reviewCount"\s*:\s*(\d+)', data)
+    r = re.search(r'"ratingValue"\s*:\s*([\d.]+)', data)
+    out["annuaire.aiagentsdirectory.avis"] = m.group(1) if m else "0"
+    if r:
+        out["annuaire.aiagentsdirectory.note"] = r.group(1)
+    return out
 
 
 def parse_pricing(page: str) -> dict[str, str]:
@@ -144,17 +191,27 @@ def parse_pricing(page: str) -> dict[str, str]:
     return {"tarifs.prix": ", ".join(prices)}
 
 
-def snapshot_site(fetch=None) -> dict[str, str]:
-    fetch = fetch or (lambda url: requests.get(url, headers={"User-Agent": "FLUGIA-tracking/1.0"}, timeout=30).text)
+def _get(url: str) -> str:
+    resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0 (FLUGIA-tracking/1.0)"}, timeout=30)
+    return resp.text if resp.status_code < 500 else ""
+
+
+def snapshot_site(fetch=None, aad_url: str | None = None) -> dict[str, str]:
+    fetch = fetch or _get
     out = parse_home(fetch(SITE + PAGES["accueil"]))
     out.update(parse_pricing(fetch(SITE + PAGES["tarifs"])))
+    if aad_url:
+        try:
+            out.update(parse_aad_listing(fetch(aad_url)))
+        except Exception:  # noqa: BLE001  (annuaire injoignable : on garde le relevé précédent)
+            pass
     return {k: v for k, v in out.items() if v}  # un champ vide = page modifiée ou erreur de lecture : on ne conclut rien
 
 
 def watch_site(db, fetch=None, now: datetime | None = None) -> list[dict]:
     """Relève le site, enregistre les changements par rapport au relevé précédent. Premier passage : simple référence."""
     now = now or datetime.now(timezone.utc)
-    current = snapshot_site(fetch)
+    current = snapshot_site(fetch, params(db).get("aiagentsdirectory_url"))
     previous = {r["champ"]: r["valeur"] for r in db.query("SELECT champ, valeur FROM veille_site")}
     changes = []
     for champ, valeur in current.items():
@@ -276,9 +333,11 @@ def platform_alerts(db, snapshot: dict, as_of: date, platform: str) -> list:
     for c in changes:  # un seul signalement par champ : le plus récent
         latest[c["champ"]] = c
     for champ, c in latest.items():
+        if champ.startswith("annuaire."):  # relevés propres aux annuaires : traités plus bas
+            continue
         lbl, sev, action = FIELDS.get(champ, (champ, "info", "Vérifier la fiche."))
-        if platform == "alternativeto":
-            action = AT_SITE_ACTIONS.get(champ, "Vérifier la fiche.")
+        if platform in SITE_ACTIONS:
+            action = SITE_ACTIONS[platform].get(champ, "Vérifier la fiche.")
         out.append(Alert(
             key=f"{platform}_site:{champ}:{hashlib.sha1((c['apres'] or '').encode()).hexdigest()[:8]}",
             etape="Visibilité", severite=sev,
@@ -333,7 +392,9 @@ def platform_alerts(db, snapshot: dict, as_of: date, platform: str) -> list:
                 detail=f"{e['description']} (saisi le {fday(str(e['cree_le'])[:10])}).",
                 action=EVENT_ACTION.get(e["type"], "Mettre à jour la rubrique concernée du profil.") + where,
             ))
-    else:  # seuls les événements qui changent la description du produit ; « Fait » les masque définitivement
+    if platform == "aiagentsdirectory":
+        out.extend(_aad_alerts(db, as_of, url, latest))
+    if platform != "crunchbase":  # seuls les événements qui changent la description du produit ; « Fait » les masque définitivement
         recent = (as_of - timedelta(days=180)).isoformat()
         for e in events(db):
             if e["type"] in AT_EVENT_ACTION and str(e["cree_le"])[:10] >= recent:
@@ -343,6 +404,52 @@ def platform_alerts(db, snapshot: dict, as_of: date, platform: str) -> list:
                     detail=f"{e['description']} (saisi le {fday(str(e['cree_le'])[:10])}).",
                     action=AT_EVENT_ACTION[e["type"]] + where,
                 ))
+    return out
+
+
+def _aad_alerts(db, as_of: date, url: str, latest_changes: dict) -> list:
+    """AI Agents Directory : badge exigé sur le site pour la fiche gratuite, publication, nouveaux avis (relevés automatiques)."""
+    from .alerts import Alert
+    from .brand import day as fday
+
+    try:
+        current = {r["champ"]: r["valeur"] for r in db.query("SELECT champ, valeur FROM veille_site WHERE champ LIKE 'annuaire.%'")}
+    except Exception:
+        current = {}
+    out = []
+    badges = current.get("annuaire.badges")
+    status = current.get("annuaire.aiagentsdirectory.statut")
+    badge = f'<a href="{url}" target="_blank" rel="noopener"><img src="https://aiagentsdirectory.com/featured-badge.svg?v=2024" ' \
+            'alt="FLUGIA - Featured on AI Agents Directory" width="200" height="50" /></a>'
+    if badges is not None and "aiagentsdirectory.com" not in badges:
+        published = status == "publiée"
+        out.append(Alert(
+            key=f"aiagentsdirectory_badge:{'publiee' if published else 'attente'}",
+            etape="Visibilité", severite="moyenne" if published else "haute",
+            titre=("AI Agents Directory : le badge a disparu de flugia.com" if published
+                   else "AI Agents Directory : badge à ajouter sur flugia.com pour valider la fiche gratuite"),
+            detail=("La fiche gratuite exige ce badge sur le site : sans lui, elle peut être retirée." if published
+                    else "La fiche gratuite n'est validée que si le badge apparaît sur la page d'accueil ou le pied de page "
+                         "dans les 72 heures suivant la soumission. Il n'a pas été trouvé lors du dernier relevé de flugia.com."),
+            action=f"Ajouter ce code dans le pied de page de flugia.com : {badge}",
+        ))
+    if status == "non publiée":
+        out.append(Alert(
+            key="aiagentsdirectory_statut:attente", etape="Visibilité", severite="info",
+            titre="AI Agents Directory : fiche en attente de validation",
+            detail="La page publique de la fiche n'est pas encore en ligne. L'alerte disparaît d'elle-même à la publication.",
+            action="Vérifier le statut dans « My Dashboard » de l'annuaire" + (" et que le badge est bien en place." if badges and
+                                                                              "aiagentsdirectory.com" not in badges else "."),
+        ))
+    c = latest_changes.get("annuaire.aiagentsdirectory.avis")
+    if c and (c["apres"] or "0").isdigit() and int(c["apres"] or 0) > int(c["avant"] or 0 if (c["avant"] or "0").isdigit() else 0):
+        out.append(Alert(
+            key=f"aiagentsdirectory_avis:{c['apres']}", etape="Visibilité", severite="moyenne",
+            titre=f"AI Agents Directory : nouvel avis sur la fiche ({c['avant']} → {c['apres']})",
+            detail=f"Détecté le {fday(str(c['detecte_le'])[:10])}" + (f" ; note moyenne : {current['annuaire.aiagentsdirectory.note']}/5."
+                                                                       if current.get("annuaire.aiagentsdirectory.note") else "."),
+            action=f"Lire l'avis et y répondre depuis la fiche{f' ({url})' if url else ''}.",
+        ))
     return out
 
 
