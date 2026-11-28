@@ -56,8 +56,9 @@ METRIC_LABELS = {
 }
 
 
-def evaluate(snapshot: dict, objectives: dict | None = None) -> list[Alert]:
-    """objectives : objectifs mensuels saisis dans l'interface (voir objectives.py) ; à défaut, alerts.yaml."""
+def evaluate(snapshot: dict, objectives: dict | None = None, db: DB | None = None) -> list[Alert]:
+    """objectives : objectifs mensuels saisis dans l'interface (voir objectives.py) ; à défaut, alerts.yaml.
+    db : active les alertes de veille Crunchbase (crunchbase.py)."""
     data: Data = snapshot["_data"]
     cfg = copy.deepcopy(alerts_config())
     if objectives is not None:
@@ -240,6 +241,11 @@ def evaluate(snapshot: dict, objectives: dict | None = None) -> list[Alert]:
                 titre=f"Source indisponible : {src['nom']}",
                 detail=src["message"] or "", action="Renouveler l'accès à cette source (jeton probablement expiré).",
             ))
+
+    # 7. Veille Crunchbase (mises à jour du profil à faire à la main)
+    if db is not None:
+        from . import crunchbase
+        alerts.extend(crunchbase.alerts(db, snapshot, as_of))
 
     alerts.sort(key=lambda a: (SEVERITY_ORDER.get(a.severite, 9), a.etape))
     return alerts

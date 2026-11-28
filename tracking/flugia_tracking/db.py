@@ -71,6 +71,30 @@ SCHEMA = [
         done_at TEXT NOT NULL,
         done_by TEXT
     )""",
+    # Veille Crunchbase : paramètres et événements saisis dans l'interface, relevés de flugia.com.
+    """CREATE TABLE IF NOT EXISTS ui_parametres (
+        cle TEXT PRIMARY KEY,
+        valeur TEXT,
+        updated_at TEXT
+    )""",
+    """CREATE TABLE IF NOT EXISTS ui_evenements (
+        id TEXT PRIMARY KEY,
+        cree_le TEXT NOT NULL,
+        type TEXT NOT NULL,
+        description TEXT,
+        reporte_le TEXT
+    )""",
+    """CREATE TABLE IF NOT EXISTS veille_site (
+        champ TEXT PRIMARY KEY,
+        valeur TEXT,
+        vu_le TEXT
+    )""",
+    """CREATE TABLE IF NOT EXISTS veille_changements (
+        detecte_le TEXT NOT NULL,
+        champ TEXT NOT NULL,
+        avant TEXT,
+        apres TEXT
+    )""",
 ]
 
 ACCOUNT_COLUMNS = [

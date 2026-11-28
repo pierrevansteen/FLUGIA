@@ -121,8 +121,15 @@ def cmd_run(args):
     print()
     db = DB()
     collect(db, args.days, args.only.split(",") if args.only else None)
+    try:  # veille Crunchbase : relevé de flugia.com, comparé au relevé précédent
+        from .crunchbase import watch_site
+        changes = watch_site(db)
+        print(f"Veille du site : {len(changes)} changement(s) détecté(s)")
+    except Exception as e:  # noqa: BLE001  (le site injoignable ne doit pas bloquer la collecte)
+        db.conn.rollback()
+        print(f"Veille du site indisponible : {e}")
     snap = kpis.compute(db)
-    all_alerts = alerts_mod.evaluate(snap, objectives_mod.load(db))
+    all_alerts = alerts_mod.evaluate(snap, objectives_mod.load(db), db)
     weekly = args.weekly or date.today().weekday() == 0
     # En semaine : seules les alertes urgentes sont diffusées (et une seule fois) ; le reste va dans le rapport du lundi.
     new_alerts = alerts_mod.only_new(db, alerts_mod.urgent(all_alerts))
@@ -148,7 +155,7 @@ def cmd_run(args):
 def cmd_dashboard(args):
     db = DB()
     snap = kpis.compute(db)
-    dashboard.build(snap, alerts_mod.evaluate(snap, objectives_mod.load(db)))
+    dashboard.build(snap, alerts_mod.evaluate(snap, objectives_mod.load(db), db))
     print(f"Tableau de bord : {dashboard.OUTPUT}")
 
 
