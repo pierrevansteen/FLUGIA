@@ -1377,7 +1377,46 @@ def _cb_write(fn, *args):
 
 
 PLATFORM_URL_HINT = {"crunchbase": "https://www.crunchbase.com/organization/…", "alternativeto": "https://alternativeto.net/software/…/about/",
-                     "aiagentsdirectory": "https://aiagentsdirectory.com/agent/… (page publique)"}
+                     "aiagentsdirectory": "https://aiagentsdirectory.com/agent/… (page publique)",
+                     "producthunt": "https://www.producthunt.com/products/… (après le lancement)"}
+
+
+def ph_launch_settings(p: dict):
+    st.markdown("**Préparation du lancement**")
+    cfg = cb._cfg()
+    c1, c2, c3, c4 = st.columns([1.2, 1.4, 1.4, 1], vertical_alignment="bottom")
+    g2 = c1.number_input("Avis G2", min_value=0, step=1, value=int(float(p.get("producthunt_g2") or 0)), key="ph_g2_in",
+                         help="À mettre à jour à chaque nouvel avis : G2 bloque la lecture automatique de ses pages.")
+    created = p.get("producthunt_compte")
+    compte = c2.date_input("Compte Product Hunt créé le", value=date.fromisoformat(created[:10]) if created else None,
+                           max_value=date.today(), format="DD/MM/YYYY", key="ph_compte_in")
+    planned = p.get("producthunt_lancement")
+    launch = c3.date_input("Lancement prévu le", value=date.fromisoformat(planned[:10]) if planned else None,
+                           format="DD/MM/YYYY", key="ph_launch_in", help="Laisser vide tant que le lancement n'est pas programmé.")
+    if c4.button("Enregistrer", key="ph_launch_save", type="secondary", use_container_width=True):
+        if _cb_write(lambda db: (cb.set_param(db, "producthunt_g2", str(int(g2))),
+                                 cb.set_param(db, "producthunt_compte", compte.isoformat() if compte else None),
+                                 cb.set_param(db, "producthunt_lancement", launch.isoformat() if launch else None))):
+            st.toast("Préparation Product Hunt enregistrée.", icon=":material/check_circle:")
+            st.rerun()
+    done = set(filter(None, (p.get("producthunt_prepa") or "").split(",")))
+    with st.form("ph_prepa_form", border=False):
+        cols = st.columns(2)
+        ticks = {k: cols[i % 2].checkbox(lbl, value=k in done, key=f"ph_prep_{k}") for i, (k, lbl) in enumerate(cb.PH_PREP.items())}
+        if st.form_submit_button("Enregistrer la préparation"):
+            if _cb_write(cb.set_param, "producthunt_prepa", ",".join(sorted(k for k, v in ticks.items() if v)) or ","):
+                st.rerun()
+    missing = cb.ph_readiness(p, date.today(), cfg)
+    slots = " ou ".join(cb.ph_slots(date.today()))
+    if missing:
+        st.markdown(f'<div class="fl-focus"><b>Lancement pas encore recommandé.</b> À réunir : {esc(" ; ".join(missing))}.<br>'
+                    f'Le bon moment : quand G2 a au moins {cfg["ph_g2_avis_min"]} avis et que le compte a au moins '
+                    f'{cfg["ph_compte_jours_min"]} jours d\'activité. Lancer un mardi ou un mercredi à 00:01, heure du Pacifique '
+                    f'(prochains créneaux : {esc(slots)}, heure de Bruxelles).</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="fl-focus"><b>Conditions réunies.</b> Prochains créneaux : {esc(slots)} (heure de Bruxelles), '
+                    f'soit 00:01 heure du Pacifique.</div>', unsafe_allow_html=True)
+    st.markdown("**Contenu de la fiche produit (après le lancement)**")
 
 
 def platform_settings(platform: str, p: dict):
@@ -1399,6 +1438,8 @@ def platform_settings(platform: str, p: dict):
                 f"Dernière mise à jour il y a {age} jours. Une revue est demandée au-delà de {cb._cfg()['revue_jours']} jours.")
                + " Cocher « Fait » sur l'alerte de revue met cette date à jour automatiquement.")
 
+    if platform == "producthunt":
+        ph_launch_settings(p)
     present = p.get(f"{platform}_fiche")
     done = set(filter(None, (present or "").split(",")))
     with st.form(f"{platform}_fiche_form", border=False):
@@ -1420,7 +1461,7 @@ def crunchbase_settings():
     data = load_crunchbase(DB_URL)
     p = data["params"]
     section("Veille des annuaires", "Les fiches se mettent à jour à la main ; ces réglages déclenchent les alertes "
-                                    "« Crunchbase », « AlternativeTo » et « AI Agents Directory » de la vue d'ensemble.")
+                                    "« Crunchbase », « AlternativeTo », « AI Agents Directory » et « Product Hunt » de la vue d'ensemble.")
     tabs = st.tabs([conf["nom"] for conf in cb.PLATFORMS.values()])
     for tab, platform in zip(tabs, cb.PLATFORMS):
         with tab:
