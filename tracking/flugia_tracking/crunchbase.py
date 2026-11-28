@@ -1,5 +1,5 @@
-"""Veille des annuaires (sans API) : signale quand les fiches FLUGIA sur Crunchbase et AlternativeTo doivent être mises à jour
-ou complétées.
+"""Veille des annuaires (sans API) : signale quand les fiches FLUGIA sur Crunchbase, AlternativeTo, AI Agents Directory et
+Product Hunt doivent être mises à jour ou complétées, et prépare le lancement Product Hunt.
 
 Ces sites ne permettent pas de modifier une fiche par programme et bloquent la lecture automatique de leurs pages :
 les alertes indiquent quoi corriger, la mise à jour se fait à la main.
@@ -125,6 +125,37 @@ AAD_SITE_ACTIONS = {
     "reseaux": "Mettre à jour les liens LinkedIn et Twitter.",
 }
 
+PH_PREP = {
+    "verification": "Compte vérifié (e-mail professionnel, LinkedIn ou GitHub)",
+    "profil": "Profil complété (photo, bio, liens)",
+    "engagement": "Activité régulière sur Product Hunt (votes et commentaires sur d'autres produits)",
+    "fiche": "Fiche produit préparée : nom, tagline (60 caractères max), description, logo 240×240",
+    "galerie": "Galerie : 3 à 5 visuels 1270×760, et une courte vidéo si possible",
+    "commentaire": "Premier commentaire du maker rédigé (histoire, problème résolu, offre)",
+    "offre": "Offre spéciale Product Hunt prête, avec sa page d'atterrissage",
+    "soutiens": "Liste des soutiens à prévenir le jour J (clients, réseau, équipe)",
+    "disponibilite": "Équipe disponible toute la journée du lancement pour répondre aux commentaires",
+}
+PH_FIELDS = {
+    "logo": ("Logo", "moyenne", "Vérifier le logo de la fiche produit (240×240)."),
+    "tagline": ("Tagline", "moyenne", "Renseigner une tagline claire de 60 caractères maximum."),
+    "description": ("Description", "moyenne", "Renseigner la description (Co-Workers, validation avant envoi, prix, essai gratuit)."),
+    "galerie": ("Galerie d'images", "info", "Ajouter 3 à 5 visuels 1270×760 de l'interface."),
+    "video": ("Vidéo", "info", "Ajouter une courte vidéo de démonstration."),
+    "makers": ("Makers", "info", "Ajouter les membres de l'équipe comme makers."),
+    "topics": ("Catégories (topics)", "info", "Choisir les topics : Artificial Intelligence, SaaS, Marketing, Sales, Productivity."),
+    "site": ("Lien vers le site", "info", "Renseigner le lien https://flugia.com."),
+    "badge": ("Badge Product Hunt sur flugia.com", "info", "Ajouter le badge « Featured on Product Hunt » dans le pied de page de flugia.com."),
+}
+PH_SITE_ACTIONS = {
+    "accueil.titre": "Mettre à jour la tagline de la fiche produit.",
+    "accueil.description": "Aligner la description de la fiche produit sur celle du site.",
+    "accueil.accroche": "Vérifier que la tagline reflète toujours le positionnement.",
+    "offre.co_workers": "Mettre à jour la description et la galerie avec les Co-Workers ajoutés ou retirés.",
+    "tarifs.prix": "Mettre à jour le prix et l'offre cités sur la fiche produit.",
+    "reseaux": "Mettre à jour les liens de la fiche et du profil maker.",
+}
+
 PLATFORMS = {
     "crunchbase": {"nom": "Crunchbase", "fields": PROFILE_FIELDS, "presse": True,
                    "revue": "description, effectif, logo, catégories, liens et actualités",
@@ -138,12 +169,17 @@ PLATFORMS = {
                           "revue": "accroche, description, fonctionnalités, cas d'usage, prix, liens et images",
                           "pourquoi": "les entreprises qui cherchent un agent IA y comparent les solutions",
                           "complet": "Une fiche complète est mieux mise en avant dans les catégories et les recherches de l'annuaire."},
+    "producthunt": {"nom": "Product Hunt", "fields": PH_FIELDS, "presse": False,
+                    "revue": "tagline, description, galerie, offre, makers et liens",
+                    "pourquoi": "la fiche reste consultée et référencée longtemps après le lancement",
+                    "complet": "Une fiche complète convertit mieux les visiteurs qui arrivent de Product Hunt."},
 }
-SITE_ACTIONS = {"alternativeto": AT_SITE_ACTIONS, "aiagentsdirectory": AAD_SITE_ACTIONS}
+SITE_ACTIONS = {"alternativeto": AT_SITE_ACTIONS, "aiagentsdirectory": AAD_SITE_ACTIONS, "producthunt": PH_SITE_ACTIONS}
 
 
 def _cfg() -> dict:
-    return {"revue_jours": 90, "changements_jours": 45, **(alerts_config().get("crunchbase") or {})}
+    return {"revue_jours": 90, "changements_jours": 45, "ph_g2_avis_min": 5, "ph_compte_jours_min": 7,
+            **(alerts_config().get("crunchbase") or {})}
 
 
 # ------------------------------------------------------------------ relevé du site
@@ -306,6 +342,11 @@ def platform_alerts(db, snapshot: dict, as_of: date, platform: str) -> list:
     url = p.get(f"{platform}_url")
     where = f" ({url})" if url else ""
     out = []
+    if platform == "producthunt":  # avant le lancement : seules les alertes de préparation et de calendrier
+        launch_alerts, launched = _ph_launch_alerts(p, as_of, cfg)
+        out.extend(launch_alerts)
+        if not launched:
+            return out
 
     # 1. Revue périodique (seulement une fois la fiche déclarée, pour ne pas alerter sur un annuaire non utilisé)
     last = p.get(f"{platform}_maj")
@@ -405,6 +446,118 @@ def platform_alerts(db, snapshot: dict, as_of: date, platform: str) -> list:
                     action=AT_EVENT_ACTION[e["type"]] + where,
                 ))
     return out
+
+
+JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
+
+
+def ph_slots(after: date, count: int = 2) -> list[str]:
+    """Prochains créneaux de lancement : mardi ou mercredi à 00:01 heure du Pacifique, exprimés à l'heure de Bruxelles."""
+    from datetime import time
+
+    from .brand import day as fday
+    out, d = [], after + timedelta(days=1)
+    while len(out) < count:
+        if d.weekday() in (1, 2):
+            try:
+                from zoneinfo import ZoneInfo
+                local = datetime.combine(d, time(0, 1), ZoneInfo("America/Los_Angeles")).astimezone(ZoneInfo("Europe/Brussels"))
+                hour = local.strftime("%H:%M")
+            except Exception:  # noqa: BLE001  (base des fuseaux absente : décalage d'hiver)
+                hour = "09:01"
+            out.append(f"{JOURS[d.weekday()]} {fday(d)} à {hour}")
+        d += timedelta(days=1)
+    return out
+
+
+def ph_readiness(p: dict, as_of: date, cfg: dict | None = None) -> list[str]:
+    """Conditions de lancement Product Hunt encore manquantes (liste vide = prêt)."""
+    cfg = cfg or _cfg()
+    missing = []
+    g2 = int(float(p.get("producthunt_g2") or 0))
+    if g2 < cfg["ph_g2_avis_min"]:
+        missing.append(f"G2 : {g2} avis sur {cfg['ph_g2_avis_min']} minimum")
+    created = p.get("producthunt_compte")
+    age = (as_of - date.fromisoformat(created[:10])).days if created else None
+    if age is None:
+        missing.append("date de création du compte Product Hunt non renseignée")
+    elif age < cfg["ph_compte_jours_min"]:
+        missing.append(f"compte Product Hunt : {age} jour(s) d'activité sur {cfg['ph_compte_jours_min']} minimum")
+    done = set(filter(None, (p.get("producthunt_prepa") or "").split(",")))
+    missing += [lbl[0].lower() + lbl[1:] for k, lbl in PH_PREP.items() if k not in done]
+    return missing
+
+
+def _ph_launch_alerts(p: dict, as_of: date, cfg: dict) -> tuple[list, bool]:
+    from .alerts import Alert
+    from .brand import day as fday
+
+    rule = "Le bon moment : quand G2 a quelques avis et que le compte a quelques jours d'activité. " \
+           "Lancer un mardi ou un mercredi à 00:01, heure du Pacifique."
+    planned = date.fromisoformat(p["producthunt_lancement"][:10]) if p.get("producthunt_lancement") else None
+    if planned and planned < as_of:  # lancement passé : suivi après lancement, puis veille normale de la fiche
+        out = []
+        if (as_of - planned).days <= 3:
+            out.append(Alert(
+                key=f"producthunt_lancement:suite:{planned}", etape="Visibilité", severite="info",
+                titre="Product Hunt : suites du lancement",
+                detail=f"Lancement du {fday(planned, True)}.",
+                action="Remercier les soutiens, répondre aux derniers commentaires, ajouter le badge Product Hunt sur flugia.com "
+                       "et enregistrer l'adresse de la fiche produit dans Paramétrages.",
+            ))
+        return out, True
+
+    missing = ph_readiness(p, as_of, cfg)
+    slots = ph_slots(as_of)
+    out = []
+    if not planned:
+        if missing:
+            out.append(Alert(
+                key=f"producthunt_lancement:attente:{as_of:%Y-%m}", etape="Visibilité", severite="info",
+                titre=f"Product Hunt : lancement pas encore recommandé ({len(missing)} point(s) à réunir)",
+                detail="À réunir : " + " ; ".join(missing) + ". " + rule,
+                action="Demander des avis G2 aux clients actuels, utiliser le compte chaque jour (votes, commentaires) "
+                       "et cocher la préparation dans Paramétrages > Veille des annuaires > Product Hunt.",
+            ))
+        else:
+            out.append(Alert(
+                key="producthunt_lancement:pret", etape="Visibilité", severite="moyenne",
+                titre="Product Hunt : conditions réunies, le lancement peut être planifié",
+                detail=f"Prochains créneaux : {' ou '.join(slots)} (heure de Bruxelles), soit 00:01 heure du Pacifique.",
+                action="Programmer le lancement sur Product Hunt pour l'un de ces créneaux, puis saisir la date dans Paramétrages.",
+            ))
+        return out, False
+
+    days_to = (planned - as_of).days
+    when = f"{JOURS[planned.weekday()]} {fday(planned, True)}"
+    if planned.weekday() not in (1, 2):
+        out.append(Alert(
+            key=f"producthunt_lancement:jour:{planned}", etape="Visibilité", severite="moyenne",
+            titre=f"Product Hunt : lancement prévu un {JOURS[planned.weekday()]}",
+            detail=f"Date prévue : {when}. {rule}",
+            action=f"Déplacer le lancement sur l'un des prochains créneaux : {' ou '.join(slots)} (heure de Bruxelles).",
+        ))
+    if missing:
+        out.append(Alert(
+            key=f"producthunt_lancement:manquant:{planned}", etape="Visibilité", severite="haute" if days_to <= 7 else "moyenne",
+            titre=f"Product Hunt : lancement du {fday(planned)} prévu, {len(missing)} point(s) pas encore prêts",
+            detail="À réunir : " + " ; ".join(missing) + ".",
+            action="Compléter ces points avant le lancement, ou le repousser à un mardi ou mercredi ultérieur.",
+        ))
+    if days_to <= 3:
+        steps = {
+            0: "Publier le premier commentaire du maker dès la mise en ligne (09:01), prévenir les soutiens, partager sur LinkedIn "
+               "et répondre à chaque commentaire toute la journée.",
+            1: "Vérifier la fiche programmée (tagline, galerie, offre), préparer les messages aux soutiens et bloquer l'agenda de demain.",
+        }
+        out.append(Alert(
+            key=f"producthunt_lancement:J-{days_to}:{planned}", etape="Visibilité", severite="haute",
+            titre="Product Hunt : lancement " + ("aujourd'hui" if days_to == 0 else f"dans {days_to} jour(s)")
+                  + " à 09:01 (00:01 heure du Pacifique)",
+            detail=f"Lancement prévu le {when}.",
+            action=steps.get(days_to, "Relire la fiche, finaliser la galerie et l'offre, confirmer la liste des soutiens."),
+        ))
+    return out, False
 
 
 def _aad_alerts(db, as_of: date, url: str, latest_changes: dict) -> list:
