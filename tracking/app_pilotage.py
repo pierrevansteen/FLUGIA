@@ -612,12 +612,13 @@ def mark_done(key: str, title: str):
         db.execute("INSERT INTO ui_alertes_traitees (alert_key, done_at, done_by) VALUES (?, ?, ?)",
                    (key, datetime.now(timezone.utc).isoformat(), viewer()))
         db.commit()
-        if key.startswith("crunchbase_revue:"):  # revue faite = date de dernière mise à jour du profil
-            cb.set_param(db, "crunchbase_maj", date.today().isoformat())
+        plat, _, rest = key.partition("_")
+        if plat in cb.PLATFORMS and rest.startswith("revue:"):  # revue faite = date de dernière mise à jour de la fiche
+            cb.set_param(db, f"{plat}_maj", date.today().isoformat())
         elif key.startswith("crunchbase_evenement:"):
             cb.mark_event(db, key.split(":", 1)[1])
-        elif key.startswith("crunchbase_fiche:") and key.split(":", 1)[1] in cb.PROFILE_FIELDS:
-            cb.mark_field(db, key.split(":", 1)[1])
+        elif plat in cb.PLATFORMS and rest.startswith("fiche:") and key.split(":", 1)[1] in cb.PLATFORMS[plat]["fields"]:
+            cb.mark_field(db, key.split(":", 1)[1], platform=plat)
         db.close()
         load_done.clear()
         load_crunchbase.clear()
@@ -636,8 +637,9 @@ def restore_done(key: str):
         db.commit()
         if key.startswith("crunchbase_evenement:"):
             cb.mark_event(db, key.split(":", 1)[1], reported=False)
-        elif key.startswith("crunchbase_fiche:") and key.split(":", 1)[1] in cb.PROFILE_FIELDS:
-            cb.mark_field(db, key.split(":", 1)[1], present=False)
+        elif key.partition("_")[0] in cb.PLATFORMS and key.partition("_")[2].startswith("fiche:") \
+                and key.split(":", 1)[1] in cb.PLATFORMS[key.partition("_")[0]]["fields"]:
+            cb.mark_field(db, key.split(":", 1)[1], present=False, platform=key.partition("_")[0])
         db.close()
         load_done.clear()
         load_crunchbase.clear()
@@ -647,7 +649,7 @@ def restore_done(key: str):
 
 
 # Alertes ponctuelles : une fois cochées, elles ne reviennent pas (un changement de site, un article, un événement).
-PERMANENT_DONE = ("crunchbase_site:", "crunchbase_presse:", "crunchbase_evenement:", "crunchbase_fiche:")
+PERMANENT_DONE = tuple(f"{p_}_{k_}:" for p_ in cb.PLATFORMS for k_ in ("site", "presse", "evenement", "fiche"))
 
 
 def active_alerts():
@@ -1374,44 +1376,56 @@ def _cb_write(fn, *args):
         return False
 
 
-def crunchbase_settings():
-    data = load_crunchbase(DB_URL)
-    p = data["params"]
-    section("Veille Crunchbase", "Le profil se met à jour à la main ; ces réglages déclenchent les alertes « Crunchbase » de la vue d'ensemble.")
+PLATFORM_URL_HINT = {"crunchbase": "https://www.crunchbase.com/organization/…", "alternativeto": "https://alternativeto.net/software/…/about/"}
+
+
+def platform_settings(platform: str, p: dict):
+    nom = cb.PLATFORMS[platform]["nom"]
+    fields = cb.PLATFORMS[platform]["fields"]
     c1, c2, c3 = st.columns([2.4, 1.4, 1], vertical_alignment="bottom")
-    url = c1.text_input("Adresse du profil Crunchbase", value=p.get("crunchbase_url", ""),
-                        placeholder="https://www.crunchbase.com/organization/…")
-    last = p.get("crunchbase_maj")
-    maj = c2.date_input("Dernière mise à jour du profil", value=date.fromisoformat(last[:10]) if last else None,
-                        max_value=date.today(), format="DD/MM/YYYY")
-    if c3.button("Enregistrer", key="cb_save", type="secondary", use_container_width=True):
-        if _cb_write(lambda db: (cb.set_param(db, "crunchbase_url", url.strip()),
-                                 cb.set_param(db, "crunchbase_maj", maj.isoformat() if maj else None))):
-            st.toast("Réglages Crunchbase enregistrés.", icon=":material/check_circle:")
+    url = c1.text_input(f"Adresse de la fiche {nom}", value=p.get(f"{platform}_url", ""), placeholder=PLATFORM_URL_HINT[platform],
+                        key=f"{platform}_url_in")
+    last = p.get(f"{platform}_maj")
+    maj = c2.date_input("Dernière mise à jour de la fiche", value=date.fromisoformat(last[:10]) if last else None,
+                        max_value=date.today(), format="DD/MM/YYYY", key=f"{platform}_maj_in")
+    if c3.button("Enregistrer", key=f"{platform}_save", type="secondary", use_container_width=True):
+        if _cb_write(lambda db: (cb.set_param(db, f"{platform}_url", url.strip()),
+                                 cb.set_param(db, f"{platform}_maj", maj.isoformat() if maj else None))):
+            st.toast(f"Réglages {nom} enregistrés.", icon=":material/check_circle:")
             st.rerun()
     age = (date.today() - date.fromisoformat(last[:10])).days if last else None
-    st.caption(("Date non renseignée : une alerte de revue s'affiche." if age is None else
+    st.caption(("Date non renseignée." if age is None else
                 f"Dernière mise à jour il y a {age} jours. Une revue est demandée au-delà de {cb._cfg()['revue_jours']} jours.")
                + " Cocher « Fait » sur l'alerte de revue met cette date à jour automatiquement.")
 
-    st.markdown("**Contenu de la fiche Crunchbase**")
-    present = p.get("crunchbase_fiche")
+    present = p.get(f"{platform}_fiche")
     done = set(filter(None, (present or "").split(",")))
-    with st.form("cb_fiche", border=False):
+    with st.form(f"{platform}_fiche_form", border=False):
         st.caption("Cochez ce qui figure déjà sur la fiche. Chaque information non cochée crée une alerte « information à ajouter » ; "
                    "cocher « Fait » sur l'alerte la coche ici automatiquement.")
         cols = st.columns(3)
-        ticks = {k: cols[i % 3].checkbox(lbl, value=k in done, key=f"cbf_{k}") for i, (k, (lbl, _s, _a)) in enumerate(cb.PROFILE_FIELDS.items())}
+        ticks = {k: cols[i % 3].checkbox(lbl, value=k in done, key=f"{platform}_f_{k}") for i, (k, (lbl, _s, _a)) in enumerate(fields.items())}
         if st.form_submit_button("Enregistrer le contenu de la fiche"):
             value = ",".join(sorted(k for k, v in ticks.items() if v)) or ","
-            if _cb_write(cb.set_param, "crunchbase_fiche", value):
+            if _cb_write(cb.set_param, f"{platform}_fiche", value):
                 st.toast("Contenu de la fiche enregistré.", icon=":material/check_circle:")
                 st.rerun()
     if present is not None:
-        missing = [lbl for k, (lbl, _s, _a) in cb.PROFILE_FIELDS.items() if k not in done]
+        missing = [lbl for k, (lbl, _s, _a) in fields.items() if k not in done]
         st.caption(("À ajouter : " + ", ".join(missing) + ".") if missing else "Fiche complète.")
 
-    st.markdown("**Événements à reporter sur Crunchbase**")
+
+def crunchbase_settings():
+    data = load_crunchbase(DB_URL)
+    p = data["params"]
+    section("Veille des annuaires", "Les fiches se mettent à jour à la main ; ces réglages déclenchent les alertes « Crunchbase » "
+                                    "et « AlternativeTo » de la vue d'ensemble.")
+    tabs = st.tabs([conf["nom"] for conf in cb.PLATFORMS.values()])
+    for tab, platform in zip(tabs, cb.PLATFORMS):
+        with tab:
+            platform_settings(platform, p)
+
+    st.markdown("**Événements à reporter sur les fiches**")
     with st.form("cb_event", clear_on_submit=True, border=False):
         e1, e2, e3 = st.columns([1.6, 3, 1], vertical_alignment="bottom")
         kind = e1.selectbox("Type", cb.EVENT_TYPES)
@@ -1422,7 +1436,8 @@ def crunchbase_settings():
     evs = data["events"]
     pending = [e for e in evs if not e["reporte_le"]]
     if not pending:
-        st.caption("Aucun événement en attente. Chaque événement ajouté crée une alerte jusqu'à ce qu'il soit reporté sur Crunchbase.")
+        st.caption("Aucun événement en attente sur Crunchbase. Chaque événement ajouté crée une alerte Crunchbase ; les nouvelles offres, "
+                   "partenariats et distinctions créent aussi une alerte AlternativeTo.")
     for e in pending:
         r1, r2, r3 = st.columns([5, 1.6, 0.8], vertical_alignment="center")
         r1.markdown(f"**{esc(e['type'])}** · {esc(e['description'])}  \n<span style='color:#6B7280;font-size:.8rem'>"
