@@ -1,14 +1,16 @@
-"""Veille Crunchbase (sans API) : signale quand le profil Crunchbase de FLUGIA doit être mis à jour.
+"""Veille des annuaires (sans API) : signale quand les fiches FLUGIA sur Crunchbase et AlternativeTo doivent être mises à jour
+ou complétées.
 
-Crunchbase ne permet pas de modifier un profil par programme : les alertes indiquent quoi corriger,
-la mise à jour se fait à la main (crunchbase.com, « Edit profile »).
+Ces sites ne permettent pas de modifier une fiche par programme et bloquent la lecture automatique de leurs pages :
+les alertes indiquent quoi corriger, la mise à jour se fait à la main.
 
-Quatre déclencheurs :
+Déclencheurs, pour chaque annuaire :
   1. revue périodique : la date de dernière mise à jour (onglet Paramétrages) dépasse N jours ;
   2. changement sur flugia.com : titre, description, accroche, gamme de Co-Workers, tarifs, réseaux sociaux
      (relevés chaque nuit, comparés au relevé précédent) ;
-  3. nouvelle mention dans la presse ou sur un site tiers (nouveau site référent GA4) ;
-  4. événement saisi dans Paramétrages (levée de fonds, nouvelle offre, effectif…) pas encore reporté.
+  3. informations manquantes sur la fiche (liste cochée dans Paramétrages) ;
+  4. événement saisi dans Paramétrages (levée de fonds, nouvelle offre…) pas encore reporté ;
+  5. Crunchbase uniquement : nouvelle mention dans la presse ou sur un site tiers (nouveau site référent GA4).
 """
 from __future__ import annotations
 
@@ -63,6 +65,49 @@ PROFILE_FIELDS = {
     "equipe": ("Équipe mise en avant", "info", "Ajouter 2 ou 3 personnes clés dans « Featured Employees »."),
     "actualites": ("Actualités (au moins un article)", "info", "Ajouter un article ou une annonce sur FLUGIA dans « News »."),
     "contact": ("E-mail et téléphone de contact", "info", "Renseigner « Contact Email » et « Phone Number »."),
+}
+
+
+AT_FIELDS = {
+    "publiee": ("Fiche validée et publiée", "moyenne",
+                "Suivre la validation dans « My submissions ». La file d'attente est longue ; l'option payante « Get reviewed sooner » "
+                "la ramène à 1-2 jours ouvrés."),
+    "logo": ("Logo", "moyenne", "Ajouter le logo carré de FLUGIA."),
+    "description": ("Description", "moyenne", "Renseigner une description claire (Co-Workers, intégrations, prix, langues)."),
+    "site": ("Site web", "moyenne", "Renseigner le lien officiel https://flugia.com."),
+    "reseaux": ("Réseaux sociaux", "info", "Ajouter LinkedIn, X, Facebook et Instagram dans « Social networks »."),
+    "captures": ("Captures d'écran", "moyenne", "Ajouter 3 à 5 captures de l'interface (tableau de bord, validation, Co-Workers)."),
+    "fonctionnalites": ("Fonctionnalités", "info", "Ajouter les fonctionnalités (Marketing Automation, AI Agent, Customer Support…)."),
+    "tags": ("Tags", "info", "Ajouter des tags (ai-agent, sales-automation, seo, crm…)."),
+    "tarif": ("Prix et licence", "info", "Renseigner « Cost / License » : abonnement, logiciel propriétaire, essai gratuit."),
+    "langues": ("Langues", "info", "Indiquer l'anglais, le français et le néerlandais."),
+    "plateformes": ("Plateformes", "info", "Indiquer « Online » et « Software as a Service (SaaS) »."),
+    "alternatives": ("Liens avec les concurrents", "moyenne",
+                     "Proposer FLUGIA comme alternative sur les fiches des concurrents : {concurrents}."),
+}
+AT_SITE_ACTIONS = {
+    "accueil.titre": "Mettre à jour la description courte.",
+    "accueil.description": "Aligner la description sur celle du site.",
+    "accueil.accroche": "Vérifier que la description reflète toujours le positionnement.",
+    "offre.co_workers": "Mettre à jour la description et les fonctionnalités avec les Co-Workers ajoutés ou retirés.",
+    "tarifs.prix": "Mettre à jour « Cost / License » et le prix cité dans la description.",
+    "reseaux": "Mettre à jour les liens « Social networks ».",
+}
+AT_EVENT_ACTION = {
+    "Nouvelle offre ou nouveau produit": "Mettre à jour la description et les fonctionnalités de la fiche.",
+    "Partenariat": "Ajouter l'intégration ou le partenaire dans la description si c'est un argument produit.",
+    "Prix ou distinction": "Mentionner la distinction dans la description.",
+}
+
+PLATFORMS = {
+    "crunchbase": {"nom": "Crunchbase", "fields": PROFILE_FIELDS, "presse": True,
+                   "revue": "description, effectif, logo, catégories, liens et actualités",
+                   "pourquoi": "investisseurs et partenaires consultent ce profil",
+                   "complet": "Une fiche complète est mieux classée sur Crunchbase et inspire confiance aux investisseurs et partenaires."},
+    "alternativeto": {"nom": "AlternativeTo", "fields": AT_FIELDS, "presse": False,
+                      "revue": "description, prix, fonctionnalités, captures, liens et concurrents liés",
+                      "pourquoi": "les prospects y comparent FLUGIA à ses concurrents",
+                      "complet": "Une fiche complète remonte dans les listes « alternatives à » et rassure les prospects qui comparent."},
 }
 
 
@@ -142,11 +187,11 @@ def set_param(db, key: str, value: str | None) -> None:
     db.commit()
 
 
-def mark_field(db, field: str, present: bool = True) -> None:
+def mark_field(db, field: str, present: bool = True, platform: str = "crunchbase") -> None:
     """Ajoute (ou retire) une information de la liste de ce qui figure sur la fiche."""
-    done = set(filter(None, (params(db).get("crunchbase_fiche") or "").split(",")))
+    done = set(filter(None, (params(db).get(f"{platform}_fiche") or "").split(",")))
     done = done | {field} if present else done - {field}
-    set_param(db, "crunchbase_fiche", ",".join(sorted(done)) or ",")
+    set_param(db, f"{platform}_fiche", ",".join(sorted(done)) or ",")
 
 
 def events(db, pending_only: bool = False) -> list[dict]:
@@ -182,27 +227,43 @@ def _short(v: str, n: int = 140) -> str:
     return v if len(v) <= n else v[: n - 1] + "…"
 
 
+def _lower(lbl: str) -> str:
+    return lbl[0].lower() + lbl[1:]
+
+
 def alerts(db, snapshot: dict, as_of: date) -> list:
+    out = []
+    for platform in PLATFORMS:
+        out.extend(platform_alerts(db, snapshot, as_of, platform))
+    return out
+
+
+def platform_alerts(db, snapshot: dict, as_of: date, platform: str) -> list:
     from .alerts import Alert
     from .brand import day as fday, num
 
     cfg = _cfg()
+    conf = PLATFORMS[platform]
+    nom = conf["nom"]
     p = params(db)
-    where = f" ({p['crunchbase_url']})" if p.get("crunchbase_url") else ""
+    url = p.get(f"{platform}_url")
+    where = f" ({url})" if url else ""
     out = []
 
-    # 1. Revue périodique
-    last = p.get("crunchbase_maj")
-    age = (as_of - date.fromisoformat(last[:10])).days if last else None
-    if age is None or age > cfg["revue_jours"]:
-        out.append(Alert(
-            key=f"crunchbase_revue:{as_of:%Y-%m}", etape="Visibilité", severite="info",
-            titre="Crunchbase : profil à revoir" + (f" (dernière mise à jour il y a {num(age, 0)} jours)" if age is not None
+    # 1. Revue périodique (seulement une fois la fiche déclarée, pour ne pas alerter sur un annuaire non utilisé)
+    last = p.get(f"{platform}_maj")
+    if url or platform == "crunchbase":
+        age = (as_of - date.fromisoformat(last[:10])).days if last else None
+        if age is None or age > cfg["revue_jours"]:
+            out.append(Alert(
+                key=f"{platform}_revue:{as_of:%Y-%m}", etape="Visibilité", severite="info",
+                titre=f"{nom} : fiche à revoir" + (f" (dernière mise à jour il y a {num(age, 0)} jours)" if age is not None
                                                    else " (date de dernière mise à jour non renseignée)"),
-            detail=f"Une revue complète est conseillée tous les {cfg['revue_jours']} jours : investisseurs et partenaires consultent ce profil.",
-            action=f"Relire le profil{where} : description, effectif, logo, catégories, liens et actualités. "
-                   "Cocher « Fait » enregistre la date du jour comme dernière mise à jour.",
-        ))
+                detail=f"Une revue complète est conseillée tous les {cfg['revue_jours']} jours : {conf['pourquoi']}.",
+                action=f"Relire la fiche{where} : {conf['revue']}. Cocher « Fait » enregistre la date du jour comme dernière mise à jour.",
+            ))
+    if not url and platform != "crunchbase":
+        return out
 
     # 2. Changements détectés sur flugia.com
     since = (datetime.combine(as_of, datetime.min.time()) - timedelta(days=cfg["changements_jours"])).isoformat()
@@ -215,54 +276,81 @@ def alerts(db, snapshot: dict, as_of: date) -> list:
     for c in changes:  # un seul signalement par champ : le plus récent
         latest[c["champ"]] = c
     for champ, c in latest.items():
-        lbl, sev, action = FIELDS.get(champ, (champ, "info", "Vérifier le profil Crunchbase."))
+        lbl, sev, action = FIELDS.get(champ, (champ, "info", "Vérifier la fiche."))
+        if platform == "alternativeto":
+            action = AT_SITE_ACTIONS.get(champ, "Vérifier la fiche.")
         out.append(Alert(
-            key=f"crunchbase_site:{champ}:{hashlib.sha1((c['apres'] or '').encode()).hexdigest()[:8]}",
+            key=f"{platform}_site:{champ}:{hashlib.sha1((c['apres'] or '').encode()).hexdigest()[:8]}",
             etape="Visibilité", severite=sev,
-            titre=f"Crunchbase : changement sur flugia.com ({lbl[0].lower() + lbl[1:]})",
+            titre=f"{nom} : changement sur flugia.com ({_lower(lbl)})",
             detail=f"Changement détecté le {fday(str(c['detecte_le'])[:10])}. Avant : « {_short(c['avant'])} ». "
                    f"Maintenant : « {_short(c['apres'])} ».",
-            action=action + (f" Profil : {p['crunchbase_url']}." if p.get("crunchbase_url") else ""),
+            action=action + (f" Fiche : {url}." if url else ""),
         ))
 
-    # 3. Nouvelle mention sur un site tiers
-    rcfg = alerts_config().get("referents", {})
-    for site in (snapshot.get("interet") or {}).get("sites_referents", []):
-        if site.get("nouveau") and site.get("visites_7j", 0) >= rcfg.get("visites_min_nouveau", 5):
-            out.append(Alert(
-                key=f"crunchbase_presse:{site['site']}", etape="Visibilité", severite="info",
-                titre=f"Crunchbase : nouvelle mention à ajouter ({site['site']})",
-                detail=f"{site['site']} envoie des visiteurs depuis peu ({num(site['visites_7j'], 0)} visites en 7 jours) : "
-                       "probablement un article ou une mention de FLUGIA.",
-                action="Retrouver l'article et l'ajouter dans la section « News » du profil s'il parle de FLUGIA.",
-            ))
+    # 3. Nouvelle mention sur un site tiers (Crunchbase : rubrique « News »)
+    if conf["presse"]:
+        rcfg = alerts_config().get("referents", {})
+        for site in (snapshot.get("interet") or {}).get("sites_referents", []):
+            if site.get("nouveau") and site.get("visites_7j", 0) >= rcfg.get("visites_min_nouveau", 5):
+                out.append(Alert(
+                    key=f"{platform}_presse:{site['site']}", etape="Visibilité", severite="info",
+                    titre=f"{nom} : nouvelle mention à ajouter ({site['site']})",
+                    detail=f"{site['site']} envoie des visiteurs depuis peu ({num(site['visites_7j'], 0)} visites en 7 jours) : "
+                           "probablement un article ou une mention de FLUGIA.",
+                    action="Retrouver l'article et l'ajouter dans la section « News » du profil s'il parle de FLUGIA.",
+                ))
 
-    # 4 bis. Informations manquantes sur la fiche (liste cochée dans Paramétrages)
-    present = p.get("crunchbase_fiche")
-    if present is None and p.get("crunchbase_url"):
+    # 4. Informations manquantes sur la fiche (liste cochée dans Paramétrages)
+    present = p.get(f"{platform}_fiche")
+    if present is None and url:
         out.append(Alert(
-            key="crunchbase_fiche:liste", etape="Visibilité", severite="info",
-            titre="Crunchbase : indiquer ce qui figure déjà sur la fiche",
-            detail="Sans cette liste, impossible de signaler les informations manquantes (logo, réseaux sociaux, actualités…).",
-            action="Dans Paramétrages > Veille Crunchbase, cocher les informations présentes sur la fiche et enregistrer.",
+            key=f"{platform}_fiche:liste", etape="Visibilité", severite="info",
+            titre=f"{nom} : indiquer ce qui figure déjà sur la fiche",
+            detail="Sans cette liste, impossible de signaler les informations manquantes.",
+            action=f"Dans Paramétrages > Veille des annuaires > {nom}, cocher les informations présentes sur la fiche et enregistrer.",
         ))
     elif present is not None:
         done = set(filter(None, present.split(",")))
-        for k, (lbl, sev, action) in PROFILE_FIELDS.items():
+        competitors = ", ".join(_competitors()) or "les principaux concurrents"
+        for k, (lbl, sev, action) in conf["fields"].items():
             if k not in done:
                 out.append(Alert(
-                    key=f"crunchbase_fiche:{k}", etape="Visibilité", severite=sev,
-                    titre=f"Crunchbase : information à ajouter sur la fiche ({lbl[0].lower() + lbl[1:]})",
-                    detail="Une fiche complète est mieux classée sur Crunchbase et inspire confiance aux investisseurs et partenaires.",
-                    action=action + where + " Cocher « Fait » une fois l'information ajoutée.",
+                    key=f"{platform}_fiche:{k}", etape="Visibilité", severite=sev,
+                    titre=(f"{nom} : fiche en attente de validation" if k == "publiee"
+                           else f"{nom} : information à ajouter sur la fiche ({_lower(lbl)})"),
+                    detail=conf["complet"],
+                    action=action.format(concurrents=competitors) + where
+                    + (" Cocher « Fait » une fois la fiche publiée." if k == "publiee" else " Cocher « Fait » une fois l'information ajoutée."),
                 ))
 
-    # 4. Événements saisis, pas encore reportés
-    for e in events(db, pending_only=True):
-        out.append(Alert(
-            key=f"crunchbase_evenement:{e['id']}", etape="Visibilité", severite="moyenne",
-            titre=f"Crunchbase : à reporter — {e['type'].lower()}",
-            detail=f"{e['description']} (saisi le {fday(str(e['cree_le'])[:10])}).",
-            action=EVENT_ACTION.get(e["type"], "Mettre à jour la rubrique concernée du profil.") + where,
-        ))
+    # 5. Événements saisis
+    if platform == "crunchbase":
+        for e in events(db, pending_only=True):
+            out.append(Alert(
+                key=f"crunchbase_evenement:{e['id']}", etape="Visibilité", severite="moyenne",
+                titre=f"Crunchbase : à reporter — {e['type'].lower()}",
+                detail=f"{e['description']} (saisi le {fday(str(e['cree_le'])[:10])}).",
+                action=EVENT_ACTION.get(e["type"], "Mettre à jour la rubrique concernée du profil.") + where,
+            ))
+    else:  # seuls les événements qui changent la description du produit ; « Fait » les masque définitivement
+        recent = (as_of - timedelta(days=180)).isoformat()
+        for e in events(db):
+            if e["type"] in AT_EVENT_ACTION and str(e["cree_le"])[:10] >= recent:
+                out.append(Alert(
+                    key=f"{platform}_evenement:{e['id']}", etape="Visibilité", severite="info",
+                    titre=f"{nom} : à reporter — {e['type'].lower()}",
+                    detail=f"{e['description']} (saisi le {fday(str(e['cree_le'])[:10])}).",
+                    action=AT_EVENT_ACTION[e["type"]] + where,
+                ))
     return out
+
+
+def _competitors() -> list[str]:
+    try:
+        import yaml
+
+        from .config import ROOT
+        return list(yaml.safe_load((ROOT / "config" / "geo_prompts.yaml").read_text(encoding="utf-8")).get("concurrents") or [])
+    except Exception:
+        return []
